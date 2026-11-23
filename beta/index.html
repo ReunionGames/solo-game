@@ -5,6 +5,7 @@
 <title>Chronicles of the Kingdom: Game Mode: Endurance</title>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Fredoka:wght@700&display=swap" rel="stylesheet">
 <style>
+/* v5.9.4 (23 Nov 2026, beta) rebuilt from v5.9.2 + the v5.9.3 quiet sounds, ui() deferred to after the unlock path; iPhone silent switch inside the Wix iframe: silent <audio> loop now also runs there. */
 /* v5.9.3 (23 Nov 2026, beta) quiet acknowledgement sounds on every tap that had no sound (Luke); reward sounds unchanged. */
 /* v5.9.2 (23 Nov 2026, not published) mobile sound: iOS silent switch (audioSession 'playback' + silent <audio> fallback), unlock only on real taps, resume from 'interrupted'. See NOTES.md. */
 /* v5.9.1 (21 Nov 2026) fix: a click during the 'Not quite…' second after a wrong card cancelled the move-to-true-place timer, so the game stuck with no score/Try again (Emily, laptop). Fixed: the run leaves the 'flipping' phase as soon as the card is judged, skip-the-flip can only act once, and a failsafe always brings up the score. RELEASE stays '5.9'. */
@@ -338,7 +339,12 @@ let actx=null,bufs={},muted=(()=>{try{return localStorage.getItem(MUTEKEY)==='1'
    not wasted on a context that is still suspended. (3) iOS 'interrupted' (call, lock screen, app switch) is resumed on the next tap. */
 let silentEl=null;
 function iosPlayback(){try{
- if(navigator.audioSession){if(navigator.audioSession.type!=='playback')navigator.audioSession.type='playback';return}
+ /* v5.9.4: WebKit ignores audioSession.type inside a cross-origin iframe that lacks allow="microphone" (the Wix embed): the setter is a
+    silent no-op and the getter says 'auto' (WebKit commit 841d41b, bug 249577). v5.9.2/5.9.3 returned here anyway, so the silent-loop
+    fallback never ran inside Wix. Now audioSession is only trusted top-level when it reads back 'playback'; otherwise the silent loop runs too. */
+ if(navigator.audioSession){try{if(navigator.audioSession.type!=='playback')navigator.audioSession.type='playback'}catch(e){}
+  let top=false;try{top=window.top===window.self}catch(e){}
+  if(top&&navigator.audioSession.type==='playback')return}
  if(!/iP(hone|ad|od)|Macintosh/.test(navigator.userAgent)||!('ontouchend' in document))return;
  if(!silentEl){const n=2205,b=new Uint8Array(44+n*2),v=new DataView(b.buffer),w=(o,t)=>{for(let i=0;i<t.length;i++)b[o+i]=t.charCodeAt(i)};
   w(0,'RIFF');v.setUint32(4,36+n*2,true);w(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
@@ -359,7 +365,7 @@ function unlockAudio(ev){try{
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&silentEl&&!silentEl.paused)silentEl.pause()});
 function sfx(k,rate){window.__ev.push((muted?'muted:':'snd:')+k);if(muted||!actx||!bufs[k])return;
   try{if(actx.state!=='running')actx.resume().catch(()=>{});const s=actx.createBufferSource(),g=actx.createGain();s.buffer=bufs[k];if(rate)s.playbackRate.value=rate;g.gain.value=VOL[k]||.7;s.connect(g);g.connect(actx.destination);s.start(0)}catch(e){}}
-function ui(k){sfx('ui'+k)}   /* v5.9.3: quiet acknowledgement */
+function ui(k){setTimeout(()=>sfx('ui'+k),0)}   /* v5.9.4: quiet acknowledgement, deferred so it always runs after this tap's unlockAudio/audioSession path */
 function muteUI(){const m=$('#mute');m.setAttribute('aria-pressed',muted?'true':'false');m.setAttribute('aria-label',muted?'Sound off. Tap to turn sound on':'Sound on. Tap to mute');m.title=muted?'Sound off':'Sound on'}
 $('#mute').onclick=ev=>{ev.stopPropagation();muted=!muted;try{localStorage.setItem(MUTEKEY,muted?'1':'0')}catch(e){}muteUI();if(muted&&silentEl)silentEl.pause();else if(!muted){unlockAudio();ui('ok')}window.__ev.push(muted?'mute':'unmute')};
 muteUI();

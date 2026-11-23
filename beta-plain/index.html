@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Chronicles of the Kingdom: Game Mode: Endurance</title>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Fredoka:wght@700&display=swap" rel="stylesheet">
+<style>
+/* v5.9.4 (23 Nov 2026, beta) rebuilt from v5.9.2 + the v5.9.3 quiet sounds, ui() deferred to after the unlock path. */
+/* v5.9.3 (23 Nov 2026, beta) quiet acknowledgement sounds on every tap that had no sound (Luke); reward sounds unchanged. */
+/* v5.9.2 (23 Nov 2026, not published) mobile sound: iOS silent switch (audioSession 'playback' + silent <audio> fallback), unlock only on real taps, resume from 'interrupted'. See NOTES.md. */
+/* v5.9.1 (21 Nov 2026) fix: a click during the 'Not quite…' second after a wrong card cancelled the move-to-true-place timer, so the game stuck with no score/Try again (Emily, laptop). Fixed: the run leaves the 'flipping' phase as soon as the card is judged, skip-the-flip can only act once, and a failsafe always brings up the score. RELEASE stays '5.9'. */
+/* v5.9 (21 Nov 2026) Place it click sound + Flip, flip, flip! word pops, Place it locked while the first-card overlay is up, 'Try again' in both places, tutorial keys versioned per release (RELEASE), Read other side on enlarged timeline cards (no Close button), card-not-showing fix (2D enlarged card + loading fallback + image retry + back preload) */
+/* v5.8 (21 Nov 2026) first-card overlay */
+/* v5.7 (21 Nov 2026): step 0 (This is your timeline pointer) now shows at the start of every playthrough, not only the first game. v5.6 (21 Nov 2026): workshop (g) stage one. Header streak number restyled (gold ring, pop on each correct card, colour steps at 3/5/10, data-driven milestones), new-best burst + 'New best!' tag from the header (best kept per deck for the session only, no storage), Kenney CC0 sounds (clack, flip, tick, thud, jingle) with a remembered mute toggle, a + marker at the left end of every timeline row (paired with the end of the row above: one insertion index, lit together), desktop zoomed card centred with the button and line below it. End of a run: no See your score step; the score pops up by itself after the verdict, with a View the timeline button that shows the final timeline and a Restart game button. Place it, Flip! and step 0 unchanged. v5.5 (17 Nov 2026): step 1 (Tap to read your first card) removed. Card 1 opens zoomed exactly like cards 2+ (after step 0, or straight away when step 0 is skipped), then the chip, then the Tap a gold marker prompt and marker pulse until the first marker tap. One stage layout for every turn, so the timeline top never moves. The Timeline: earliest to latest label is gone (the marker prompt says earliest on the left). v5.4 (17 Nov 2026): step 0 (the start card on the timeline, first game only), shared burgundy pill button for Tap to read your first card / Flip! / Got it, buttons centred on the card. v5.3 (17 Nov 2026): three-step start on card 1 (tap card to read, enlarged card says Got it place it, then a gold-marker prompt stays over the timeline until the first tap). v5.2 (17 Nov 2026): lays itself out in the part of the frame the visitor can actually see (IntersectionObserver), compact two-column end screen on desktop, quick Flip! text white again. v5.1 (17 Nov 2026): card 1 back to the side-by-side start; cards 2+ zoom (smaller on desktop, near the top); 2-line chip; fixed-height top zone. v5 (17 Nov 2026): every new card opens zoomed (read it, tap off to place); slim chip + one instruction line; timeline gets the frame */
+:root{--parch:#F4E8CB;--burg:#551309;--gold:#E9D29E;--red:#9c1c14;--ink:#2b1a10;--lab:#40110C;--soft:#7F5C4F}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--parch);color:var(--ink);font-family:'EB Garamond',Georgia,serif;-webkit-tap-highlight-color:transparent}
+#app{position:absolute;left:0;right:0;top:var(--vt,0px);height:var(--vh,100%);width:min(100%,1400px);margin:0 auto;display:flex;flex-direction:column}
+#vs{position:absolute;left:0;top:0;width:1px;height:100%;visibility:hidden;pointer-events:none}
+header{flex:none;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 12px;min-height:34px;border-bottom:1px solid #d8c79c}
+.brand b{font-size:17px;font-variant:small-caps;color:var(--burg);line-height:1.1}
+#stats{font-size:16px;font-weight:600;text-align:right;line-height:1.2;white-space:nowrap}
+/* stage: the drawn card and instructions, or the verdict */
+#stage{flex:none;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:4px 10px;text-align:center}
+#stage.ch{flex-direction:column;align-items:stretch;justify-content:center;gap:2px}
+#stage.pan{flex-direction:column}
+.lab{display:flex;align-items:center;gap:10px;font-weight:700;font-variant:small-caps;font-size:16px;line-height:1.1;letter-spacing:.04em;color:var(--lab)}
+.lab .rule{flex:1;height:2px;background:var(--gold);position:relative;min-width:20px}
+.lab .rule:after{content:"";position:absolute;right:-2px;top:-4px;border-left:8px solid var(--gold);border-top:5px solid transparent;border-bottom:5px solid transparent}
+.lab.c{flex-direction:column;gap:3px;align-items:stretch;text-align:center;margin-bottom:5px}
+.lab.c .rule{flex:none;width:100%;min-width:0}.lab.c .rule:after{display:none}
+#tlh{flex:none;padding:3px 12px 0;border-top:1px solid #d8c79c}
+.crow{display:flex;align-items:center;gap:6px}
+.chip{flex:1;min-width:0;display:flex;align-items:center;gap:10px;min-height:46px;padding:2px 6px 2px 9px;background:#fbf3de;border:2px solid var(--burg);border-radius:12px;font:inherit;color:var(--burg);cursor:pointer;text-align:left;touch-action:manipulation;box-shadow:0 0 0 2px var(--gold)}
+.chip .mc{width:26px;flex:none}
+.chip .ct{flex:1;min-width:0;font-size:17px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip .rd{flex:none;background:var(--burg);color:var(--parch);border-radius:999px;padding:3px 13px 4px;font-weight:700;font-size:16px;line-height:1.2}
+#hint{font-size:17px;line-height:1.2;color:var(--burg);margin:0;text-align:center}
+#stage.loud #hint{font-size:18px}
+.helpb{position:relative;width:44px;height:44px;flex:none;border:0;background:none;padding:0;color:var(--burg);font:inherit;font-weight:700;font-size:19px;line-height:1;cursor:pointer}
+.helpb:before{content:"";position:absolute;left:7px;top:7px;width:30px;height:30px;border-radius:50%;border:1.5px solid #cdb98a;box-sizing:border-box}
+.btn{font:inherit;font-size:19px;font-weight:600;background:var(--burg);color:var(--parch);border:0;border-radius:8px;min-height:46px;padding:0 30px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.btn.sec{background:none;color:var(--burg);border:1.5px solid #cdb98a;font-weight:600;font-size:17px;min-height:44px}
+.panel{font-size:19px;line-height:1.4;margin-bottom:10px}.panel b{color:var(--burg)}
+.panel .big{font-size:26px;font-weight:700;color:var(--burg);line-height:1.15}
+.nbst{display:inline-block;margin-top:6px;padding:2px 12px;border-radius:14px;background:var(--gold);color:var(--burg);font-weight:700;font-size:20px;box-shadow:0 0 12px 2px var(--gold)}
+.vp{width:100%;display:flex;flex-direction:column;justify-content:center;margin:0}
+.vh{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.vh .big{white-space:nowrap}.vh .nbst{margin:0;font-size:16px;padding:0 10px;box-shadow:0 0 8px 1px var(--gold)}
+.vh .btn{min-height:44px;font-size:18px;padding:0 18px}
+.vb{font-size:16px;line-height:1.25;margin-top:1px}.vb b{color:var(--burg)}
+.nbst .lg{display:none}
+/* the flip words */
+.ff{display:inline-block;font-family:'Fredoka','Arial Rounded MT Bold',Arial,sans-serif;font-weight:700;font-size:60px;line-height:1.02;color:#fff;-webkit-text-stroke:max(5px,.09em) #28140E;paint-order:stroke fill;text-shadow:0 .06em .06em rgba(40,20,14,.55);letter-spacing:.5px;white-space:nowrap}
+.ff i{font-style:normal;display:inline-block;margin:0 .1em;opacity:0;transform:scale(.5);animation:ffpop .22s cubic-bezier(.34,1.9,.64,1) forwards}
+.ff.st i{display:block;margin:0}
+.ff.q i{animation-duration:.15s;animation-delay:.1s}
+.ff i:nth-child(2){animation-delay:.24s}.ff i:nth-child(3){animation-delay:.48s}
+@keyframes ffpop{0%{opacity:0;transform:scale(.5)}27%{opacity:1}100%{opacity:1;transform:scale(1)}}
+.cp{font-size:17px;margin:0 0 2px}
+.panel:has(.ff){align-self:stretch;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0;flex:1 1 auto;min-height:0}
+/* timeline */
+#tlw{position:relative;flex:1 1 auto;min-height:0}
+#tl{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:8px 18px 6px;--band:24px;--g:7px;--rg:10px;--tw:26px;--th:20px;--tf:19px}
+.rw{margin:0 auto;position:relative}
+.rw+.rw{margin-top:var(--rg)}
+.cards{display:flex;gap:var(--g)}
+.tabs{position:relative;height:var(--band)}
+.slot{position:relative;cursor:zoom-in}
+.slot.moved .card img,.slot.good .card img,.slot.pv .card img{filter:drop-shadow(0 0 2px var(--burg)) drop-shadow(0 0 6px var(--gold)) drop-shadow(0 0 14px rgba(233,210,158,.95))}
+.tab{position:absolute;top:-10px;width:44px;height:44px;margin-left:-22px;border:0;background:none;padding:0;cursor:pointer;touch-action:manipulation;z-index:3}
+.tab span{position:absolute;left:50%;top:12px;width:var(--tw);height:var(--th);margin-left:calc(var(--tw) / -2);border:2px solid var(--burg);border-radius:7px;background:#fbf3de;color:var(--red);font-size:var(--tf);font-weight:700;text-align:center;transition:transform .15s}
+.tab b{position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;font-weight:700;line-height:1;padding-bottom:1px}
+.tab span:before{content:"";position:absolute;left:50%;bottom:-5px;width:8px;height:8px;margin-left:-4px;background:inherit;border-right:2px solid;border-bottom:2px solid;border-color:inherit;transform:rotate(45deg)}
+#tl.quiet .tab span{border-color:var(--soft);color:var(--soft)}
+#tl.loud .tab span,#tl .tab:hover span,#tl .tab.lit span{background:var(--gold);border-color:var(--burg);color:var(--red)}
+#tl .tab:hover span,#tl .tab.lit span{transform:scale(1.12)}
+.bar{position:absolute;top:var(--band);width:3px;margin-left:-1.5px;background:var(--soft);opacity:.6;border-radius:2px;pointer-events:none;z-index:2}
+#tl.loud .bar,#tl .bar.hl{width:6px;margin-left:-3px;background:var(--gold);opacity:1;border:1px solid rgba(85,19,9,.45);box-shadow:0 0 8px 2px rgba(233,210,158,.95)}
+#tl.loud .tab span{box-shadow:0 0 8px 2px rgba(233,210,158,.9)}
+#tl.pulse .tab span,#tl.pulse .bar{animation:glow 1.2s ease-in-out infinite alternate}
+@keyframes glow{from{box-shadow:0 0 1px 0 rgba(233,210,158,.5)}to{box-shadow:0 0 14px 6px rgba(233,210,158,1)}}
+#tl.noplace .tab{visibility:hidden}#tl.noplace .bar{display:none}
+.cue{position:relative;height:22px;pointer-events:none}
+.cue i{position:absolute;bottom:3px;width:0;height:0;margin-left:-7px;border-left:7px solid transparent;border-right:7px solid transparent;border-top:10px solid var(--burg)}
+.cue span{position:absolute;bottom:0;white-space:nowrap;font-size:16px;font-weight:700;line-height:1.2;color:var(--burg)}
+/* the previewed card and its Flip! */
+.flipb{position:absolute;inset:0;z-index:4;border:0;background:none;padding:0;margin:0;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation}
+/* flip animation */
+.card{width:100%;aspect-ratio:1512/2112;position:relative;perspective:900px;background:transparent}
+.inner{position:absolute;inset:0;transform-style:preserve-3d}
+.card.up .inner{transform:rotateY(180deg)}
+.card.flip .inner{animation:sq var(--fd,.5s) ease-in-out forwards}
+@keyframes sq{0%{transform:rotateY(0) scale(1,1)}50%{transform:rotateY(90deg) scale(1.07,.9)}100%{transform:rotateY(180deg) scale(1,1)}}
+.card.pop{animation:popk .35s ease-out}
+@keyframes popk{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
+.slot.settle{animation:stl .1s ease-out}
+@keyframes stl{0%{transform:scale(.96)}100%{transform:scale(1)}}
+.face{position:absolute;inset:0;backface-visibility:hidden;background:transparent}
+.face img{width:100%;height:100%;display:block;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
+.front{transform:rotateY(180deg)}
+.card.bad img{filter:drop-shadow(0 0 5px #b3261e) drop-shadow(0 2px 6px rgba(0,0,0,.35))}
+/* "Your card" tab when the placed card is out of view */
+#yc{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);z-index:6;background:var(--burg);color:var(--parch);border:2px solid var(--gold);border-radius:999px;font:inherit;font-weight:700;font-size:17px;min-height:44px;padding:0 18px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.35)}
+#yc[hidden]{display:none}
+/* overlays */
+#zoom{position:fixed;left:0;right:0;top:var(--vt,0px);height:var(--vh,100%);background:rgba(35,17,9,.95);display:none;flex-direction:column;align-items:center;justify-content:center;padding:8px 10px;z-index:9;animation:zin .22s ease-out}
+@media (min-width:700px){
+#zoom .zt{font-size:20px}#zoom .zt b{font-size:22px}#zoom .zb{font-size:22px;min-height:52px}}
+@keyframes zin{from{opacity:0}to{opacity:1}}
+#zoom .zt{flex:none;text-align:center;color:var(--gold);font-size:17px;line-height:1.25;margin:0 0 8px;max-width:520px}
+#zoom .zt b{font-variant:small-caps;letter-spacing:.04em;font-size:18px}
+#zoom .zt:empty{display:none}
+#zoom .z{flex:none;width:300px}
+#zoom .zb{flex:none;margin-top:10px;background:var(--gold);color:var(--burg);font-size:20px;min-height:48px;padding:0 26px;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+#help,#end{position:fixed;left:0;right:0;top:var(--vt,0px);height:var(--vh,100%);background:rgba(40,20,10,.62);display:none;align-items:center;justify-content:center;padding:10px;z-index:10}
+.ep{background:var(--parch);border:2px solid var(--gold);border-radius:14px;width:100%;max-width:440px;max-height:100%;overflow:auto;padding:16px 18px 14px;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.45);animation:rise .4s ease-out}
+@keyframes rise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+.ep h2{margin:0 0 4px;font-size:22px;color:var(--burg);font-weight:700;line-height:1.15}
+.ep ol{text-align:left;margin:8px 0 12px;padding-left:22px;font-size:17px;line-height:1.35}
+.ep ol li{margin-bottom:5px}
+.ep .score{font-weight:700;font-size:38px;line-height:1.05;color:var(--burg)}
+.ep .bs{font-size:20px;font-weight:600;margin-top:2px}
+.ep .perf{display:inline-block;margin-top:6px;font-weight:700;font-size:22px;color:var(--burg);background:var(--gold);border-radius:14px;padding:0 14px}
+.ep hr{border:0;height:2px;background:var(--gold);margin:12px 0}
+.ep .facts{font-size:17px;line-height:1.35;margin:0 0 2px}.ep .facts b{color:var(--burg)}
+.ep .demo{font-size:15px;color:var(--soft);font-style:italic;margin:0 0 6px}
+.show{display:flex;align-items:center;justify-content:center;gap:14px;margin:6px 0 12px}
+.fan{position:relative;width:150px;height:116px}
+.fan img{position:absolute;bottom:0;width:80px;height:auto;border-radius:6px;filter:drop-shadow(0 2px 5px rgba(0,0,0,.4))}
+.fan img:nth-child(1){left:0;transform:rotate(-9deg);transform-origin:50% 100%}
+.fan img:nth-child(2){left:35px;z-index:1}
+.fan img:nth-child(3){left:70px;transform:rotate(9deg);transform-origin:50% 100%}
+.box{width:112px;height:auto;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.3);display:block}
+.ep .acts{display:flex;flex-direction:column;align-items:center;gap:8px}
+.ep .acts .btn:first-child{width:100%;max-width:300px}
+.short .ep{padding:12px 14px 10px}.short .ep .score{font-size:32px}.short .ep hr{margin:8px 0}.short .show{margin:4px 0 8px}.short .fan{height:100px}.short .fan img{width:70px}.short .box{width:96px}
+@media (min-width:700px){
+ header{padding:6px 14px;min-height:42px}.brand b{font-size:19px}#stats{font-size:18px}
+ #tlh{padding:5px 24px 0}.lab{font-size:17px}
+ .crow{max-width:760px;margin:0 auto;width:100%}.chip .ct{font-size:20px}.chip{min-height:52px}.chip .mc{width:30px}#hint{font-size:21px}#stage.loud #hint{font-size:21px}
+ .vb{font-size:21px;text-align:center}.vh{justify-content:center;gap:24px}.nbst .lg{display:inline}
+ #tl{padding:12px 16px;--band:32px;--g:12px;--rg:12px;--tw:32px;--th:24px;--tf:22px}
+ .cue span{font-size:18px}
+ .panel{font-size:21px}.panel .big{font-size:30px}
+}
+@media (prefers-reduced-motion:reduce){.ff i{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* reduce motion: steady glow instead of a pulse */
+@media (prefers-reduced-motion:reduce){#tl.pulse .tab span,#tl.pulse .bar{box-shadow:0 0 12px 4px rgba(233,210,158,1)}}
+/* v5.1 */
+#zoom .zs{display:contents}#zoom .zt{order:0}#zoom .z{order:1}#zoom .zb{order:2}
+.hw{display:flex;flex-direction:column;align-items:stretch;flex:none}
+#hand{cursor:zoom-in}
+.ctl{display:flex;flex-direction:column;align-items:center;max-width:300px;min-width:0}
+.prog{font-weight:700;font-variant:small-caps;letter-spacing:.04em;color:var(--lab);font-size:17px;margin:0 0 6px}
+.ctl #hint{font-size:18px;line-height:1.3;margin:0 0 6px}
+.ctl .q{font-size:14px;opacity:.75;color:var(--burg);margin:0}
+@media (min-width:700px){.prog{font-size:19px}.ctl #hint{font-size:22px}.ctl .q{font-size:16px}.ctl{max-width:340px}}
+/* chip: title wraps to 2 lines, fixed height */
+.chip{height:56px;min-height:56px;align-items:center}
+.chip .ct{white-space:normal;overflow:hidden;text-overflow:clip;font-size:16px;line-height:1.15;max-height:37px}
+.chip .mc{width:28px}
+#stage.slim{justify-content:flex-start;gap:2px}
+#stage.slim #hint{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;font-size:17px;line-height:1.2}
+@media (min-width:700px){.chip{height:56px;min-height:56px}.chip .ct{font-size:20px;max-height:26px}.chip .mc{width:30px}#stage.slim #hint{font-size:21px}}
+/* zoom: compact on desktop, card at the top-left of a side panel so it is fully visible in a short window */
+@media (min-width:700px){
+ #zoom{display:none;flex-direction:row;flex-wrap:wrap;align-items:flex-start;justify-content:center;align-content:flex-start;padding:10px 20px;column-gap:28px}
+ #zoom .z{order:1}
+ #zoom .zs{order:2;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;padding-top:20px;max-width:330px}
+ #zoom .zt{text-align:left;margin:0 0 14px;font-size:22px}
+ #zoom .zb{margin-top:0}
+}
+/* end screen: two columns on desktop so it is short enough for any visible height */
+@media (min-width:700px){
+ #end .ep{max-width:820px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto;column-gap:28px;align-items:center;padding:16px 26px 14px}
+ #end .ep hr{display:none}
+ #end .e1{grid-column:1;grid-row:1}#end .e2{grid-column:2;grid-row:1/3;border-left:2px solid var(--gold);padding-left:28px}
+ #end .ep .acts{grid-column:1;grid-row:2;margin-top:6px}
+ #end .ep .score{font-size:44px}
+ .short #end .ep .score{font-size:38px}
+}
+/* v5.3: prompts as solid pills over the cards (workshop e) */
+.pill{background:rgba(85,19,9,.92);color:var(--parch);border-radius:14px;padding:6px 14px 7px;text-align:center;font-weight:700;font-size:18px;line-height:1.2;box-shadow:0 3px 10px rgba(0,0,0,.4);pointer-events:none}
+.pill small{display:block;font-weight:400;font-size:15px;line-height:1.2;opacity:.95}
+#pill{position:absolute;left:50%;top:6px;transform:translateX(-50%);z-index:5;width:max-content;max-width:calc(100% - 24px)}
+#pill[hidden]{display:none}
+#hand{position:relative;margin:0 auto}
+/* one shared button style: Tap to read your first card, Flip!, Got it */
+.gbtn{font-family:'EB Garamond',Georgia,serif;font-weight:700;color:#F4E8CB;background:#551309;border:2px solid #E9D29E;border-radius:999px;min-height:48px;padding:5px 14px 7px;line-height:1.12;box-shadow:0 3px 10px rgba(0,0,0,.45);display:inline-flex;align-items:center;justify-content:center;text-align:center;font-size:22px;animation:gpulse 1s ease-in-out 1;touch-action:manipulation}
+@keyframes gpulse{0%{transform:scale(1)}45%{transform:scale(1.07)}100%{transform:scale(1)}}
+.flipb span.gbtn{min-width:60%;max-width:96%;padding:4px 8px 6px;white-space:nowrap}
+/* step 0: dim the frame, light the start card, parchment box with the line, gold arrow */
+#s0{position:fixed;left:0;right:0;top:var(--vt,0px);height:var(--vh,100%);z-index:8;overflow:hidden;cursor:pointer}
+#s0[hidden]{display:none}
+.s0hole{position:absolute;border-radius:10px;pointer-events:none;box-shadow:0 0 0 3px #E9D29E,0 0 24px 9px rgba(233,210,158,.95),0 0 0 9999px rgba(35,17,9,.6)}
+.s0box{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:min(94%,640px);background:var(--parch);border:2px solid #E9D29E;outline:2px solid var(--burg);border-radius:14px;padding:10px 14px 12px;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.5);color:var(--burg);font-size:20px;font-weight:700;line-height:1.25}
+.s0box p{margin:0 0 10px}.s0box p b{color:#40110C}
+.s0box .gbtn{min-width:180px;cursor:pointer}
+.s0arrow{position:absolute;width:0;pointer-events:none;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+.s0arrow:before{content:"";position:absolute;left:-4px;width:8px;top:0;bottom:var(--hh);background:#E9D29E}
+.s0arrow:after{content:"";position:absolute;left:calc(var(--hw) * -1);bottom:0;border-left:var(--hw) solid transparent;border-right:var(--hw) solid transparent;border-top:var(--hh) solid #E9D29E}
+@media (min-width:700px){.s0box{font-size:23px}}
+@keyframes arrbob{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
+.s0arrow.bob{animation:arrbob 1s ease-in-out 3}
+
+#tl.pulse1 .tab span,#tl.pulse1 .bar{animation:glow .6s ease-in-out 2 alternate}
+@media (min-width:700px){.pill{font-size:21px}.pill small{display:inline;font-size:21px;font-weight:700;opacity:1}.pill small:before{content:"\00a0\00b7\00a0"}}
+
+/* ===== v5.6 ===== */
+/* header: brand | streak + best | mute */
+header{position:relative;z-index:7}
+#hr{display:flex;align-items:center;gap:2px;flex:none}
+#stats{display:flex;align-items:center;gap:5px;font-size:16px;color:var(--ink)}
+#stats .sep{opacity:.6}
+/* the streak number: burgundy disc, gold ring, EB Garamond Bold. Colours step up with the streak (STREAK_STEPS). The disc keeps every step readable on the parchment header */
+.stk{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-width:30px;height:30px;padding:0 6px 2px;border-radius:999px;background:#551309;border:2px solid var(--sr,#cdb98a);color:var(--sf,#F4E8CB);font-family:'EB Garamond',Georgia,serif;font-weight:700;font-size:21px;line-height:1;box-shadow:var(--sg,none);transition:color .6s ease,border-color .6s ease,box-shadow .6s ease;will-change:transform}
+.stk.pop{animation:stkpop .25s ease-out}
+@keyframes stkpop{0%{transform:scale(1)}50%{transform:scale(1.25)}100%{transform:scale(1)}}
+@media (min-width:700px){.stk{min-width:34px;height:34px;font-size:24px}#stats{font-size:18px;gap:6px}}
+/* mute toggle: 44px tap target, 30px ring */
+#mute{position:relative;width:44px;height:44px;margin:-5px -8px -5px 0;flex:none;border:0;background:none;padding:0;cursor:pointer;color:var(--burg);touch-action:manipulation}
+#mute:before{content:"";position:absolute;left:8px;top:8px;width:28px;height:28px;border-radius:50%;border:1.5px solid #cdb98a;box-sizing:border-box}
+#mute svg{position:absolute;left:13px;top:13px;width:18px;height:18px}
+#mute .x{display:none}#mute[aria-pressed="true"] .x{display:inline}#mute[aria-pressed="true"] .w{display:none}
+@media (max-width:380px){.brand b{font-size:15px}#stats{font-size:15px;gap:4px}header{gap:4px;padding-left:8px;padding-right:10px}}
+/* new best: gold sparkle out of the streak area + a tag; never blocks a tap */
+#fx{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:8}
+#fx .sp{position:absolute;width:13px;height:13px;margin:-6.5px 0 0 -6.5px;background:#F2B81C;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);filter:drop-shadow(0 0 1px #7a4a00) drop-shadow(0 0 4px rgba(255,200,60,.9));opacity:0;animation:spk var(--d,1.2s) ease-out var(--dl,0s) forwards}
+@keyframes spk{0%{opacity:0;transform:translate(0,0) scale(.4) rotate(0)}15%{opacity:1}70%{opacity:1}100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(1.1) rotate(90deg)}}
+#fx .tag{position:absolute;z-index:2;white-space:nowrap;background:#E9D29E;color:#551309;border:2px solid #551309;border-radius:999px;padding:1px 12px 3px;font-weight:700;font-size:17px;line-height:1.2;box-shadow:0 2px 8px rgba(0,0,0,.35),0 0 12px 3px rgba(233,210,158,.9);animation:tagin 1.5s ease-out forwards}
+@keyframes tagin{0%{opacity:0;transform:translateY(-6px) scale(.8)}15%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0}}
+#stats.nbglow .stk{box-shadow:0 0 0 2px #E9D29E,0 0 14px 6px rgba(255,214,90,.95)}
+@media (prefers-reduced-motion:reduce){#fx .tag{animation:none!important;opacity:1}}
+/* paired markers (end of row N = start of row N+1) light together */
+#tl .tab.hv span{background:var(--gold);border-color:var(--burg);color:var(--red);transform:scale(1.12)}
+/* desktop zoom: card centred, the button below it, then one line, nothing wider than the card (like mobile) */
+@media (min-width:700px){
+ #zoom{flex-direction:column;flex-wrap:nowrap;align-items:center;justify-content:flex-start;padding:10px 20px}
+ #zoom .zs{display:contents;max-width:none;padding:0}
+ #zoom .z{order:1}
+ #zoom .zb{order:2;margin-top:10px;font-size:20px;min-height:48px;padding:0 16px;max-width:100%;white-space:normal;line-height:1.15}
+ #zoom .zt{order:3;text-align:center;margin:8px 0 0;font-size:20px;line-height:1.2}
+}
+#end .ep .a2{display:flex;gap:8px;flex-wrap:nowrap;justify-content:center;width:100%;max-width:300px}#end .ep .a2 .btn{flex:1 1 auto;padding:0 10px;font-size:16px;white-space:nowrap}
+/* v5.8: first-card overlay covers the zoomed card only (not the header, button or 'Card N of M' line) */
+#fc{position:absolute;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;box-sizing:border-box;padding:10px 14px;background:rgba(30,14,7,.93);color:var(--gold);font-family:'EB Garamond',Georgia,serif;text-align:center;cursor:pointer;overflow:hidden;border-radius:6px;box-shadow:inset 0 0 0 2px rgba(233,210,158,.7);pointer-events:auto;touch-action:manipulation;container-type:size}
+#fc[hidden]{display:none!important}
+#fc .fcmsg{margin:0;font-weight:700;text-shadow:0 1px 3px #000;font-size:clamp(14px,8cqw,22px);line-height:1.25;color:var(--gold)}
+#fc .fchint{margin:.55em 0 0;font-weight:400;font-size:clamp(12px,5.5cqw,16px);line-height:1.2;color:var(--parch);opacity:.92}
+
+/* ===== v5.9 ===== */
+/* Place it is locked while the first-card overlay is up (Emily: it could be skipped) */
+#zoom .zb:disabled{opacity:.45;filter:grayscale(.5);cursor:not-allowed;box-shadow:none;animation:none}
+/* enlarged card is plain 2D: one face shown at a time, no 3D/backface (fixes a card that sometimes did not show on phones) */
+#zoom .card{perspective:none}
+#zoom .inner{transform:none!important;transform-style:flat;animation:none!important}
+#zoom .face{transform:none;-webkit-backface-visibility:visible;backface-visibility:visible}
+#zoom .card:not(.up) .front,#zoom .card.up .back{visibility:hidden}
+/* Read other side: a quick 2D turn */
+#zoom .card.turn{animation:zturn .36s ease-in-out}
+@keyframes zturn{0%{transform:scaleX(1)}50%{transform:scaleX(0)}100%{transform:scaleX(1)}}
+/* card image still loading or failed: a red card with its title, so a card is always visible */
+.face .ft{display:none}
+.face.ld{background:#9c1c14;border-radius:4.5%;box-shadow:inset 0 0 0 3px #E9D29E}
+.face.ld .ft{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:8%;text-align:center;color:#F4E8CB;font-weight:700;font-size:clamp(9px,9cqw,30px);line-height:1.15}
+.face.ld{container-type:size}
+.face.ld img{opacity:0}
+</style></head><body>
+<div id="vs"></div>
+<div id="app">
+<header><div class="brand"><b>Game Mode: Endurance</b></div><div id="hr"><div id="stats" aria-live="polite"></div><button id="mute" aria-pressed="false" aria-label="Sound on. Tap to mute"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3z" fill="currentColor"/><path class="w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="x" d="M15.5 9.5l5 5M20.5 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button></div><div id="fx"></div></header>
+<div id="stage"></div>
+<div id="tlh"><div class="lab"><span>Timeline: earliest to latest</span><span class="rule"></span></div></div>
+<div id="tlw"><div id="tl"></div><div id="pill" class="pill" hidden></div><button id="yc" hidden>Your card ↓</button></div>
+</div>
+<div id="zoom" role="dialog" aria-label="Your card, large"><div class="z"></div><div class="zs"><div class="zt"></div><button class="btn zb"></button></div><div id="fc" hidden role="dialog" aria-label="This is your first card"><p class="fcmsg">This is your first card. Read it, and then tap to place it on the timeline.</p><p class="fchint">Tap anywhere to read it</p></div></div>
+<div id="s0" hidden><div class="s0hole"></div><div class="s0arrow"></div><div class="s0box"><p></p><button class="gbtn" id="s0go">Got it</button></div></div>
+<div id="help"></div>
+<div id="end"></div>
+<script>
+/* ===== CARD DATA: the 13 promo cards (the game reads the deck from this list; nothing assumes 13) =====
+ id = period-number. title = card title from the card data (card-index). back = red side image, front = picture side.
+ Front images are only requested when the player taps Flip!. */
+const DECK_ALL=[{"id": "1-2", "period": 1, "number": 2, "title": "Creation of Heavens and Earth", "front": "https://static.wixstatic.com/media/551332_c508294323d54f64820e421d1a65fc28~mv2.webp", "back": "https://static.wixstatic.com/media/551332_3f1bbd011ebf4d2fbcdfde6132dface1~mv2.webp"}, {"id": "1-7", "period": 1, "number": 7, "title": "The Call of Abram", "front": "https://static.wixstatic.com/media/551332_6ef631011e59496b869faa10ba52ffb7~mv2.webp", "back": "https://static.wixstatic.com/media/551332_b5b4f146493543b2a28fd245f1859dd5~mv2.webp"}, {"id": "2-2", "period": 2, "number": 2, "title": "Moses Parts the Sea", "front": "https://static.wixstatic.com/media/551332_91d86390c8804b59af2a2630273a6184~mv2.webp", "back": "https://static.wixstatic.com/media/551332_10c47816cd714d76a37a8ea7739ea1cc~mv2.webp"}, {"id": "2-5", "period": 2, "number": 5, "title": "12 Spies and Israel's Rebellion", "front": "https://static.wixstatic.com/media/551332_cdb0aee7cef342c9a6b92f4cb7483ab6~mv2.webp", "back": "https://static.wixstatic.com/media/551332_4b7fab839dc144c8ae8b7b55782ac1a5~mv2.webp"}, {"id": "3-2", "period": 3, "number": 2, "title": "Gideon and the 300 Defeat Midian", "front": "https://static.wixstatic.com/media/551332_e75ecacd1f054a6bbcdb57bfb6c500ff~mv2.webp", "back": "https://static.wixstatic.com/media/551332_f3db04745f3548ca873f0e583c334852~mv2.webp"}, {"id": "3-5", "period": 3, "number": 5, "title": "God Calls Samuel in the Tabernacle", "front": "https://static.wixstatic.com/media/551332_8b54a4e08e264156922462a072caf8cd~mv2.webp", "back": "https://static.wixstatic.com/media/551332_77e60b5e828444ecb0178c9a4e495711~mv2.webp"}, {"id": "4-6", "period": 4, "number": 6, "title": "Jonah Sent to Nineveh", "front": "https://static.wixstatic.com/media/551332_c9e0cac9bc4648b4bb3444c837e9e37e~mv2.webp", "back": "https://static.wixstatic.com/media/551332_3e8a951126db4676b45abb86a2ac55e8~mv2.webp"}, {"id": "5-3", "period": 5, "number": 3, "title": "The Golden Statue and Fiery Furnace", "front": "https://static.wixstatic.com/media/551332_d78efc4881b94a0b88f365217dd0dd01~mv2.webp", "back": "https://static.wixstatic.com/media/551332_efcbbde6aab5458a8b20e7bb6e89081c~mv2.webp"}, {"id": "5-7", "period": 5, "number": 7, "title": "Esther Becomes Queen", "front": "https://static.wixstatic.com/media/551332_249bcd660cca4cb1b666157cc00e38c8~mv2.webp", "back": "https://static.wixstatic.com/media/551332_cf448221a2284102a58c2e86464e1416~mv2.webp"}, {"id": "6-3", "period": 6, "number": 3, "title": "Jesus Tempted in the Wilderness", "front": "https://static.wixstatic.com/media/551332_4f6adf19a784450f88f04ee646026df5~mv2.webp", "back": "https://static.wixstatic.com/media/551332_926dd11580984e158457a32e1d3d233b~mv2.webp"}, {"id": "6-7", "period": 6, "number": 7, "title": "Jesus Crucifixion and Resurrection", "front": "https://static.wixstatic.com/media/551332_835c124d70684946ab4980a034b251ba~mv2.webp", "back": "https://static.wixstatic.com/media/551332_051adb546a8b4b459a17a7881b176455~mv2.webp"}, {"id": "7-3", "period": 7, "number": 3, "title": "Jesus Converts Paul", "front": "https://static.wixstatic.com/media/551332_658770100d8c4f77b71d10af9722245c~mv2.webp", "back": "https://static.wixstatic.com/media/551332_af59cbaa86684a779f39265d029e244a~mv2.webp"}, {"id": "7-6", "period": 7, "number": 6, "title": "Jesus Visits John on Patmos", "front": "https://static.wixstatic.com/media/551332_0369faf5200b4cfc8f1ce079f7c4f9bf~mv2.webp", "back": "https://static.wixstatic.com/media/551332_a2a9eaf2560643afa312a543c40e5d4a~mv2.webp"}];
+const BUY="https://www.chroniclesofthekingdom.co.uk/product-page/bible-timeline-game";
+const BOX="https://static.wixstatic.com/media/551332_c2d9d223bf844d64a0f9468e80b070d4~mv2.jpg/v1/fit/w_300,h_300,q_80/file.jpg";
+const DECK_ID='promo13';                        /* bests are kept per deck: a full-deck beta gets its own id */
+/* streak colour steps (data, so a full deck can add more): parchment below 3, gold at 3, warm amber at 5, deep gold + steady glow at 10 */
+const STREAK_STEPS=[{at:0,fg:'#F4E8CB',ring:'#cdb98a',glow:'none'},{at:3,fg:'#E9D29E',ring:'#E9D29E',glow:'none'},{at:5,fg:'#F3AE45',ring:'#F3AE45',glow:'none'},
+ {at:10,fg:'#F2B81C',ring:'#F2B81C',glow:'0 0 10px 3px rgba(242,184,28,.75)'},{at:20,fg:'#F2B81C',ring:'#F2B81C',glow:'0 0 12px 4px rgba(242,184,28,.8)'},
+ {at:30,fg:'#F2B81C',ring:'#F2B81C',glow:'0 0 13px 5px rgba(242,184,28,.85)'},{at:40,fg:'#F2B81C',ring:'#F2B81C',glow:'0 0 14px 5px rgba(242,184,28,.9)'},{at:50,fg:'#F2B81C',ring:'#F2B81C',glow:'0 0 15px 6px rgba(242,184,28,.95)'}];
+const MID=[3,4,5];                              /* start card comes from the middle three periods: Judges, Kings, Exile */
+const HARD=new Set(['4-6','3-5','5-7','2-5','7-6']); /* Jonah, Samuel, Esther, 12 Spies, Patmos: full flip */
+const FAN=['1-7','2-2','6-7'];
+const RELEASE='5.9';                            /* bump on every release: the first-time tutorial (step 0 flag + first-card overlay) shows again after each update (Luke, 21 Nov) */                 /* real card fronts shown on the end screen */
+/* ===== GAME ===== */
+(function(){
+'use strict';
+const $=s=>document.querySelector(s), key=c=>c.period*1000+c.number, byId=id=>DECK_ALL.find(c=>c.id===id);
+const RM=matchMedia('(prefers-reduced-motion: reduce)');
+const R=1512/2112;                              /* card width / height */
+/* best streak per deck, for this page session only (Luke, 16 Nov: no storage for the best streak) */
+function getBest(){return BESTS[DECK_ID]||0}
+function setBest(v){BESTS[DECK_ID]=Math.max(BESTS[DECK_ID]||0,v)}
+let BESTS={},best=0,bestStart=0,nbShown=false,streak=0,deck=[],total=0,tl=[],hand=null,phase='',sel=null,lit=new Set(),timers=[],turn=0,cur=null,skipOK=false;
+let FT=0,FH=innerHeight,vis=null,visSeen=false;
+let s0Active=false,tapAt={x:-999,y:-999},step3=false,pulseUntil=0,swallowUntil=0,zoomKind='';
+let learned=false,big=true,loud=false,pulseOn=false,ycFor=null,zoomAt=0,L={N:3,cw:100,ch:140};
+const later=(f,ms)=>{const t=setTimeout(f,ms);timers.push(t);return t};
+const clearT=()=>{timers.forEach(clearTimeout);timers=[]};
+const desk=()=>innerWidth>=700;
+/* ---- sounds ----
+   Sound effects: Kenney (www.kenney.nl), licence Creative Commons CC0 1.0 (public domain), credit not required but given:
+   clack = Casino Audio card-place-2, flip = Casino Audio card-slide-4, tick = Interface Sounds glass_002,
+    thud = Interface Sounds bong_001, jingle = Music Jingles Steel jingles/jingles_STEEL02,
+   v5.9: place = Casino Audio chip-lay-3 (Place it on the timeline), pop = Interface Sounds drop_003 (each Flip, flip, flip! word, pitched up per word).
+   Trimmed with ffmpeg (each under 0.4s except the 1.4s jingle), mono 22kHz mp3, inlined so the game stays one file.
+   Web Audio starts on the player's first tap (autoplay rule). The mute choice is remembered on this device. */
+const SND={clack:'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',
+flip:'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',
+tick:'SUQzBAAAAAAAIlRTU0UAAAAOAAADTGF2ZjYxLjcuMTAzAAAAAAAAAAAAAAD/83DAAAAAAAAAAAAASW5mbwAAAA8AAAAHAAAESABISEhISEhISEhISEhISGdnZ2dnZ2dnZ2dnZ2dnhoaGhoaGhoaGhoaGhoakpKSkpKSkpKSkpKSkpKTDw8PDw8PDw8PDw8PDw+Hh4eHh4eHh4eHh4eHh//////////////////8AAAAATGF2YzYxLjE5AAAAAAAAAAAAAAAAJANqAAAAAAAABEjjZWpPAAAAAAAAAAAAAAAAAP/zUMQAE+jqse9FeAAADAKcvAAOBwhNTkJboQ7/U9Kf/4pS+//7w36seMByEEEIDUC4GQzv38d4IAmD74Pgg6oBv7vP93p4Y6eHwQOZf3YIAMHw/u/wACDv//BA4k+gAACBAwOBgAAODYJIkfDxOFhIpLxcwrbyGjKitfyHC5hW347/81LEJSBaZrH3kaAAkQqDckMDbIV3ABPAamaAgUDc4SkGrwMOeGuhCy0RsOQjIaOaOaZEWIsY//5FSKmRFi8Yl0upf//l4vIl01UkktFFSX///+bLLoSDpVi57//rKiIKgqIgqCoiCoK1A0xiCAw/hGAkB4U0LRRwlovJ0Ukkkkn9Sf/zUsQZIHEmEAHW8AB0sefS2a0qjVPLsqZfIAAFMAYANWgAgFCwB5gKgYGCCCwYO4QRgdhCmKARyZqCRZtcbMm5w6eZdJIxjCDjmJwMGYfwYZhGAsmBkAuj4YAIACAJCUoCoCoKy2KwEsMsZr0tUHf/////+JkDayAIDAGAUYY+y2UT//NQxA0aDBYEALALjGoO63frtffb/VZBUoj6KZEA+wIgGAHAWAwPAeAxFhiA08HyA3Z14A09hoAwACTAxIDFAwZAtBYBAowsA7iRc6p7K6XrRXWoY3fb////tX/9ft/r16f+n/63RYmqgQPCAajxxAYDAFgFACD4RzhmTYurUlXr+v/zUsQZG2J9/FK3iyRK636nUk/V+VaNcjLSmyqLBQCUABHGPOc4aL5DRgWhIGBwAgYCIAyvFLgBDwijlL+ilZl/rbv9Sfr/7//9y9H/S9N6lKcVH2eSmPkX/rq/kdHds/laAaHklz0tKppM1V+tVpabEQSMjNHzRv7vLl25XsdlkPqq//NSxCET8P3oFMB2dA0BmHA5hS+ed+ngKZZYwAhEhRWtzZFLb+DrVf6P1/q/uR3fw7///e9cl1T3//+qABcclYkgN3yHABOEEQjVAx9vX6BIjMBNhcgIyRzVwnUVipUovC6VOF0bDTOuJgqDwwGxx51cYkoUjSSDc1A8JJWHkhFI7cf/81DERxRpEY5Ywlhc6CwkDPFxXFRbUL1MQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
+thud:'SUQzBAAAAAAAIlRTU0UAAAAOAAADTGF2ZjYxLjcuMTAzAAAAAAAAAAAAAAD/83DAAAAAAAAAAAAASW5mbwAAAA8AAAAHAAAESABISEhISEhISEhISEhISGdnZ2dnZ2dnZ2dnZ2dnhoaGhoaGhoaGhoaGhoakpKSkpKSkpKSkpKSkpKTDw8PDw8PDw8PDw8PDw+Hh4eHh4eHh4eHh4eHh//////////////////8AAAAATGF2YzYxLjE5AAAAAAAAAAAAAAAAJANqAAAAAAAABEiQAwh5AAAAAAAAAAAAAAAAAP/zUMQAGlC6SANdQABBsQuBqAfRkwBBj+fZrG25vnDJxDBJumvJn+OYNGUxxFUDCuFAEMCAGAQCJ0Rlh6RCxIEm3/h+X6jAC4L7IFBRJLFDN3fRBcPlInBDKAmH8HwQdKAmH8HwQdKAmH8HwQdUAz+kMdPJhjpVCXogEAoHAAAAM8n/81LECx0B6nhfnWgBbTVauTCcIDAZqwgOjAxIzjs3peaegs+oOSaSmFwImBADkwG9UJ0E2BOgTpepahPQtIWlWtcYwjQlxIu34WkLSO4YYS7/yRHqOEnD2HsY//49R6mReJIxLpdS///HsPYxLpdMi8XkS6jCPdWVmyuPoY945Rh4gv/zUsQNGgCmEBfeMAARhcElmgMxadBnE5m3PsGe2MkYGwk4CGGMKwQsxQAyTCWBrMEgCEHAOuzKILd5gSxmvT+FqrDICSNRNyqc4BAIK3+DWInKoo3L9DtNL9n/9db+GHf5L//b///pCQ/oyMjE8B7MLUJwwtAwTFHHUMaITQ9FoCzL//NQxBsbMIHwCvbGSABBDDxCzNjkTSqo9U0M8Nx0Cft9qWsDUSOjoD2I8W4cZWVEAfRypo0S7iO0uTe19d88sUGpqrJ3WktmaDbCyanCtj765URcJbtT+rtVtXR0omkQSsqdVppRi1BvmByCMGADmAwCaYxKshkegwmHqCYYFABoJP/zUsQjGoh96DT2TkhDSpM2oHjM55ymlQZY50VfjYexmX6nllPrYt3qeOCi665UWz3ncq9vx4yi+iwVnBUFFKG0ZUSRjg7lW5Z1T5Wp/TLV1Vs6ySoLXxSUqmTjJzAki95jQmZvbH64xpoKChRFBHtEkcTa3SyZlEYRBMEzQeejqb5D//NSxC4QaE3sNtbeCL/7P91H/Z0bE/3f+t3/yv////yVDrmuoAN+uwTSGispqhUaGEg5cFj8iJCYLalbhJ+XiCQB7EAdB+OWL9UyHEFRoJZgvgSl4ulM4X0soIO5H/qwax+wKCBOj9gMFA9UgY2oXFaxUW/+sU6lTEFNRTMuMTAwVVX/81DEYhWhJXz02wZ0VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
+jingle:'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',
+ place:'SUQzBAAAAAAAIlRTU0UAAAAOAAADTGF2ZjYxLjcuMTAzAAAAAAAAAAAAAAD/83DAAAAAAAAAAAAASW5mbwAAAA8AAAAJAAAFTQA6Ojo6Ojo6Ojo6OlNTU1NTU1NTU1NTbGxsbGxsbGxsbGyEhISEhISEhISEhJ2dnZ2dnZ2dnZ2dtra2tra2tra2trbOzs7Ozs7Ozs7Ozufn5+fn5+fn5+fn//////////////8AAAAATGF2YzYxLjE5AAAAAAAAAAAAAAAAJAKUAAAAAAAABU2vi96rAAAAAAAAAAAAAAAAAP/zUMQAEsBWnBdMGAAJQCKYHjjYhgDgBgfVnZmZiWJYlma/F6994IAgD5/qBAEAQB8HwfB8CeD5+n4PhcHwfAhz+j/+H/4gB9/8HwfB//wcBB3//xA7Lh8QTebIA4iiqiR6Y1leIK8/jurUlw41XEqjRwLdAAyLMVbazQSWHeZY7x7/81LEKiS6CsAjmHgAkHEpltqJ2j9nGgSDDXCPQp4uVIyIY4uaCJCqhXRCNYiuNHSvscbZEeA2UwSYcyPQ0/rb1aT+JuaHt/im0SdBuwGZuZob7X/r/809K73v739W3FzBk0wi534GffblvS3/lTH/NHTwVX8qLRUlEq62/G3NDw/Qg//zUsQNHcGysZ/PMAAfzOwxUvLqLEnhVfPo0tMwc0NdTtqQlHpa8RGbiNHz/vCUCXbDvcTVV58buSjr7/9Z81tru3n/9zY2vJxQeCt5MPA2bBUPBpxYkCufy6cWeVSYFEamnbkILLWlSzGSuUZ/rAcS7woGsVOpYAyRdiFBIUjq+dA9//NQxAwbqSaYNmPMKAPQPNycGQ/ZlYhR9gMWfppoERvcrzemBS8hUQ8zSZEaj5hHU72Ctstnom5+uFmCdIGIjB5cBANgXQhhcAOe0vKqBZjlh+wB6KhXL5C+XuB/xPl4DboazomvrlxhMyH73LJwzQQ4ki1G27hXHEim0gpOVg/huv/zUsQSHnrSnR55how4ScqGsWSIKkkcDXRxI8FBYglcZsMBYm0oGo1UBKeGNHokuZ5eFAWDAVUFDrHktpQ7S//ektB2Wq/0ZelPM4REfDznqyFzP7l2/+WpZ+q75341CnqXmRwiN3SqHKTb/cF4s/E5uIA7JJR+gxhBsrobwIUEAJlP//NSxA4ZqO6ITHsMQBwFC8xgCosjJYNRaB2zEzNEvTxaMsmTRlcFdqK0uc0tlwEQEw0FCDCIlcUPNDqg6CuaUtwMu9CyrgltiVLlPw1SeEvUjaxyW1v8SmfV5Kq10RwVyIVGMIyNAZUtjTbcjbjRqrbC00LPj0ikewV0E0xxGMyNuUX/81DEHRmB+pJeYYZUtPLpjjif6pyZqxmT3KMsvMqxPDbhvdSk2JD9cr/3ho1lby/b7+3cF5rC7IdWCO9Ek4k+XTbaZY16s6QF6q22P3U1tOC71JQ1SABjGlWysgqtOQlAKWTlau+q1bWB6tVVUlWhgICAj/iwVhgIdYX+qhjoldV///NSxCwZYUJptDMGEGZvYyyAjagIlVBUNEcRSzyp1QdKz0mEg6ZUd57WE6h7hM8qMe2W6yJZRUFYmxFxK76uwRFYlqPNwVUGgwiTHKG1hQVwSfPFmwKKPFnwkLEgKFALIhJ0VwqRcWFTOFA8e4CFkCkfwE3KipkZ1eFW3wp8KyoUNAX/81DEPBVgIgTAeYQAlRIBRVITdQFWiwFYKZoVR7DICFiP0hLpGNVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
+ pop:'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'};
+/* v5.9.3 quiet acknowledgement sounds (Luke, 23 Nov: every interaction gets a soft, quiet sound). Kenney Interface Sounds (CC0 1.0):
+   uitap = select_001, uiopen = open_001, uiclose = close_001, uiok = toggle_001; low-passed 5 kHz, mono 22 kHz mp3, played at low gain
+   (about 7 dB under the quietest reward sound). Reward sounds above are unchanged. */
+Object.assign(SND,{uitap:'SUQzBAAAAAAAIlRTU0UAAAAOAAADTGF2ZjYxLjcuMTAzAAAAAAAAAAAAAAD/83DAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAADKQBqampqampqampqampqampqampqampqamqcnJycnJycnJycnJycnJycnJycnJycnJyczs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozv////////////////////////////////8AAAAATGF2YzYxLjE5AAAAAAAAAAAAAAAAJANFAAAAAAAAAykWVTJMAAAAAAAAAAAAAAAAAP/zYMQAHDmGuUdJYABgAA3zn5+dz2oIBQFAQFDkYIAgKCRBCEIXvMzM7elKUpSlKP3vdtevXrzwwJAgAgBADhYOwIAQEQmHixylL3+ZmZmZ27a9+ASAJgTBuJZmvuUB8HwfB8HAQd/4gB8PxACYP/5d+D7///8oCDv/g+D4Prc5QRIGAUwagSUnJcJMhSzQ+sQUVyhuWNLktLDF1//zYsQeJ3sy2lePaAICFBSUFt5iSI4f0i8XjHobEsiiS4WoA3VEgPUcpoapU0AW0YVFIzRCfoHESQLo8h7KMi6ZGyKQw4Vw7hhiWWi2i363d9S1vtYvnCcSz6CCkzFJ9Wpku9131OYGhqSRt/y8Ynkkn+/ZBDav/rTOGR01W0+DIMqlkBkaCv7QoRLOGVSDWeAAB4AFYiixvLUCoZH/82LEECIjQoJnyVgASSxySyIhQocj8l3W2rn/h7VDY2PX/bXGx4km1yakolgOQAR9keQ8jpOtUNh3GtfLYNjakk2Gyo7R2k15qwbh1HpRO21pqdlu7dLa7/i//Rc42dKJ1vDr5a2txsbHnRfDa///d//Dr/3Ob//8O//7217nGx0Y+vuBlQA6giG7QsdQNwnC0kp49MJ2mssjkZHy//NixBcVCUodjkhGatlzI7P7LPn/2GdIyZQwMGll+KFEZkBBIVYZdaaFRX/FRb+DIsLN+LdQuIzLhb/zQqKihJ//AoVEgeNAUUaqTEFNRTMuMTAwqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqg==',uiopen:'SUQzBAAAAAAAIlRTU0UAAAAOAAADTGF2ZjYxLjcuMTAzAAAAAAAAAAAAAAD/83DAAAAAAAAAAAAASW5mbwAAAA8AAAAIAAAFnAA8PDw8PDw8PDw8PDxYWFhYWFhYWFhYWFh0dHR0dHR0dHR0dHR0kJCQkJCQkJCQkJCQrKysrKysrKysrKysrMjIyMjIyMjIyMjIyOTk5OTk5OTk5OTk5OT///////////////8AAAAATGF2YzYxLjE5AAAAAAAAAAAAAAAAJAMFAAAAAAAABZyy8cOaAAAAAAAAAAAAAAAAAP/zYMQAHcu2LAFDgAEATd3d3RERERNE64cW8TToIIIfTTTf9BBBky4aLTTUggsuFxD/9CtBBBq06CaadBBBky4aIMpBBZfIoOYRQ1IGIXD5xpikAbjC4MZMoDKEEPJp6CDem/9BD///+m/pvTT////oIdNPTT/QTTTdRgXDxmOYRQ0jh6re/z7f3+Wy5+vJQiwspiAYZNIIE4nXXP/zYsQXJNKusl+JWACeWLoSQ69hw6Q5ooS6Ppnw9glkqCU+b39qGqBSXFr3tiTZub51pw45t1DJpOrQNi0lvVhrEjmxjNr3nLm2bGVTIhSrr5JAfB0Ew++/54hxKHWINmc//+URtIwlD2Xk/2V17P//plHHlWv0Oe8oIHf4YW//BkJEHua+91kGqm25ZHD5AyILP8kJZPkCjM2XC0//82LEEyRq8rJVxkgAFlngYJCM+sZqaVSpVAYl/CXxc0YQJZBBlfeubRqQQyyKC7n//Pzmv/7i+9nq8tudbXr7W/773/MyvV7fn/6z5W75SlKSIVAkhIg0uGRo2GQsNDYgGw8Qi4IHRIFycgBAwXAcDYGAQBAEAxEjFbxWbIGEaVtAAHIfIQwxCTm/VUQ1hE4XKoF1cixZHl4jgvrg//NixBEh+4rC9GBNdHxMMYFto2b2tkTcKx8qNQbWe3f2zr961vT5nffWbSTLEzgCMzKwThyJhJGJTbBOAhH6JozRIi7jPmSRXoBcZ3zJfTliCiFVb38moyxyjtNhZE48+E0DyjVkAIMFrBBh4DC8PJg5MmTJ3zyacRN0mQBwtoDa6uPatcljSEAkgwPIQcJ3C5c+jmZNk7YrwSIEev/zYMQZJKwWylZI03xJJNdfwjNt7XnBfV4OyErq56rC5zqqtDZ0zSomeRFD8qZxf1di5uWfol0dhFd3px3LM9XjEkrlwotSmX/o/z0Sn9d35/3f9z/v/l//znDUg0Osxn5swCJgZqJRowVB1DFThQucGSYlFyQuZDaTBGTkAoZUJGJo0ZOjfWRyIiAyPMytbJKkQNM+aF14GCccI//zYsQVIEK6wkFJMAEzN1qksKAIF923hyDNFzyOqbJKUa7l/T/42POb+pyolUwYV8h5grVwg0Z6c7zD7v2b31UFzMR13mf+MfW8eXjV3mNE3bN38v497utH//8l8wOt6bMp/25272iBnwJ83d//ffv7s1M9bc2VQVtKNFSJtOJo0lAABlEq0ZtYRGNOS4qIQfJLVzgWicPhClaFRcL/82LEJCirss5ViUAApwiiSfFAySIx7A3FZUloGGEuNEIPWBozaqg8WF7ZxY8O+g5E/z8yfaUXY+VYQ0gWHEDhHpYYWlVmkuzld5Pu4E7B2PY8oQLFDxwjiorqsr/x+0zNxbNVz9MKtoXY4eLTF7r//8//PXXok8b//d5UDRVQ8zZ3t7YugGBVHuVwmsACfapRgIozN1V1VS//9m+t//NixBEcCf4tYcNAAFdmkkVbVVphYWphYWbUVFbJFTa2v+GZtV1WouVFWaSRU0YCoBY0oGwfHZIqKyDUGo4oWcOQFR4cg1NgWOkVsFTrBKVDX6OIjwiDsFVnfxKt23g0oO/+VOiV3kSp0FXUVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ==',uiclose:'SUQzBAAAAAAAIlRTU0UAAAAOAAADTGF2ZjYxLjcuMTAzAAAAAAAAAAAAAAD/83DAAAAAAAAAAAAASW5mbwAAAA8AAAAIAAAFnAA8PDw8PDw8PDw8PDxYWFhYWFhYWFhYWFh0dHR0dHR0dHR0dHR0kJCQkJCQkJCQkJCQrKysrKysrKysrKysrMjIyMjIyMjIyMjIyOTk5OTk5OTk5OTk5OT///////////////8AAAAATGF2YzYxLjE5AAAAAAAAAAAAAAAAJAMFAAAAAAAABZxatiHGAAAAAAAAAAAAAAAAAP/zYMQAGepOqYFBMADAVCAcYxja8gA8iADiIz/P////4u7u7u7iIiIiIu7u7u////EQTTu7u7uIiIjHsgQiIggQIAMBgMBkyaewTJkyZMnewTJk07vtBMnfaIyyBCC4PnwfUCBwuf4If+p39Yf/ggc+CAIAgnLbY5rdJLb6iQBq3mEaDzaG2wZIFShUnQdgzHI9m7gMVRtBCmMD0f/zYsQnKdvW2lWJWAFr1R3GhuPUkkCTBOLiwkEysss3tqKpcalKC5tcpG9wui08gok2jU1NGoutlNRtzoWSYdJrIcrUnp9GKQSnSlzrPNet8dS1stjiJ6mO+e6dD/dJ11U9nz7JqWRxDqn3y5Zj+bj2TzV2vKD77uY5imxddvmeWz/HH1ftRSpSNW8uevUCEmI6tkQPQJaCB/Mk1zz/82LEDyKsDr1hxkAB3sSg92FhhoOoffGMKgbepjiEY85ZsCroNSlSjhsjhdYuVu5sxUGi17aQOOHSalGQqEHpFwkJdOynMUNWrR8ftN7I0NTxbFtp+sxdQqwuvvabz7rdpfOt1zrFLc9f1PP13N3HxXr9xx1cc6bwRM1Lu/EI79oQZUpDj4osYjFknWaKBj5zTCWW5xSU3itcqOij//NixBQjw/K5YDDNXZtI72S/VKZqWkZRwHnxQmCByo0eAmO6iTlGJGZiBl7HuLQWRkZR+0lE0SOz2RDlzSB6pmsVvJdkHPbZIcM6ZZRz7MpCPmsM+kXulhOYggAq4cPdH8ECCDhaz1mIkykUyBh5RpRZBaJEpZGCTo4ajLHEkqo2ZmZ9JZFWFo44KJgAQ0kQo4fYKCUaaGKJVuJJoP/zYMQVIcM+tiwwzRy0OosrybGUtJfEqvRFoUU7KQ6HS7UeHDZrKaqvum21LNRPHLP61mX/SrlDf6RZ5ec+T1LL5Xh/783p+wQQjN9ng5OgRQOPBxSgsEFgQGIAgsaFCVAyYKs0JRokDAwMRIkXY5JyJUBEgr26qGRriS2lKRbaPWtp7A8LCSQgWRNjbJSQ1OYZKyyOAS3Z+WC9Kv/zYsQdIDKusk1GMABu151PZR+NTU7bLf47zNN83xuxn/9V6n/7Pqn/+xL1XZvs///MjfNf98b/3d2emFpyD6QNHggsUDCRQGQCgVABQDBWkQUAgEiSJbJHDlmg6FXdv6jZ5A02yWeYPLptNDHkfu5eQwZggg3Hw+Fo0CkCLgJB0uotfzzN45WL8T4Ujf/H0LUFaSRNDk8nDQBRy8T/82LELCrbrpb/j2gBkbccIth3hzECWKxxeCqHsUioYp8qNXMPj4L5eLRBgLlBA2WYl0qR/pHjBZoopFaCBsmiaomJq3+pUmCeATAeASIly6gtakR3iZDCjGMk0Fo0Wor/83OJDmW5fOqqZ0UlIqcxol1J1bLZX//2XUlSXrU7lwkDMkUB7f/TTNTJGFUhB6AGACCp8xPaHS3pmdrW//NixBAdc7mgC8xQAb9a1nLWsyHHPU03NNNacdOOO/Oeaa07+cdQ6ppv//NNnHIREzmmshxsiEUDcLRGCyAyTgSgFQvSgNwXxchOOOdTWQ7/+a046hx3/6HUOf///0//m5x046prTmocRHSEeuQj02EcLUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ==',uiok:'SUQzBAAAAAAAIlRTU0UAAAAOAAADTGF2ZjYxLjcuMTAzAAAAAAAAAAAAAAD/83DAAAAAAAAAAAAASW5mbwAAAA8AAAAIAAAFnAA8PDw8PDw8PDw8PDxYWFhYWFhYWFhYWFh0dHR0dHR0dHR0dHR0kJCQkJCQkJCQkJCQrKysrKysrKysrKysrMjIyMjIyMjIyMjIyOTk5OTk5OTk5OTk5OT///////////////8AAAAATGF2YzYxLjE5AAAAAAAAAAAAAAAAJAQAAAAAAAAABZxwZbnSAAAAAAAAAAAAAAAAAP/zYMQAGkG6tVdDeAKQACESpu7u7u6IiIiIgGBgYGBi3P/ze935/i3gZAkBLHBjV7O/jxKUpr///0pSlKXve79/fDxD0PV6vfx7/////////N70///pR+/D6jkuf/KAgCAYnxACAY//ygIHP/+CBz//lwQcXB9Xd4hAaEyUEJK2ffbxQ1KoiUgJpEGWIf6tSRe/RMSzj/WTonVsbf/zYsQmKVQW9r+JmAK+KWXoMpjGlpJJnzE5nCIP5fFz/QJj/qMByP6Yy/+SJkknQehQLQaIO0grN+o+HxiojSRsr2PiJokBLZspNRgmeHCEIgtZLruozt9SRDg4BfIUrGaBikmfMSMF4DymBgkv2YlBs/+okP1EYNlv+op2ZJToj4Dl2OqdJdalnxZy1R//tqHCWs7v//VObBlpHQj/82LEECRMEuJfxmgCR56WZVKRFpmCS0DLMhJX0aST2XUpkFKWl/9SSTk4P5Ko/61srWy9dSv+kJsFO7/j8stcsKCkikgbnkHRKJ8mE0fj5IjCosskRGRbP///qVUg7JJJZkOIEuPVFq3opdu7LbZ6C0lo6swBIkktdJNB1KWpmVS1JqVdjZ10UUQrQsDzKgNtLEDwVcs/Kt0YgCAI//NixA4iFA7GVivbCsUgILCgKViOJ850xqYkBTx9vHkTMN5EyTtVv1Gr2ODh/lkWUrqzNlJhbimt///61psgh13l4C6L6b7PLhgs6mfctKRdIjF0epImZqs3PmyBKbGCYgTf/v1q0UfqVqZQmo9Fp+6lVpueapaku31K1HQ2RaOv/////WYnqgL7LkEIXLd//okJ1N6LVYOXd43Syv/zYMQVI+Pixl4KUF7632z6RJNXFDBERIkhUAYOgXNf/69cLUM11qTTX//7NqtarsUdYHAtEWGZrVRYShCIQjKq8qsM2puqrsU2zaqsFNQdHAOAMLNr//6t81/w1+ux2wsWaUPVeVqCjigBghr/b5+VWoZagWGiKVa/9Q1/FytbXwLAqH+DICpRGm/Bud55y+N0mh5a+0cmPXiwyf/zYsQUFbsaYj4ahVCZtiwwrh7SgADQYgpH1Pqj7asceSkI9NNa01Tf/7j0ZEgNRxN9Wod9FYxupUo/+tOFBCgrU///2o+//+Wokl///6wFRYuoF0hpKjiUqhaldACWChLJFoubBJKZZJjtNyqefOVb2VJWi906OwInh8cxwPTpzE8JoakiRYeqtwdDWp+SBo3Dp3nSPKnZaViVIlP/82LETRh4+cwEeZhYp13509+JRF9H54JUo/akqWrzrZUseDaDNE6F3G4S8GAzIpNJRBIBLMAsMOJERQGYTQWjJxpR8DkxKIOWBqgxZMSqHLEqhyyaqIs2SqHLcqqWfVUs+iqZb6qlv5VMt9VS2NFUy1NVSzdFUy1NURZuioctTVEWK0VLJaaplitFSyWmqZYrRUslpqmWK0VLJaZM//NixHsecIT4AnsMKUFNRTMuMTAwqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqg=='});
+const VOL={clack:.8,flip:.7,tick:.6,thud:.75,jingle:.55,place:.85,pop:.6,uitap:.12,uiopen:.4,uiclose:.4,uiok:.12},MUTEKEY='ckEnduranceMute';
+window.__ev=[];
+let actx=null,bufs={},muted=(()=>{try{return localStorage.getItem(MUTEKEY)==='1'}catch(e){return false}})();
+/* v5.9.2 draft: mobile sound. (1) iOS plays Web Audio on the 'ambient' channel, which the ring/silent switch mutes, so a phone on
+   silent got no game sound. navigator.audioSession.type='playback' (iOS 16.4+/17) lets the game sound play like a video does; older
+   iOS gets the same effect from a tiny silent looping <audio> started inside the tap. (2) The context is only created/resumed in
+   events Safari counts as a tap (touchend, click, keydown, mouse pointerdown), not touch pointerdown, so the silent unlock blip is
+   not wasted on a context that is still suspended. (3) iOS 'interrupted' (call, lock screen, app switch) is resumed on the next tap. */
+let silentEl=null;
+function iosPlayback(){try{
+ if(navigator.audioSession){if(navigator.audioSession.type!=='playback')navigator.audioSession.type='playback';return}
+ if(!/iP(hone|ad|od)|Macintosh/.test(navigator.userAgent)||!('ontouchend' in document))return;
+ if(!silentEl){const n=2205,b=new Uint8Array(44+n*2),v=new DataView(b.buffer),w=(o,t)=>{for(let i=0;i<t.length;i++)b[o+i]=t.charCodeAt(i)};
+  w(0,'RIFF');v.setUint32(4,36+n*2,true);w(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
+  v.setUint32(24,22050,true);v.setUint32(28,44100,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,n*2,true);
+  silentEl=document.createElement('audio');silentEl.setAttribute('playsinline','');silentEl.setAttribute('x-webkit-airplay','deny');silentEl.loop=true;silentEl.preload='auto';
+  silentEl.src=URL.createObjectURL(new Blob([b],{type:'audio/wav'}))}
+ if(silentEl.paused){const q=silentEl.play();q&&q.catch(()=>{})}}catch(e){}}
+function unlockAudio(ev){try{
+ if(ev&&ev.type==='pointerdown'&&ev.pointerType!=='mouse')return;   /* touch: wait for touchend/click (Safari's tap) */
+ if(!muted)iosPlayback();
+ if(actx){if(actx.state!=='running'&&actx.state!=='closed')actx.resume().catch(()=>{});return}
+ const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;actx=new AC();
+ if(actx.state!=='running')actx.resume().catch(()=>{});
+ const s=actx.createBufferSource();s.buffer=actx.createBuffer(1,1,22050);s.connect(actx.destination);s.start(0);   /* iOS: a silent blip inside the tap unlocks output */
+ Object.keys(SND).forEach(k=>{const bin=atob(SND[k]),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+  actx.decodeAudioData(u.buffer,b=>{bufs[k]=b},()=>{})})}catch(e){}}
+['pointerdown','touchend','keydown','click'].forEach(t=>addEventListener(t,unlockAudio,true));
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&silentEl&&!silentEl.paused)silentEl.pause()});
+function sfx(k,rate){window.__ev.push((muted?'muted:':'snd:')+k);if(muted||!actx||!bufs[k])return;
+  try{if(actx.state!=='running')actx.resume().catch(()=>{});const s=actx.createBufferSource(),g=actx.createGain();s.buffer=bufs[k];if(rate)s.playbackRate.value=rate;g.gain.value=VOL[k]||.7;s.connect(g);g.connect(actx.destination);s.start(0)}catch(e){}}
+function ui(k){setTimeout(()=>sfx('ui'+k),0)}   /* v5.9.4: quiet acknowledgement, deferred so it always runs after this tap's unlockAudio/audioSession path */
+function muteUI(){const m=$('#mute');m.setAttribute('aria-pressed',muted?'true':'false');m.setAttribute('aria-label',muted?'Sound off. Tap to turn sound on':'Sound on. Tap to mute');m.title=muted?'Sound off':'Sound on'}
+$('#mute').onclick=ev=>{ev.stopPropagation();muted=!muted;try{localStorage.setItem(MUTEKEY,muted?'1':'0')}catch(e){}muteUI();if(muted&&silentEl)silentEl.pause();else if(!muted){unlockAudio();ui('ok')}window.__ev.push(muted?'mute':'unmute')};
+muteUI();
+
+/* ---- fit to the part of the frame the visitor can see ----
+   The game sits in a Wix iframe that can be taller than the browser window. An IntersectionObserver (its root is the
+   top-level viewport, even cross-origin) reports which slice of this frame is on screen. We read the latest slice when a
+   turn starts (and on resize / end screen), never while scrolling, and lay everything out inside it. */
+function applyFrame(){const full=innerHeight;let t=0,h=full;
+ if(vis&&vis.h>0){t=Math.max(0,Math.min(vis.top,full));h=Math.min(full-t,vis.h)}
+ const MIN=Math.min(full,desk()?380:360);if(h<MIN){h=MIN;t=Math.min(t,full-h)}
+ FT=Math.round(t);FH=Math.round(h);const r=document.documentElement;
+ r.style.setProperty('--vt',FT+'px');r.style.setProperty('--vh',FH+'px');r.classList.toggle('short',FH<=600)}
+try{const io=new IntersectionObserver(es=>{const e=es[es.length-1],ir=e.intersectionRect;
+  vis=e.isIntersecting&&ir.height>0?{top:ir.top,h:ir.height}:null;window.__vis=vis;
+  if(!visSeen){visSeen=true;relayout()}},{threshold:Array.from({length:101},(_,i)=>i/100)});io.observe(document.getElementById('vs'))}catch(e){}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function build(c,o){const el=document.createElement('div');el.className='card'+(o.up?' up':'');
+  const inner=document.createElement('div');inner.className='inner';
+  const b=document.createElement('div');b.className='face back';const bi=new Image();bi.alt='Bible event card';
+  const ft=document.createElement('span');ft.className='ft';ft.textContent=c.title;b.appendChild(ft);watchImg(bi,b,c.back);b.appendChild(bi);
+ const f=document.createElement('div');f.className='face front';inner.appendChild(b);inner.appendChild(f);el.appendChild(inner);
+ if(o.up)fillFront(el,c);return el}
+function fillFront(el,c){const f=el.querySelector('.front');if(f.firstChild)return null;
+  const i=new Image();i.alt=c.title;watchImg(i,f,c.front);f.appendChild(i);return i}
+/* v5.9 fix (Emily: a new card once did not show, only the dark backdrop and the button): the card image had not arrived
+   (slow or failed download on a phone), so the enlarged card was blank. Now every card face shows a red card with the
+   title until its image has loaded, a failed image is retried (twice, then a resized copy), and all red sides preload. */
+const IMGBAD=new Set();window.__imgTries=0;
+function watchImg(img,face,src){let n=0;face.classList.add('ld');
+  const ok=()=>{if(img.naturalWidth>0)face.classList.remove('ld')};
+  img.onload=ok;
+  img.onerror=()=>{if(n>=3){IMGBAD.add(src);return}n++;window.__imgTries++;const u=n<3?src+(src.includes('?')?'&':'?')+'r='+n:src+'/v1/fit/w_760,h_1062,q_85/card.webp';
+   setTimeout(()=>{img.src=u},TEST?20:400*n)};
+  img.src=src;if(img.complete&&img.naturalWidth>0)face.classList.remove('ld')}
+const PRE=[];function preloadBacks(){DECK_ALL.forEach(c=>{const i=new Image();i.src=c.back;PRE.push(i)})}
+function newRun(){clearT();$('#end').style.display='none';hideYc();if(!PRE.length)preloadBacks();
+ const start=shuffle(DECK_ALL.filter(c=>MID.includes(c.period)))[0];
+ deck=shuffle(DECK_ALL.filter(c=>c!==start));if(TEST&&TK)deck=deck.slice(0,TK);total=deck.length;
+ tl=[{c:start,up:true}];streak=0;turn=0;nbShown=false;best=getBest();bestStart=best;stkLevel=-1;stkCold=false;draw()}
+function draw(){if(!deck.length)return over();applyFrame();
+ hand=deck.pop();turn++;sel=null;lit=new Set();phase='choose';hideYc();
+ big=!learned;loud=(turn===1);pulseOn=false;step3=false;pulseUntil=0;                /* loud markers until the first correct card; one pulse when the step 3 prompt appears */
+ $('#tlh').style.display='none';
+ s0Active=(turn===1&&!s0Seen());
+ stats();renderStage();timeline();$('#tl').scrollTop=0;if(s0Active)showS0();else zoomHand()}   /* every new card opens large: read it, tap off to place it */
+function stats(){const st=$('#stats');let k=st.querySelector('.stk');
+ if(!k){st.innerHTML='<span class="sl">Streak</span><span class="stk"></span><span class="sep">·</span><span class="bl">Best <b class="bv"></b></span>';k=st.querySelector('.stk')}
+ k.textContent=streak;st.querySelector('.bv').textContent=Math.max(best,streak);st.setAttribute('aria-label','Streak '+streak+', best '+Math.max(best,streak));streakLook()}
+let stkLevel=-1,stkCold=false;
+function streakLook(){const k=$('#stats .stk');if(!k)return;let i=0;STREAK_STEPS.forEach((s,j)=>{if(streak>=s.at)i=j});if(stkCold)i=0;
+ const s=STREAK_STEPS[i];k.style.setProperty('--sf',s.fg);k.style.setProperty('--sr',s.ring);k.style.setProperty('--sg',s.glow);k.dataset.lv=s.at;stkLevel=i}
+function streakPop(){const k=$('#stats .stk');if(!k||RM.matches)return;k.classList.remove('pop');void k.offsetWidth;k.classList.add('pop')}
+/* new best: about 1.5s of gold sparkle out of the Streak/Best area plus a 'New best!' tag. pointer-events none, nothing waits for it */
+function newBestBurst(){const fx=$('#fx'),hd=$('header').getBoundingClientRect(),k=$('#stats .stk'),st=$('#stats');if(!k)return;
+ fx.innerHTML='';const r=k.getBoundingClientRect(),cx=r.left+r.width/2-hd.left,cy=r.top+r.height/2-hd.top;
+ const tag=document.createElement('div');tag.className='tag';tag.textContent='New best!';fx.appendChild(tag);
+ const tw=tag.offsetWidth,sr=st.getBoundingClientRect();tag.style.left=Math.max(4,sr.left-hd.left-tw-6)+'px';tag.style.top=Math.round((hd.height-tag.offsetHeight)/2)+'px';   /* inside the header, just left of the streak: never over the verdict or its button */
+ if(RM.matches){st.classList.add('nbglow')}
+ else for(let i=0;i<16;i++){const s=document.createElement('i');s.className='sp';const a=(i/16)*Math.PI*2+Math.random()*.3,d=26+Math.random()*30;
+  s.style.cssText='left:'+cx+'px;top:'+cy+'px;--tx:'+Math.round(Math.cos(a)*d*1.6)+'px;--ty:'+Math.round(Math.sin(a)*d)+'px;--d:'+(1+Math.random()*.45).toFixed(2)+'s;--dl:'+(Math.random()*.15).toFixed(2)+'s';fx.appendChild(s)}
+ window.__ev&&window.__ev.push('burst');clearTimeout(newBestBurst.t);newBestBurst.t=setTimeout(()=>{fx.innerHTML='';st.classList.remove('nbglow')},1600)}
+/* ---- stage height: slim while choosing (chip + one line), taller for the flip words and the verdict ---- */
+const VH=116,END_WIN=1700,END_MISS=2200;        /* ms the final verdict stays before the score pops up */
+function sizeStage(mode){const D=desk(),H=FH,cl=(v,a,b)=>Math.max(a,Math.min(b,v));
+ /* card 1: the roomy side-by-side start (as v4 turn 1). Card 2 onwards: ONE constant height, so the timeline never moves */
+ $('#stage').style.height=VH+'px'}
+function renderStage(){stageChoose()}
+/* ---- step 0: shown at the start of every playthrough (v5.7) ---- */
+const TEST=/[?&]test=1\b/.test(location.search),TK=+((location.search.match(/[?&]cards=(\d+)/)||[])[1]||0),TS=TEST?.08:1;
+if(TEST){const st=document.createElement('style');st.textContent='*,*::before,*::after{animation:none!important;transition:none!important}';document.head.appendChild(st)}
+const S0KEY='ckEnduranceStep0_v'+RELEASE;
+function s0Seen(){if(!TEST)return false;try{return localStorage.getItem(S0KEY)==='1'}catch(e){return false}} /* v5.7: step 0 on every playthrough (Luke 21 Nov); the old first-game-only flag is honoured only in ?test=1 so the test suite can skip it */
+function s0Mark(){try{localStorage.setItem(S0KEY,'1')}catch(e){}}
+/* ---- first-card overlay: first game only (v5.8). Flag honoured in ?test=1 so the suite stays deterministic, same pattern as s0Seen. ---- */
+const FCKEY='ck_fc_seen_v'+RELEASE;
+/* tidy up flags from older releases (ck_fc_seen, ck_fc_seen_v5.8, ckEnduranceStep0, ...) */
+try{const old=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(/^(ck_fc_seen|ckEnduranceStep0)/.test(k)&&k!==FCKEY&&k!==S0KEY)old.push(k)}old.forEach(k=>localStorage.removeItem(k))}catch(e){}
+function fcSeen(){try{return localStorage.getItem(FCKEY)==='1'}catch(e){return false}}
+function fcMark(){try{localStorage.setItem(FCKEY,'1')}catch(e){}}
+function fcOn(){const f=$('#fc');return !!(f&&!f.hidden)}
+function showFc(){const f=$('#fc');if(!f)return;f.hidden=false;const zb=$('#zoom .zb');zb.disabled=true;zb.setAttribute('aria-disabled','true');f.focus&&f.setAttribute('tabindex','-1');f.focus({preventScroll:true});positionFc()}
+function positionFc(){const f=$('#fc'),z=$('#zoom'),box=z&&z.querySelector('.z');if(!f||f.hidden||!z||z.style.display!=='flex'||!box)return;
+ const zr=z.getBoundingClientRect(),cr=box.getBoundingClientRect();
+ f.style.left=(cr.left-zr.left)+'px';f.style.top=(cr.top-zr.top)+'px';f.style.width=cr.width+'px';f.style.height=cr.height+'px'}
+function dismissFc(){const f=$('#fc');if(!f||f.hidden)return;f.hidden=true;fcMark();const zb=$('#zoom .zb');zb.disabled=false;zb.removeAttribute('aria-disabled');if($('#zoom').style.display==='flex')zb.focus({preventScroll:true})}
+function showS0(){const s=$('#s0'),start=tl[0]&&tl[0].c;if(!start){s0Active=false;return}
+ s.querySelector('p').innerHTML='This is your timeline. <b>'+start.title+'</b> is already on it. Your cards go left if earlier, right if later.';
+ s.hidden=false;s.dataset.at=performance.now();positionS0();updatePill();$('#s0go').focus({preventScroll:true})}
+function positionS0(){const s=$('#s0');if(s.hidden)return;
+ const sr=s.getBoundingClientRect(),card=$('#tl .slot .card')||$('#tl .slot');if(!card)return;
+ const c=card.getBoundingClientRect(),hole=s.querySelector('.s0hole'),box=s.querySelector('.s0box'),ar=s.querySelector('.s0arrow');
+ hole.style.cssText='left:'+(c.left-sr.left)+'px;top:'+(c.top-sr.top)+'px;width:'+c.width+'px;height:'+c.height+'px';
+ const b=box.getBoundingClientRect(),y0=b.bottom-sr.top+3,tip=c.top-sr.top-5,len=tip-y0,cx=c.left-sr.left+c.width/2;
+ const hw=Math.max(11,Math.min(22,c.width*.22)),hh=Math.max(14,Math.min(26,len,c.width*.3));
+ ar.style.cssText='left:'+cx+'px;top:'+y0+'px;height:'+Math.max(len,0)+'px;--hw:'+hw+'px;--hh:'+Math.min(hh,Math.max(len,0))+'px;'+(len<8?'display:none':'');
+ ar.classList.toggle('bob',!RM.matches)}
+function dismissS0(){const s=$('#s0');if(s.hidden)return;s.hidden=true;s0Active=false;s0Mark();swallowUntil=performance.now()+(TEST?100:350);
+ renderStage();zoomHand()}
+$('#s0').onclick=ev=>{ev.stopPropagation();ev.preventDefault();if(performance.now()-(+$("#s0").dataset.at||0)<250)return;tapAt={x:ev.clientX,y:ev.clientY};if(!$('#s0').hidden)ui('ok');dismissS0()};
+addEventListener('keydown',ev=>{if((ev.key==='Escape'||ev.key==='Enter')&&!$('#s0').hidden){ev.preventDefault();ui('ok');dismissS0()}});
+function updatePill(){const p=$('#pill'),zo=$('#zoom').style.display==='flex';
+ const show=loud&&phase==='choose'&&!zo&&!s0Active&&(sel!=null||step3);
+ if(!show){p.hidden=true;return}
+ p.innerHTML=sel==null?'Tap a gold marker where it goes<small>Earliest on the left</small>':'Tap <b>Flip!</b> to check<small>or tap another gold marker</small>';p.hidden=false}
+function pulseMarkers(){if(RM.matches)return;pulseUntil=performance.now()+1500;const sc=$('#tl');sc.classList.remove('pulse1');void sc.offsetWidth;sc.classList.add('pulse1');later(()=>sc.classList.remove('pulse1'),1500)}
+function stageChoose(){const s=$('#stage');s.innerHTML='';s.className='ch slim';sizeStage('choose');
+ const n='Card '+turn+' of '+total,row=document.createElement('div');row.className='crow';
+ const chip=document.createElement('button');chip.className='chip';chip.id='chip';
+ chip.setAttribute('aria-label','Your card: '+hand.title+'. Tap to read it large');
+ const mc=document.createElement('span');mc.className='mc';mc.appendChild(build(hand,{up:false}));chip.appendChild(mc);
+ const ct=document.createElement('span');ct.className='ct';ct.innerHTML='Your card: <b>'+hand.title+'</b>';chip.appendChild(ct);
+ const rd=document.createElement('span');rd.className='rd';rd.textContent='Read';chip.appendChild(rd);
+ chip.onclick=()=>{if(hand&&phase==='choose')ui('open');zoomHand()};row.appendChild(chip);
+ const hb=document.createElement('button');hb.className='helpb';hb.textContent='?';hb.setAttribute('aria-label','How to play');hb.onclick=()=>{ui('tap');help()};row.appendChild(hb);
+ s.appendChild(row);
+ const h=document.createElement('div');h.id='hint';
+h.innerHTML='<span><b>'+n+'</b> · '+(sel==null?'Tap <b>+</b> where it goes, then <b>Flip!</b>':'Tap <b>Flip!</b> to check, or another <b>+</b>')+'</span>';
+ s.appendChild(h);
+ const ct2=chip.querySelector('.ct');let fs=parseFloat(getComputedStyle(ct2).fontSize);while(fs>12&&ct2.scrollHeight>ct2.clientHeight+1){fs-=1;ct2.style.fontSize=fs+'px'}}
+function verdict(head,body,btn,nb){const s=$('#stage');s.innerHTML='';s.className='pan v';sizeStage('verdict');
+ const p=document.createElement('div');p.className='panel vp';const hr=document.createElement('div');hr.className='vh';
+ hr.innerHTML='<span class="big">'+head+'</span>'+(nb||'');
+ if(btn){const b=document.createElement('button');b.className='btn';b.textContent=btn[0];b.onclick=ev=>{ui('tap');btn[1](ev)};hr.appendChild(b)}
+ p.appendChild(hr);if(body){const v=document.createElement('div');v.className='vb';v.innerHTML=body;p.appendChild(v)}
+ s.appendChild(p);const vb=p.querySelector('.vb');
+ if(vb){let fs=parseFloat(getComputedStyle(vb).fontSize);while(fs>13&&p.scrollHeight>s.clientHeight-8){fs-=1;vb.style.fontSize=fs+'px'}}}
+function stagePanel(html,btn){const s=$('#stage');s.innerHTML='';s.className='pan';sizeStage('verdict');
+ const p=document.createElement('div');p.className='panel';p.innerHTML=html;s.appendChild(p);
+ if(btn){const b=document.createElement('button');b.className='btn';b.textContent=btn[0];b.onclick=ev=>{ui('tap');btn[1](ev)};s.appendChild(b)}
+ fitFF()}
+function fitFF(){const f=$('#stage .ff');if(!f)return;const s=$('#stage'),W=s.clientWidth-24,Hs=s.clientHeight-12-(f.previousElementSibling?22:0),n=f.children.length;
+ let fs=Math.min(110,(Hs)/3.15,W*.26);
+ if(n>1&&fs>=46){f.classList.add('st');f.style.fontSize=fs+'px';return}
+ f.classList.remove('st');f.style.fontSize=Math.floor(Math.min(110,Hs*.78,W/(n>1?8.2:3)))+'px'}
+/* ---- timeline layout: cards shrink in steps (whenever another row is needed) so the whole timeline fits ---- */
+function layout(count){const sc=$('#tl'),D=desk(),cs=getComputedStyle(sc);
+ const g=D?12:7,band=D?32:24,rg=D?12:10,cueH=(loud&&phase==='choose')?(D?46:62):0;
+ const W=sc.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight);
+ const tlh=$('#tlh'),avail=FH-$('header').offsetHeight-(tlh.style.display==='none'?0:tlh.offsetHeight)-Math.max(VH,$('#stage').offsetHeight);   /* frame left for the timeline once the verdict stage is shown */
+ const Hb=avail-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom)-cueH-1;
+ const nMin=D?5:3,nMax=D?7:5,cap=D?200:130;let b=null;
+ for(let n=nMin;n<=nMax;n++){const rows=Math.ceil(count/n),cwW=(W-g*(n-1))/n,chH=(Hb-rg*(rows-1))/rows-band;
+  const cw=Math.floor(Math.max(36,Math.min(cwW,chH*R,cap)));if(!b||cw>b.cw)b={N:n,cw}}
+ L={N:b.N,cw:b.cw,ch:Math.floor(b.cw/R),g}}
+function timeline(){const sc=$('#tl'),keep=sc.scrollTop,choose=phase==='choose',tcs=getComputedStyle(sc),padL=parseFloat(tcs.paddingLeft);
+ sc.className=(choose?(loud?'loud':'quiet'):'noplace')+(choose&&pulseOn?' pulse':'');
+ const items=tl.slice();let pvI=-1;if(choose&&sel!=null){items.splice(sel,0,{c:hand,preview:true});pvI=sel}
+ sc.innerHTML='';layout(choose?tl.length+1:tl.length);
+ const {N,cw,ch,g}=L,len=items.length;sc.style.setProperty('--ch',ch+'px');const cwBox=sc.clientWidth,Wc=cwBox-padL-parseFloat(tcs.paddingRight);
+ const gapPos=d=>pvI<0?d:(d===pvI||d===pvI+1)?-1:(d<pvI?d:d-1);
+ for(let r=0;r*N<len;r++){const r0=r*N,row=items.slice(r0,r0+N);
+  const w=document.createElement('div');w.className='rw';w.style.width=(row.length*cw+g*(row.length-1))+'px';
+  if(r===0&&loud&&choose){const cu=document.createElement('div');cu.className='cue';cu.style.height=(desk()?46:62)+'px';w.appendChild(cu)}   /* room for the step 3 pill */
+  const cs=document.createElement('div');cs.className='cards';
+  row.forEach((e,j)=>{const i=r0+j,sl=document.createElement('div');sl.className='slot';sl.style.width=cw+'px';
+   if(e.preview){sl.classList.add('pv');sl.appendChild(build(e.c,{up:false}));     /* red side only: no picture, no number */
+    const fb=document.createElement('button');fb.className='flipb';fb.setAttribute('aria-label','Flip! Check your card');
+    fb.innerHTML='<span class="gbtn" style="font-size:'+Math.round(Math.max(14,Math.min(22,cw*.3)))+'px">Flip!</span>';
+    fb.onclick=ev=>{ev.stopPropagation();place()};sl.appendChild(fb);cs.appendChild(sl);return}
+   sl.dataset.i=i;if(e.moved)sl.classList.add('moved');
+   const el=build(e.c,{up:e.up});e.el=el;sl.appendChild(el);
+   sl.onclick=()=>{if(e.up&&phase!=='flipping'&&phase!=='judging'){ui('open');zoom(e,tl.indexOf(e))}};cs.appendChild(sl)});
+  const tb=document.createElement('div');tb.className='tabs';
+  const add=(d,x,edge)=>{const p=gapPos(d);if(p<0||!choose)return;
+   const b=document.createElement('div');b.className='bar';b.dataset.p=p;b.style.cssText='left:'+x+'px;height:'+ch+'px';tb.appendChild(b);
+   const m=document.createElement('button');m.className='tab';m.dataset.p=p;m.style.left=x+'px';
+   m.setAttribute('aria-label','Put your card here: position '+(p+1)+' of '+(tl.length+1));m.innerHTML='<span><b>+</b></span>';
+   /* keep the whole 44px target inside the scroll box at the row ends (the box clips anything outside it) */
+   const left=padL+(Wc-rowW)/2+x-22,sh=Math.max(0,-left)-Math.max(0,left+44-cwBox);
+   if(sh){m.style.marginLeft=(sh-22)+'px';m.firstChild.style.left='calc(50% - '+sh+'px)'}
+   if(edge)m.classList.add(edge);
+   m.onmouseenter=m.onfocus=()=>hover(p,true);m.onmouseleave=m.onblur=()=>hover(p,false);m.onpointerdown=()=>hover(p,true);
+   m.onclick=ev=>{ev.stopPropagation();pick(p)};tb.appendChild(m)};
+  const rowW=row.length*cw+g*(row.length-1);
+  add(r0,-g/2,'ls');                             /* left end of EVERY row: the gap before this row's first card (same index as the end of the row above) */
+  row.forEach((e,j)=>add(r0+j+1,(j+1)*cw+j*g+g/2,j===row.length-1?'le':''));
+  w.appendChild(tb);w.appendChild(cs);sc.appendChild(w)}
+ refreshLit();sc.scrollTop=keep;updatePill()}
+/* hover / focus / press on a marker lights every marker and bar for that same gap (row end + next row start) */
+function hover(p,on){const sc=$('#tl');sc.querySelectorAll('[data-p="'+p+'"]').forEach(el=>{if(el.classList.contains('bar'))el.classList.toggle('hl',on||lit.has(p));else el.classList.toggle('hv',on)})}
+function refreshLit(){const sc=$('#tl');
+ sc.querySelectorAll('.tab').forEach(m=>m.classList.toggle('lit',lit.has(+m.dataset.p)));
+ sc.querySelectorAll('.bar').forEach(m=>m.classList.toggle('hl',lit.has(+m.dataset.p)))}
+/* keep an element in view inside the timeline box */
+function inView(el){const s=$('#tl').getBoundingClientRect(),r=el.getBoundingClientRect();return r.top>=s.top-1&&r.bottom<=s.bottom+1&&r.bottom<=FT+FH+1&&r.top>=FT-1}
+function showEl(el,smooth){if(!el)return;const sc=$('#tl'),s=sc.getBoundingClientRect(),r=el.getBoundingClientRect(),band=desk()?32:24;let d=0;
+ const bot=Math.min(s.bottom,FT+FH);
+ if(r.top-band<s.top)d=r.top-band-s.top-4;else if(r.bottom>bot-4)d=r.bottom-bot+8;
+ if(d)sc.scrollBy({top:d,behavior:smooth&&!RM.matches?'smooth':'auto'})}
+function hideYc(){ycFor=null;$('#yc').hidden=true}
+function ycCheck(e){const y=$('#yc');if(!e||!e.el||inView(e.el)){hideYc();return}
+ ycFor=e;const up=e.el.getBoundingClientRect().top<$('#tl').getBoundingClientRect().top;
+ y.textContent=up?'Your card ↑':'Your card ↓';y.style.top=up?'6px':'';y.style.bottom=up?'auto':'';y.hidden=false}
+$('#yc').onclick=ev=>{ev.stopPropagation();ui('tap');if(ycFor)showEl(ycFor.el,true);hideYc()};
+$('#tl').addEventListener('scroll',()=>{if(ycFor&&inView(ycFor.el))hideYc()});
+/* ---- choosing: tap a gap to preview, tap Flip! to commit ---- */
+function slideFrom(el,from){if(RM.matches||!from||!el)return;const to=el.getBoundingClientRect();if(!to.width)return;
+ el.style.transformOrigin='0 0';el.style.transition='none';el.style.zIndex=5;
+ el.style.transform='translate('+(from.left-to.left)+'px,'+(from.top-to.top)+'px) scale('+(from.width/to.width)+')';el.getBoundingClientRect();
+ el.style.transition='transform .3s ease-out';el.style.transform='';
+ setTimeout(()=>{el.style.transition='';el.style.transformOrigin='';el.style.zIndex=''},360)}
+function pick(p){if(phase!=='choose'||p===sel)return;
+ const pv=$('#tl .slot.pv'),hc=$('#chip .card')||$('#hand .card'),from=(pv||hc)?(pv||hc).getBoundingClientRect():null;
+ sel=p;lit=new Set();pulseOn=false;step3=false;renderStage();timeline();sfx('clack');
+ const now=$('#tl .slot.pv');showEl(now,false);slideFrom(now,from)}
+function help(){const h=$('#help');
+ h.innerHTML='<div class="ep" role="dialog" aria-label="How to play"><h2>How to play</h2><ol>'+
+  '<li>Each new card opens large. Read it, then tap anywhere to put it on the timeline.</li>'+
+  '<li>Want to read it again? Tap <b>Your card</b> at the top.</li>'+
+  '<li>Tap the <b>+</b> where you think it goes (earliest on the left, latest on the right). Your card slides in, red side up. Changed your mind? Tap another <b>+</b>.</li>'+
+  '<li>Tap <b>Flip!</b> on your card to check. One wrong card ends the run and your score pops up. How long a streak can you build?</li></ol>'+
+  '<button class="btn" id="gotit">Got it</button></div>';
+ h.style.display='flex';h.onclick=()=>{ui('ok');h.style.display='none'};$('#gotit').focus({preventScroll:true})}
+function fitZoom(){const z=$('#zoom');if(z.style.display!=='flex')return;
+ const zt=z.querySelector('.zt'),zb=z.querySelector('.zb'),box=z.querySelector('.z');
+ if(desk()){zb.style.maxWidth='';const av=FH-20-zb.offsetHeight-10-(zt.offsetHeight?zt.offsetHeight+8:0)-4;
+  const w=Math.floor(Math.max(120,Math.min(276,av*R)));box.style.width=w+'px';zb.style.maxWidth=w+'px';zt.style.maxWidth=w+'px';positionFc();return}   /* desktop: about 276x385 near the top, the button and the line below it, all within the card width */
+ const avail=FH-16-(zt.offsetHeight?zt.offsetHeight+8:0)-zb.offsetHeight-10;
+ box.style.width=Math.floor(Math.max(120,Math.min(innerWidth-20,avail*R,720)))+'px';
+ positionFc()}
+function zoomOpen(node,cap,label,kind){const z=$('#zoom'),b=z.querySelector('.z');b.innerHTML='';b.appendChild(node);zoomKind=kind||'';
+  z.querySelector('.zt').innerHTML=cap||'';const zb=z.querySelector('.zb');zb.textContent=label;zb.disabled=false;zb.removeAttribute('aria-disabled');zb.classList.toggle('ros',kind==='placed');
+ z.style.display='flex';zoomAt=performance.now();fitZoom();zb.focus({preventScroll:true});updatePill();
+ z.onclick=ev=>{ev.stopPropagation();ev.preventDefault();if(performance.now()-zoomAt<(TEST?40:250))return;
+  if(fcOn()&&performance.now()<swallowUntil)return; /* leftover tap from dismissing step 0 must not clear the first-card overlay */
+   const onBtn=!!(ev.target.closest&&ev.target.closest('.zb'));
+   if(fcOn()){if(!onBtn){ui('tap');dismissFc()}return}       /* v5.9: Place it is locked until the overlay is tapped away */
+   if(onBtn&&zoomKind==='placed'){ui('tap');turnZoom();return}   /* Read other side: flip, stay open */
+   if(onBtn&&zoomKind==='hand'&&sel==null)sfx('place');else ui('close');
+   tapAt={x:ev.clientX,y:ev.clientY};zoomClose()};return z}
+/* Read other side (cards already on the timeline only): turn the enlarged card over, and back again */
+function turnZoom(){const c=$('#zoom .z .card');if(!c)return;window.__ev.push('turn');
+  if(RM.matches||TEST){c.classList.toggle('up');return}
+  c.classList.remove('turn');void c.offsetWidth;c.classList.add('turn');clearTimeout(turnZoom.t);turnZoom.t=setTimeout(()=>c.classList.toggle('up'),180);setTimeout(()=>c.classList.remove('turn'),380)}
+/* a tap that dismisses the enlarged card must never reach a marker underneath */
+document.addEventListener('click',ev=>{if(performance.now()<swallowUntil&&!ev.target.closest('#zoom')&&Math.hypot(ev.clientX-tapAt.x,ev.clientY-tapAt.y)<48){ev.stopPropagation();ev.preventDefault()}},true);
+function zoomClose(){if(fcOn())dismissFc();const kind=zoomKind;zoomKind='';$('#zoom').style.display='none';swallowUntil=performance.now()+(TEST?100:350);
+ if(lit.size)later(()=>{lit=new Set();refreshLit()},2500);
+ if(kind==='hand'&&turn===1&&loud&&phase==='choose'&&sel==null){const first=!step3;step3=true;updatePill();if(first)pulseMarkers()}
+ else updatePill()}
+function zoom(e,i){const z=zoomOpen(build(e.c,{up:true}),'<b>'+e.c.title+'</b>','Read other side','placed');
+ if(phase==='choose'&&sel==null&&i>=0){lit=new Set([i,i+1]);refreshLit()}}
+function zoomHand(){if(!hand||phase!=='choose')return;const n='Card '+turn+' of '+total;
+ zoomOpen(build(hand,{up:false}),'<b>'+n+'</b>',sel==null?'Place it on the timeline':'Back to the timeline','hand');
+ if(turn===1&&!fcSeen())showFc()}
+addEventListener('keydown',ev=>{if(fcOn()){ev.preventDefault();dismissFc();return}if(ev.key==='Escape'&&$('#zoom').style.display==='flex'){ui('close');zoomClose()}});
+/* ---- placing and flipping ---- */
+function place(){if(sel==null||phase!=='choose')return;const c=hand;hand=null;clearT();
+ const e={c,up:false,pending:true};tl.splice(sel,0,e);const i=sel;sel=null;lit=new Set();
+ const pv=tl[i-1]&&tl[i-1].c,nx=tl[i+1]&&tl[i+1].c;
+ const okP=(!pv||pv.period<=c.period)&&(!nx||c.period<=nx.period);
+ e.ok=okP&&(!pv||key(pv)<key(c))&&(!nx||key(c)<key(nx));e.pv=pv;e.nx=nx;
+ e.newBest=e.ok&&bestStart>=1&&!nbShown&&streak+1>bestStart;
+ e.full=turn===1||HARD.has(c.id)||deck.length===0||e.newBest;
+ phase='flipping';cur=e;skipOK=false;
+  stagePanel(e.full?'<div class="cp">Card placed.</div><span class="ff"><i>Flip,</i><i>flip,</i><i>flip!</i></span>':'<span class="ff q"><i>Flip!</i></span>');
+  if(e.full&&!RM.matches){sfx('pop',1);later(()=>sfx('pop',1.12),240*TS);later(()=>sfx('pop',1.26),480*TS)}else sfx('pop',e.full?1:1.12);   /* v5.9: a pop for each Flip word as it appears */
+ timeline();showEl(e.el,false);                 /* the card is in view before it flips and before any verdict */
+ runFlip(e);later(()=>{skipOK=true},150)}
+function runFlip(e){const sl=e.el.parentElement,full=e.full,flipAt=(full?800:300)*TS,dur=(full?500:350)*TS;
+ const img=fillFront(e.el,e.c);if(!full)sl.classList.add('settle');
+ later(()=>{let done=false;const go=()=>{if(done)return;done=true;
+   e.el.style.setProperty('--fd',dur+'ms');e.el.classList.add('flip');e.up=true;if(!e.snd){e.snd=1;sfx('flip')}later(()=>resolve(e),dur+(full?50:150))};
+  if(!img||img.complete)go();else{img.addEventListener('load',go);img.addEventListener('error',go);later(go,3500)}},flipAt)}
+function skipFlip(){if(phase!=='flipping'||!skipOK||!cur||resolved===cur)return;const e=cur;clearT();if(!e.snd){e.snd=1;sfx('flip')}e.up=true;e.el.classList.remove('flip');e.el.classList.add('up');
+ const img=e.el.querySelector('.front img');if(img&&!img.complete){const r=()=>resolve(e);img.addEventListener('load',r);img.addEventListener('error',r);later(r,1500)}else resolve(e)}
+let resolved=null;
+function resolve(e){if(resolved===e)return;resolved=e;clearT();phase='judging';   /* v5.9.1: no longer 'flipping', so a later click can't skipFlip()/clearT() the miss timer */
+ e.el.classList.remove('flip');e.el.classList.add('up');
+ showEl(e.el,false);if(e.ok)correct(e);else wrong(e)}
+function correct(e){streak++;best=Math.max(best,streak);setBest(best);stkCold=false;stats();streakPop();phase='result';learned=true;
+ if(e.newBest){sfx('jingle');newBestBurst()}else sfx('tick');
+ const last=!deck.length;if(e.newBest)nbShown=true;
+ e.el.parentElement.classList.add('good');if(!RM.matches)e.el.classList.add('pop');
+ const nb='';   /* v5.6: the header 'New best!' tag is the only new-best label */
+ verdict('Spot on!',when(e),last?null:['Next card',()=>draw()],nb);
+ if(last)later(over,Math.max(TEST?400:0,END_WIN*TS));              /* last card: the score pops up by itself once the verdict has registered */
+ ycCheck(e);
+ }
+function when(e){const k=tl.indexOf(e),pv=tl[k-1]&&tl[k-1].c,nx=tl[k+1]&&tl[k+1].c,b=t=>'<b>'+t+'</b>';
+ return b(e.c.title)+' happens '+(pv&&nx?'after '+b(pv.title)+' and before '+b(nx.title):pv?'after '+b(pv.title):'before '+b(nx.title))+'.'}
+function wrong(e){e.el.classList.add('bad');sfx('thud');stkCold=true;stats();verdict('Not quite…');ycCheck(e);later(()=>miss(e),1000*TS);
+ setTimeout(()=>{if(phase==='judging'&&cur===e&&!e.moved){window.__ev.push('failsafe:miss');miss(e)}},1000*TS+1200)}   /* v5.9.1 failsafe: never stuck on 'Not quite…' */
+function miss(e){const old=e.el.getBoundingClientRect();
+ tl.splice(tl.indexOf(e),1);const k=tl.filter(x=>key(x.c)<key(e.c)).length;
+ e.moved=true;e.up=true;e.pending=false;tl.splice(k,0,e);
+ phase='over';timeline();showEl(e.el,false);
+ verdict('Not quite',when(e));ycCheck(e);later(over,Math.max(TEST?400:0,END_MISS*TS));
+ setTimeout(()=>{if(phase==='over'&&cur===e&&$('#end').style.display!=='flex'){window.__ev.push('failsafe:over');over()}},Math.max(TEST?400:0,END_MISS*TS)+1500);   /* v5.9.1 failsafe: the score always pops up */   /* the score pops up by itself after the card has slid to its true place */
+ if(!RM.matches){const sl=e.el.parentElement,nw=e.el.getBoundingClientRect(),dx=old.left-nw.left,dy=old.top-nw.top;
+  if(dx||dy){sl.style.transition='none';sl.style.transform='translate('+dx+'px,'+dy+'px)';sl.style.zIndex=4;sl.getBoundingClientRect();
+   sl.style.transition='transform .6s ease-in-out';sl.style.transform='';later(()=>{sl.style.transition='';sl.style.zIndex=''},700)}}}
+/* ---- end screen ---- */
+function over(){phase='over';applyFrame();$('#pill').hidden=true;$('#s0').hidden=true;s0Active=false;$('#fc').hidden=true;$('#zoom').style.display='none';resolved=null;sel=null;hideYc();best=Math.max(best,streak);setBest(best);stats();const perfect=streak===total;
+ const end=$('#end');
+ end.innerHTML='<div class="ep" role="dialog" aria-label="Your result"><div class="e1"><div class="score">'+streak+' of '+total+' correct</div><div class="bs">Best streak '+best+'</div>'+(perfect?'<div class="perf">Perfect!</div>':'')+
+  '</div><hr><div class="e2"><h2>Play with friends: get the full game</h2><p class="demo">This web game uses '+DECK_ALL.length+' of the 52 cards.</p>'+
+  '<div class="show"><div class="fan">'+FAN.map(id=>'<img src="'+byId(id).front+'" alt="'+byId(id).title+'">').join('')+'</div><img class="box" src="'+BOX+'" alt="The Chronicles of the Kingdom game box"></div>'+
+  '<p class="facts"><b>52</b> Bible Event Cards &middot; <b>1+</b> players &middot; <b>Age 9+</b></p></div><hr>'+
+  '<div class="acts"><a class="btn" id="buy" href="'+BUY+'" target="_blank" rel="noopener">Get the full game</a><div class="a2"><button class="btn sec" id="again">Try again</button><button class="btn sec" id="viewtl">View the timeline</button></div></div></div>';
+ end.style.display='flex';$('#again').onclick=()=>{ui('tap');newRun()};$('#viewtl').onclick=()=>{ui('tap');viewTimeline()};$('#buy').addEventListener('click',()=>ui('tap'));$('#again').focus({preventScroll:true})}
+/* 'View the timeline' on the score: close it and show the finished timeline with a Try again button (v5.9: same words as the score) */
+function viewTimeline(){$('#end').style.display='none';phase='review';hideYc();applyFrame();
+ const s=$('#stage');s.innerHTML='';s.className='pan v';sizeStage('verdict');
+ const p=document.createElement('div');p.className='panel vp';const hr=document.createElement('div');hr.className='vh';
+ hr.innerHTML='<span class="big">Your timeline</span>';const b=document.createElement('button');b.className='btn';b.id='restart';b.textContent='Try again';b.onclick=()=>{ui('tap');newRun()};hr.appendChild(b);p.appendChild(hr);
+ const v=document.createElement('div');v.className='vb';v.innerHTML='<b>'+streak+' of '+total+'</b> correct · Best streak <b>'+best+'</b>';p.appendChild(v);s.appendChild(p);
+ timeline();$('#tl').scrollTop=0;b.focus({preventScroll:true})}
+function relayout(){applyFrame();if(!phase||!hand&&phase==='choose')return;if(phase==='review'){sizeStage('verdict');timeline();return}if(phase==='choose')renderStage();else sizeStage('verdict');if(phase==='flipping')fitFF();timeline();positionS0();fitZoom();if(ycFor)ycCheck(ycFor)}
+let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(relayout,120)});
+document.addEventListener('click',ev=>{if(!(ev.target.closest&&ev.target.closest('#mute')))skipFlip()},true);
+newRun();
+})();
+</script></body></html>
