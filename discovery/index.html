@@ -273,7 +273,7 @@ header{position:relative;z-index:7}
 #stats .pg{font-variant-numeric:tabular-nums;color:var(--soft);font-weight:700}
 /* a corrected (wrong) card: soft amber outline that stays on the timeline */
 .slot.fixd .card img,.slot.moved.fixd .card img{filter:drop-shadow(0 0 2px #8a4b00) drop-shadow(0 0 6px #F3AE45) drop-shadow(0 0 12px rgba(243,174,69,.85))}
-#sbk{position:absolute;inset:0;z-index:6;display:flex;align-items:center;justify-content:center;pointer-events:none;transition:opacity .3s}
+#sbk{position:absolute;inset:0;z-index:6;display:flex;align-items:flex-start;box-sizing:border-box;justify-content:center;pointer-events:none;transition:opacity .3s}
 #sbk.out{opacity:0}
 #sbk .ff{text-align:center;white-space:nowrap;line-height:.98}
 #sbk .ff i,#sbk .ff i:nth-child(2),#sbk .ff i:nth-child(3){animation-delay:0s;animation-duration:.24s}
@@ -498,7 +498,10 @@ function newBestBurst(){const fx=$('#fx'),hd=$('header').getBoundingClientRect()
 function bigFlash(cls,html,evn){const w=$('#tlw');let o=$('#sbk');if(o)o.remove();o=document.createElement('div');o.id='sbk';o.className=cls;o.setAttribute('aria-live','assertive');
   o.innerHTML='<span class="ff st">'+html+'</span>';w.appendChild(o);fitBig(o);window.__ev.push(evn);
   clearTimeout(bigFlash.t);clearTimeout(bigFlash.u);bigFlash.t=setTimeout(()=>o.classList.add('out'),TEST?600:1100);bigFlash.u=setTimeout(()=>o.remove(),TEST?900:1450)}
-function fitBig(o){const f=o.querySelector('.ff'),W=o.clientWidth-16,H=o.clientHeight-8;let fs=Math.min(150,W*.27,H/2.3);f.style.fontSize=Math.max(34,Math.floor(fs))+'px';
+function fitBig(o){const f=o.querySelector('.ff'),w=$('#tlw').getBoundingClientRect(),c=$('#tl .slot');
+  /* v3 (Luke 24 Nov, t204u): the words start near the top of the first row of timeline cards, not the middle of the timeline */
+  const top=c?Math.max(0,Math.min(c.getBoundingClientRect().top-w.top,w.height*.4)):0;o.style.paddingTop=Math.round(top)+'px';
+  const W=o.clientWidth-16,H=o.clientHeight-top-8;let fs=Math.min(150,W*.27,H/2.3);f.style.fontSize=Math.max(34,Math.floor(fs))+'px';
   let n=0;while(n++<30&&(f.scrollWidth>W||f.scrollHeight>H)&&fs>34){fs-=3;f.style.fontSize=Math.floor(fs)+'px'}}
 function streakBroken(){bigFlash('brk','<i>Streak</i><i>broken!</i>','streakBroken')}
 /* ---- stage height: slim while choosing (chip + one line), taller for the flip words and the verdict ---- */
