@@ -5,6 +5,7 @@
 <title>Chronicles of the Kingdom: Game Mode: Endurance</title>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Fredoka:wght@700&display=swap" rel="stylesheet">
 <style>
+/* v5.9.7 (24 Nov 2026, beta) Emily/Luke t227u: remove the header streak counter (gold ring) from Endurance; it repeated the card count because one wrong card ends the run. 'Card N of total' and Best stay. New-best burst is retargeted at Best. Root/live untouched. */
 /* v5.9.5 (23 Nov 2026, beta) Luke's sound pick: one card sound (existing clack) and one button sound (uitap = select_001) for every action that had no sound in v5.9.2; open/close/toggle sounds removed. */
 /* v5.9.4 (23 Nov 2026, beta) rebuilt from v5.9.2 + the v5.9.3 quiet sounds, ui() deferred to after the unlock path; iPhone silent switch inside the Wix iframe: silent <audio> loop now also runs there. */
 /* v5.9.3 (23 Nov 2026, beta) quiet acknowledgement sounds on every tap that had no sound (Luke); reward sounds unchanged. */
@@ -210,29 +211,25 @@ header{flex:none;display:flex;justify-content:space-between;align-items:center;g
 @media (min-width:700px){.pill{font-size:21px}.pill small{display:inline;font-size:21px;font-weight:700;opacity:1}.pill small:before{content:"\00a0\00b7\00a0"}}
 
 /* ===== v5.6 ===== */
-/* header: brand | streak + best | mute */
+/* header: brand | best | mute  (v5.9.7: streak gold-ring removed) */
 header{position:relative;z-index:7}
 #hr{display:flex;align-items:center;gap:2px;flex:none}
 #stats{display:flex;align-items:center;gap:5px;font-size:16px;color:var(--ink)}
 #stats .sep{opacity:.6}
-/* the streak number: burgundy disc, gold ring, EB Garamond Bold. Colours step up with the streak (STREAK_STEPS). The disc keeps every step readable on the parchment header */
-.stk{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-width:30px;height:30px;padding:0 6px 2px;border-radius:999px;background:#551309;border:2px solid var(--sr,#cdb98a);color:var(--sf,#F4E8CB);font-family:'EB Garamond',Georgia,serif;font-weight:700;font-size:21px;line-height:1;box-shadow:var(--sg,none);transition:color .6s ease,border-color .6s ease,box-shadow .6s ease;will-change:transform}
-.stk.pop{animation:stkpop .25s ease-out}
-@keyframes stkpop{0%{transform:scale(1)}50%{transform:scale(1.25)}100%{transform:scale(1)}}
-@media (min-width:700px){.stk{min-width:34px;height:34px;font-size:24px}#stats{font-size:18px;gap:6px}}
+@media (min-width:700px){#stats{font-size:18px;gap:6px}}
 /* mute toggle: 44px tap target, 30px ring */
 #mute{position:relative;width:44px;height:44px;margin:-5px -8px -5px 0;flex:none;border:0;background:none;padding:0;cursor:pointer;color:var(--burg);touch-action:manipulation}
 #mute:before{content:"";position:absolute;left:8px;top:8px;width:28px;height:28px;border-radius:50%;border:1.5px solid #cdb98a;box-sizing:border-box}
 #mute svg{position:absolute;left:13px;top:13px;width:18px;height:18px}
 #mute .x{display:none}#mute[aria-pressed="true"] .x{display:inline}#mute[aria-pressed="true"] .w{display:none}
 @media (max-width:380px){.brand b{font-size:15px}#stats{font-size:15px;gap:4px}header{gap:4px;padding-left:8px;padding-right:10px}}
-/* new best: gold sparkle out of the streak area + a tag; never blocks a tap */
+/* new best: gold sparkle out of the Best area + a tag; never blocks a tap */
 #fx{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:8}
 #fx .sp{position:absolute;width:13px;height:13px;margin:-6.5px 0 0 -6.5px;background:#F2B81C;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);filter:drop-shadow(0 0 1px #7a4a00) drop-shadow(0 0 4px rgba(255,200,60,.9));opacity:0;animation:spk var(--d,1.2s) ease-out var(--dl,0s) forwards}
 @keyframes spk{0%{opacity:0;transform:translate(0,0) scale(.4) rotate(0)}15%{opacity:1}70%{opacity:1}100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(1.1) rotate(90deg)}}
 #fx .tag{position:absolute;z-index:2;white-space:nowrap;background:#E9D29E;color:#551309;border:2px solid #551309;border-radius:999px;padding:1px 12px 3px;font-weight:700;font-size:17px;line-height:1.2;box-shadow:0 2px 8px rgba(0,0,0,.35),0 0 12px 3px rgba(233,210,158,.9);animation:tagin 1.5s ease-out forwards}
 @keyframes tagin{0%{opacity:0;transform:translateY(-6px) scale(.8)}15%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0}}
-#stats.nbglow .stk{box-shadow:0 0 0 2px #E9D29E,0 0 14px 6px rgba(255,214,90,.95)}
+#stats.nbglow .bl{text-shadow:0 0 8px rgba(255,214,90,.95);color:#7a4a00}
 @media (prefers-reduced-motion:reduce){#fx .tag{animation:none!important;opacity:1}}
 /* paired markers (end of row N = start of row N+1) light together */
 #tl .tab.hv span{background:var(--gold);border-color:var(--burg);color:var(--red);transform:scale(1.12)}
@@ -288,10 +285,6 @@ const DECK_ALL=[{"id": "1-2", "period": 1, "number": 2, "title": "Creation of He
 const BUY="https://www.chroniclesofthekingdom.co.uk/product-page/bible-timeline-game";
 const BOX="https://static.wixstatic.com/media/551332_c2d9d223bf844d64a0f9468e80b070d4~mv2.jpg/v1/fit/w_300,h_300,q_80/file.jpg";
 const DECK_ID='promo13';                        /* bests are kept per deck: a full-deck beta gets its own id */
-/* streak colour steps (data, so a full deck can add more): parchment below 3, gold at 3, warm amber at 5, deep gold + steady glow at 10 */
-const STREAK_STEPS=[{at:0,fg:'#F4E8CB',ring:'#cdb98a',glow:'none'},{at:3,fg:'#E9D29E',ring:'#E9D29E',glow:'none'},{at:5,fg:'#F3AE45',ring:'#F3AE45',glow:'none'},
- {at:10,fg:'#F2B81C',ring:'#F2B81C',glow:'0 0 10px 3px rgba(242,184,28,.75)'},{at:20,fg:'#F2B81C',ring:'#F2B81C',glow:'0 0 12px 4px rgba(242,184,28,.8)'},
- {at:30,fg:'#F2B81C',ring:'#F2B81C',glow:'0 0 13px 5px rgba(242,184,28,.85)'},{at:40,fg:'#F2B81C',ring:'#F2B81C',glow:'0 0 14px 5px rgba(242,184,28,.9)'},{at:50,fg:'#F2B81C',ring:'#F2B81C',glow:'0 0 15px 6px rgba(242,184,28,.95)'}];
 const MID=[3,4,5];                              /* start card comes from the middle three periods: Judges, Kings, Exile */
 const HARD=new Set(['4-6','3-5','5-7','2-5','7-6']); /* Jonah, Samuel, Esther, 12 Spies, Patmos: full flip */
 const FAN=['1-7','2-2','6-7'];
@@ -413,25 +406,23 @@ const PRE=[];function preloadBacks(){DECK_ALL.forEach(c=>{const i=new Image();i.
 function newRun(){clearT();$('#end').style.display='none';hideYc();if(!PRE.length)preloadBacks();
  const start=shuffle(DECK_ALL.filter(c=>MID.includes(c.period)))[0];
  deck=shuffle(DECK_ALL.filter(c=>c!==start));if(TEST&&TK)deck=deck.slice(0,TK);total=deck.length;
- tl=[{c:start,up:true}];streak=0;turn=0;nbShown=false;best=getBest();bestStart=best;stkLevel=-1;stkCold=false;draw()}
+ tl=[{c:start,up:true}];streak=0;turn=0;nbShown=false;best=getBest();bestStart=best;draw()}
 function draw(){if(!deck.length)return over();applyFrame();
  hand=deck.pop();turn++;sel=null;lit=new Set();phase='choose';hideYc();
  big=!learned;loud=(turn===1);pulseOn=false;step3=false;pulseUntil=0;                /* loud markers until the first correct card; one pulse when the step 3 prompt appears */
  $('#tlh').style.display='none';
  s0Active=(turn===1&&!s0Seen());
  stats();renderStage();timeline();$('#tl').scrollTop=0;if(s0Active)showS0();else zoomHand()}   /* every new card opens large: read it, tap off to place it */
-function stats(){const st=$('#stats');let k=st.querySelector('.stk');
- if(!k){st.innerHTML='<span class="sl">Streak</span><span class="stk"></span><span class="sep">·</span><span class="bl">Best <b class="bv"></b></span>';k=st.querySelector('.stk')}
- k.textContent=streak;st.querySelector('.bv').textContent=Math.max(best,streak);st.setAttribute('aria-label','Streak '+streak+', best '+Math.max(best,streak));streakLook()}
-let stkLevel=-1,stkCold=false;
-function streakLook(){const k=$('#stats .stk');if(!k)return;let i=0;STREAK_STEPS.forEach((s,j)=>{if(streak>=s.at)i=j});if(stkCold)i=0;
- const s=STREAK_STEPS[i];k.style.setProperty('--sf',s.fg);k.style.setProperty('--sr',s.ring);k.style.setProperty('--sg',s.glow);k.dataset.lv=s.at;stkLevel=i}
-function streakPop(){const k=$('#stats .stk');if(!k||RM.matches)return;k.classList.remove('pop');void k.offsetWidth;k.classList.add('pop')}
-/* new best: about 1.5s of gold sparkle out of the Streak/Best area plus a 'New best!' tag. pointer-events none, nothing waits for it */
-function newBestBurst(){const fx=$('#fx'),hd=$('header').getBoundingClientRect(),k=$('#stats .stk'),st=$('#stats');if(!k)return;
+function stats(){const st=$('#stats');
+ if(!st.querySelector('.bv'))st.innerHTML='<span class="bl">Best <b class="bv"></b></span>';
+ st.querySelector('.bv').textContent=Math.max(best,streak);st.setAttribute('aria-label','Best '+Math.max(best,streak))}
+/* new best: about 1.5s of gold sparkle out of the Best area plus a 'New best!' tag. pointer-events none, nothing waits for it.
+   v5.9.7: the header streak disc is gone, so the burst is centred on Best instead. */
+function newBestBurst(){const fx=$('#fx'),hd=$('header').getBoundingClientRect(),st=$('#stats');if(!st)return;
+ const k=st.querySelector('.bv')||st;
  fx.innerHTML='';const r=k.getBoundingClientRect(),cx=r.left+r.width/2-hd.left,cy=r.top+r.height/2-hd.top;
  const tag=document.createElement('div');tag.className='tag';tag.textContent='New best!';fx.appendChild(tag);
- const tw=tag.offsetWidth,sr=st.getBoundingClientRect();tag.style.left=Math.max(4,sr.left-hd.left-tw-6)+'px';tag.style.top=Math.round((hd.height-tag.offsetHeight)/2)+'px';   /* inside the header, just left of the streak: never over the verdict or its button */
+ const tw=tag.offsetWidth,sr=st.getBoundingClientRect();tag.style.left=Math.max(4,sr.left-hd.left-tw-6)+'px';tag.style.top=Math.round((hd.height-tag.offsetHeight)/2)+'px';   /* inside the header, just left of Best: never over the verdict or its button */
  if(RM.matches){st.classList.add('nbglow')}
  else for(let i=0;i<16;i++){const s=document.createElement('i');s.className='sp';const a=(i/16)*Math.PI*2+Math.random()*.3,d=26+Math.random()*30;
   s.style.cssText='left:'+cx+'px;top:'+cy+'px;--tx:'+Math.round(Math.cos(a)*d*1.6)+'px;--ty:'+Math.round(Math.sin(a)*d)+'px;--d:'+(1+Math.random()*.45).toFixed(2)+'s;--dl:'+(Math.random()*.15).toFixed(2)+'s';fx.appendChild(s)}
@@ -645,7 +636,7 @@ let resolved=null;
 function resolve(e){if(resolved===e)return;resolved=e;clearT();phase='judging';   /* v5.9.1: no longer 'flipping', so a later click can't skipFlip()/clearT() the miss timer */
  e.el.classList.remove('flip');e.el.classList.add('up');
  showEl(e.el,false);if(e.ok)correct(e);else wrong(e)}
-function correct(e){streak++;best=Math.max(best,streak);setBest(best);stkCold=false;stats();streakPop();phase='result';learned=true;
+function correct(e){streak++;best=Math.max(best,streak);setBest(best);stats();phase='result';learned=true;
  if(e.newBest){sfx('jingle');newBestBurst()}else sfx('tick');
  const last=!deck.length;if(e.newBest)nbShown=true;
  e.el.parentElement.classList.add('good');if(!RM.matches)e.el.classList.add('pop');
@@ -656,7 +647,7 @@ function correct(e){streak++;best=Math.max(best,streak);setBest(best);stkCold=fa
  }
 function when(e){const k=tl.indexOf(e),pv=tl[k-1]&&tl[k-1].c,nx=tl[k+1]&&tl[k+1].c,b=t=>'<b>'+t+'</b>';
  return b(e.c.title)+' happens '+(pv&&nx?'after '+b(pv.title)+' and before '+b(nx.title):pv?'after '+b(pv.title):'before '+b(nx.title))+'.'}
-function wrong(e){e.el.classList.add('bad');sfx('thud');stkCold=true;stats();verdict('Not quite…');ycCheck(e);later(()=>miss(e),1000*TS);
+function wrong(e){e.el.classList.add('bad');sfx('thud');stats();verdict('Not quite…');ycCheck(e);later(()=>miss(e),1000*TS);
  setTimeout(()=>{if(phase==='judging'&&cur===e&&!e.moved){window.__ev.push('failsafe:miss');miss(e)}},1000*TS+1200)}   /* v5.9.1 failsafe: never stuck on 'Not quite…' */
 function miss(e){const old=e.el.getBoundingClientRect();
  tl.splice(tl.indexOf(e),1);const k=tl.filter(x=>key(x.c)<key(e.c)).length;
