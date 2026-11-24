@@ -436,7 +436,7 @@ function flushPend(k){const now=performance.now();pend=pend.filter(p=>{if(p[0]!=
 function sfx(k,rate){window.__ev.push((muted?'muted:':'snd:')+k);if(muted||!actx)return;if(!bufs[k]){pend.push([k,rate,performance.now()]);return}play(k,rate)}
 function play(k,rate){
   try{if(actx.state!=='running')actx.resume().catch(()=>{});const s=actx.createBufferSource(),g=actx.createGain();s.buffer=bufs[k];if(rate)s.playbackRate.value=rate;g.gain.value=VOL[k]||.7;s.connect(g);g.connect(actx.destination);s.start(0)}catch(e){}}
-function ui(k){setTimeout(()=>sfx('ui'+k),0)}   /* v5.9.4: quiet acknowledgement, deferred so it always runs after this tap's unlockAudio/audioSession path */
+function ui(k){setTimeout(()=>sfx('tick'),0)}   /* Discovery (Luke 24 Nov 21:08): every button plays the tick */   /* v5.9.4: quiet acknowledgement, deferred so it always runs after this tap's unlockAudio/audioSession path */
 function cardSnd(){setTimeout(()=>sfx('clack'),0)}   /* v5.9.5 (Luke 23 Nov): every card action that had no sound uses the existing clack; every such button uses uitap */
 function muteUI(){const m=$('#mute');m.setAttribute('aria-pressed',muted?'true':'false');m.setAttribute('aria-label',muted?'Sound off. Tap to turn sound on':'Sound on. Tap to mute');m.title=muted?'Sound off':'Sound on'}
 $('#mute').onclick=ev=>{ev.stopPropagation();muted=!muted;try{localStorage.setItem(MUTEKEY,muted?'1':'0')}catch(e){}muteUI();if(muted&&silentEl)silentEl.pause();else if(!muted){unlockAudio();ui('tap')}window.__ev.push(muted?'mute':'unmute')};
