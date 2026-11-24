@@ -273,7 +273,10 @@ header{position:relative;z-index:7}
 #stats .pg{font-variant-numeric:tabular-nums;color:var(--soft);font-weight:700}
 /* a corrected (wrong) card: soft amber outline that stays on the timeline */
 .slot.fixd .card img,.slot.moved.fixd .card img{filter:drop-shadow(0 0 2px #8a4b00) drop-shadow(0 0 6px #F3AE45) drop-shadow(0 0 12px rgba(243,174,69,.85))}
-#fx .tag.brk{background:#F4E8CB;color:#551309;border-color:#b86a1c;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+#sbk{position:absolute;inset:0;z-index:6;display:flex;align-items:center;justify-content:center;pointer-events:none;transition:opacity .3s}
+#sbk.out{opacity:0}
+#sbk .ff{font-size:clamp(44px,13vw,96px);text-align:center;white-space:normal}
+#sbk .ff i:nth-child(2){animation-delay:.2s}
 #end .ep.dsc{max-width:440px}
 .dsc .strip{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin:2px auto 6px;max-width:400px}
 .dsc .strip img{width:100%;height:auto;display:block;border-radius:3px;box-shadow:0 1px 3px rgba(0,0,0,.35)}
@@ -413,10 +416,16 @@ function unlockAudio(ev){try{
  if(actx.state!=='running')actx.resume().catch(()=>{});
  const s=actx.createBufferSource();s.buffer=actx.createBuffer(1,1,22050);s.connect(actx.destination);s.start(0);   /* iOS: a silent blip inside the tap unlocks output */
  Object.keys(SND).forEach(k=>{const bin=atob(SND[k]),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
-  actx.decodeAudioData(u.buffer,b=>{bufs[k]=b},()=>{})})}catch(e){}}
+  actx.decodeAudioData(u.buffer,b=>{bufs[k]=b;flushPend(k)},()=>{})})}catch(e){}}
 ['pointerdown','touchend','keydown','click'].forEach(t=>addEventListener(t,unlockAudio,true));
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&silentEl&&!silentEl.paused)silentEl.pause()});
-function sfx(k,rate){window.__ev.push((muted?'muted:':'snd:')+k);if(muted||!actx||!bufs[k])return;
+/* v5.9.6 (Luke 24 Nov, t198u/t199u: no sound on the first click): the first tap of a game is in the tutorial (step 0 'Got it' or the
+   first-card overlay). That tap creates the audio context and starts decoding the sounds, which finishes a few ms AFTER the tap's own
+   sound is asked for, so that sound was dropped. Now a sound asked for while its sound is still decoding waits and plays the moment it is ready (up to 600 ms). */
+let pend=[];
+function flushPend(k){const now=performance.now();pend=pend.filter(p=>{if(p[0]!==k)return true;if(now-p[2]<600&&!muted)play(k,p[1]);return false})}
+function sfx(k,rate){window.__ev.push((muted?'muted:':'snd:')+k);if(muted||!actx)return;if(!bufs[k]){pend.push([k,rate,performance.now()]);return}play(k,rate)}
+function play(k,rate){
   try{if(actx.state!=='running')actx.resume().catch(()=>{});const s=actx.createBufferSource(),g=actx.createGain();s.buffer=bufs[k];if(rate)s.playbackRate.value=rate;g.gain.value=VOL[k]||.7;s.connect(g);g.connect(actx.destination);s.start(0)}catch(e){}}
 function ui(k){setTimeout(()=>sfx('ui'+k),0)}   /* v5.9.4: quiet acknowledgement, deferred so it always runs after this tap's unlockAudio/audioSession path */
 function cardSnd(){setTimeout(()=>sfx('clack'),0)}   /* v5.9.5 (Luke 23 Nov): every card action that had no sound uses the existing clack; every such button uses uitap */
@@ -482,10 +491,10 @@ function newBestBurst(){const fx=$('#fx'),hd=$('header').getBoundingClientRect()
  else for(let i=0;i<16;i++){const s=document.createElement('i');s.className='sp';const a=(i/16)*Math.PI*2+Math.random()*.3,d=26+Math.random()*30;
   s.style.cssText='left:'+cx+'px;top:'+cy+'px;--tx:'+Math.round(Math.cos(a)*d*1.6)+'px;--ty:'+Math.round(Math.sin(a)*d)+'px;--d:'+(1+Math.random()*.45).toFixed(2)+'s;--dl:'+(Math.random()*.15).toFixed(2)+'s';fx.appendChild(s)}
  window.__ev&&window.__ev.push('burst');clearTimeout(newBestBurst.t);newBestBurst.t=setTimeout(()=>{fx.innerHTML='';st.classList.remove('nbglow')},1600)}
-function streakBroken(){const fx=$('#fx'),hd=$('header').getBoundingClientRect(),st=$('#stats');if(!st)return;
-  clearTimeout(newBestBurst.t);fx.innerHTML='';const tag=document.createElement('div');tag.className='tag brk';tag.textContent='Streak broken';fx.appendChild(tag);
-  const tw=tag.offsetWidth,sr=st.getBoundingClientRect();tag.style.left=Math.max(4,sr.left-hd.left-tw-6)+'px';tag.style.top=Math.round((hd.height-tag.offsetHeight)/2)+'px';
-  window.__ev.push('streakBroken');newBestBurst.t=setTimeout(()=>{fx.innerHTML=''},1600)}
+/* Streak broken! (Luke 24 Nov, t198u): big, over the timeline, same lettering as Flip, flip, flip!; gone before the card glides to its place */
+function streakBroken(){const w=$('#tlw');let o=$('#sbk');if(o)o.remove();o=document.createElement('div');o.id='sbk';o.setAttribute('aria-live','assertive');
+  o.innerHTML='<span class="ff"><i>Streak</i><i>broken!</i></span>';w.appendChild(o);window.__ev.push('streakBroken');
+  clearTimeout(streakBroken.t);clearTimeout(streakBroken.u);streakBroken.t=setTimeout(()=>o.classList.add('out'),TEST?600:950);streakBroken.u=setTimeout(()=>o.remove(),TEST?900:1300)}
 /* ---- stage height: slim while choosing (chip + one line), taller for the flip words and the verdict ---- */
 const VH=116,END_WIN=1700,END_MISS=2200,AUTO_NEXT=3200;        /* ms the final verdict stays before the score pops up */
 function sizeStage(mode){const D=desk(),H=FH,cl=(v,a,b)=>Math.max(a,Math.min(b,v));
