@@ -275,8 +275,10 @@ header{position:relative;z-index:7}
 .slot.fixd .card img,.slot.moved.fixd .card img{filter:drop-shadow(0 0 2px #8a4b00) drop-shadow(0 0 6px #F3AE45) drop-shadow(0 0 12px rgba(243,174,69,.85))}
 #sbk{position:absolute;inset:0;z-index:6;display:flex;align-items:center;justify-content:center;pointer-events:none;transition:opacity .3s}
 #sbk.out{opacity:0}
-#sbk .ff{font-size:clamp(44px,13vw,96px);text-align:center;white-space:normal}
-#sbk .ff i:nth-child(2){animation-delay:.2s}
+#sbk .ff{text-align:center;white-space:nowrap;line-height:.98}
+#sbk .ff i,#sbk .ff i:nth-child(2),#sbk .ff i:nth-child(3){animation-delay:0s;animation-duration:.24s}
+#sbk.stf .ff i:first-child{font-size:.62em}
+#sbk.stf .ff i.n{font-size:1.25em;line-height:.95}
 #end .ep.dsc{max-width:440px}
 .dsc .strip{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin:2px auto 6px;max-width:400px}
 .dsc .strip img{width:100%;height:auto;display:block;border-radius:3px;box-shadow:0 1px 3px rgba(0,0,0,.35)}
@@ -491,12 +493,16 @@ function newBestBurst(){const fx=$('#fx'),hd=$('header').getBoundingClientRect()
  else for(let i=0;i<16;i++){const s=document.createElement('i');s.className='sp';const a=(i/16)*Math.PI*2+Math.random()*.3,d=26+Math.random()*30;
   s.style.cssText='left:'+cx+'px;top:'+cy+'px;--tx:'+Math.round(Math.cos(a)*d*1.6)+'px;--ty:'+Math.round(Math.sin(a)*d)+'px;--d:'+(1+Math.random()*.45).toFixed(2)+'s;--dl:'+(Math.random()*.15).toFixed(2)+'s';fx.appendChild(s)}
  window.__ev&&window.__ev.push('burst');clearTimeout(newBestBurst.t);newBestBurst.t=setTimeout(()=>{fx.innerHTML='';st.classList.remove('nbglow')},1600)}
-/* Streak broken! (Luke 24 Nov, t198u): big, over the timeline, same lettering as Flip, flip, flip!; gone before the card glides to its place */
-function streakBroken(){const w=$('#tlw');let o=$('#sbk');if(o)o.remove();o=document.createElement('div');o.id='sbk';o.setAttribute('aria-live','assertive');
-  o.innerHTML='<span class="ff"><i>Streak</i><i>broken!</i></span>';w.appendChild(o);window.__ev.push('streakBroken');
-  clearTimeout(streakBroken.t);clearTimeout(streakBroken.u);streakBroken.t=setTimeout(()=>o.classList.add('out'),TEST?600:950);streakBroken.u=setTimeout(()=>o.remove(),TEST?900:1300)}
+/* Discovery v2 (Luke 24 Nov, t202u): big words over the timeline in the Flip, flip, flip! lettering, all lines appear together, stacked.
+   'Streak / broken!' on a wrong card; 'Streak / N' on every right card. About 1.1s, then fade. Nothing waits for them (pointer-events none). */
+function bigFlash(cls,html,evn){const w=$('#tlw');let o=$('#sbk');if(o)o.remove();o=document.createElement('div');o.id='sbk';o.className=cls;o.setAttribute('aria-live','assertive');
+  o.innerHTML='<span class="ff st">'+html+'</span>';w.appendChild(o);fitBig(o);window.__ev.push(evn);
+  clearTimeout(bigFlash.t);clearTimeout(bigFlash.u);bigFlash.t=setTimeout(()=>o.classList.add('out'),TEST?600:1100);bigFlash.u=setTimeout(()=>o.remove(),TEST?900:1450)}
+function fitBig(o){const f=o.querySelector('.ff'),W=o.clientWidth-16,H=o.clientHeight-8;let fs=Math.min(150,W*.27,H/2.3);f.style.fontSize=Math.max(34,Math.floor(fs))+'px';
+  let n=0;while(n++<30&&(f.scrollWidth>W||f.scrollHeight>H)&&fs>34){fs-=3;f.style.fontSize=Math.floor(fs)+'px'}}
+function streakBroken(){bigFlash('brk','<i>Streak</i><i>broken!</i>','streakBroken')}
 /* ---- stage height: slim while choosing (chip + one line), taller for the flip words and the verdict ---- */
-const VH=116,END_WIN=1700,END_MISS=2200,AUTO_NEXT=3200;        /* ms the final verdict stays before the score pops up */
+const VH=116,END_WIN=1700,END_MISS=2200;        /* ms the final verdict stays before the score pops up */
 function sizeStage(mode){const D=desk(),H=FH,cl=(v,a,b)=>Math.max(a,Math.min(b,v));
  /* card 1: the roomy side-by-side start (as v4 turn 1). Card 2 onwards: ONE constant height, so the timeline never moves */
  $('#stage').style.height=VH+'px'}
@@ -704,7 +710,7 @@ let resolved=null;
 function resolve(e){if(resolved===e)return;resolved=e;clearT();phase='judging';   /* v5.9.1: no longer 'flipping', so a later click can't skipFlip()/clearT() the miss timer */
  e.el.classList.remove('flip');e.el.classList.add('up');
  showEl(e.el,false);if(e.ok)correct(e);else wrong(e)}
-function correct(e){streak++;nRight++;runBest=Math.max(runBest,streak);best=Math.max(best,streak);setBest(best);stkCold=false;stats();streakPop();phase='result';learned=true;
+function correct(e){streak++;nRight++;runBest=Math.max(runBest,streak);bigFlash('stf','<i>Streak</i><i class="n">'+streak+'</i>','streak:'+streak);best=Math.max(best,streak);setBest(best);stkCold=false;stats();streakPop();phase='result';learned=true;
  if(e.newBest){sfx('jingle');newBestBurst()}else sfx('tick');
  const last=!deck.length;if(e.newBest)nbShown=true;
  e.el.parentElement.classList.add('good');if(!RM.matches)e.el.classList.add('pop');
@@ -715,18 +721,15 @@ function correct(e){streak++;nRight++;runBest=Math.max(runBest,streak);best=Math
  }
 function when(e){const k=tl.indexOf(e),pv=tl[k-1]&&tl[k-1].c,nx=tl[k+1]&&tl[k+1].c,b=t=>'<b>'+t+'</b>';
  return b(e.c.title)+' happens '+(pv&&nx?'after '+b(pv.title)+' and before '+b(nx.title):pv?'after '+b(pv.title):'before '+b(nx.title))+'.'}
-function wrong(e){e.el.classList.add('bad');sfx('thud');nWrong++;const lost=streak;streak=0;stkCold=true;stats();if(lost>0)streakBroken();verdict('Not quite…');ycCheck(e);later(()=>miss(e),1000*TS);
+function wrong(e){e.el.classList.add('bad');sfx('thud');nWrong++;const lost=streak;streak=0;stkCold=true;stats();if(lost>0)streakBroken();verdict('Not quite…');ycCheck(e);later(()=>miss(e),1300*TS);
  setTimeout(()=>{if(phase==='judging'&&cur===e&&!e.moved){window.__ev.push('failsafe:miss');miss(e)}},1000*TS+1200)}   /* v5.9.1 failsafe: never stuck on 'Not quite…' */
 function miss(e){const old=e.el.getBoundingClientRect();
  tl.splice(tl.indexOf(e),1);const k=tl.filter(x=>key(x.c)<key(e.c)).length;
  e.moved=true;e.up=true;e.pending=false;tl.splice(k,0,e);
  e.fixd=true;phase='result';timeline();showEl(e.el,false);
  const last=!deck.length;
- verdict('Not quite',when(e),last?null:['Next card',()=>draw()]);ycCheck(e);
- /* Discovery: no extra tap needed. The next card opens by itself (Next card skips the wait); after the last card the score pops up */
- if(last){later(over,Math.max(TEST?400:0,END_MISS*TS));
-  setTimeout(()=>{if(phase==='result'&&cur===e&&!deck.length&&$('#end').style.display!=='flex'){window.__ev.push('failsafe:over');over()}},Math.max(TEST?400:0,END_MISS*TS)+1500)}
- else later(()=>{if(phase==='result'&&cur===e&&!hand)draw()},Math.max(TEST?500:0,AUTO_NEXT*TS));   /* v5.9.1 failsafe: the score always pops up */   /* the score pops up by itself after the card has slid to its true place */
+ /* Discovery v2 (Luke 24 Nov, t202u): no timer. The player reads why and taps Next card (or See your score after the last card) */
+ verdict('Not quite',when(e),last?['See your score',()=>over()]:['Next card',()=>draw()]);ycCheck(e);   /* v5.9.1 failsafe: the score always pops up */   /* the score pops up by itself after the card has slid to its true place */
  if(!RM.matches){const sl=e.el.parentElement,nw=e.el.getBoundingClientRect(),dx=old.left-nw.left,dy=old.top-nw.top;
   if(dx||dy){sl.style.transition='none';sl.style.transform='translate('+dx+'px,'+dy+'px)';sl.style.zIndex=4;sl.getBoundingClientRect();
    sl.style.transition='transform .6s ease-in-out';sl.style.transform='';later(()=>{sl.style.transition='';sl.style.zIndex=''},700)}}}
