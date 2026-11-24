@@ -754,7 +754,7 @@ function over(){phase='over';applyFrame();$('#pill').hidden=true;$('#s0').hidden
  const lock='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2" fill="currentColor"/><path d="M8 10.5V8a4 4 0 0 1 8 0'+(unlocked?'':'v2.5')+'" fill="none" stroke="currentColor" stroke-width="2.2"/></svg>';
  const end=$('#end');
  end.innerHTML='<div class="ep dsc" role="dialog" aria-label="Your result"><div class="e1">'+
-  '<p class="theme'+(THEME_FINAL?'':' ph')+'"'+(THEME_FINAL?'':' title="Placeholder wording: not final"')+'>'+THEME_LINE+'</p>'+
+  /* theme line removed per Luke 24 Nov 20:59 */
   '<div class="slist"><div class="sc">'+
   '<div class="inc" data-v="'+nWrong+'"><small>Incorrect</small><b>0</b></div>'+
   '<div class="okn" data-v="'+nRight+'"><small>Correct</small><b>0</b></div>'+
