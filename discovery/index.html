@@ -327,6 +327,12 @@ header{position:relative;z-index:7}
 #sbk.gold .ff{color:#F2B81C;-webkit-text-stroke-color:#551309;filter:drop-shadow(0 0 8px rgba(242,184,28,.55))}
 #sbk.gold .ff i:first-child,#sbk.gold .ff i:nth-child(2){font-size:.48em;line-height:1}
 #sbk.gold .ff i.n{font-size:1.2em;line-height:.95}
+/* Luke t272u/t273u: gold YES! centred on the conquered hard card, same Flip lettering as the streak pop-ups */
+#yesbk{position:fixed;z-index:8;pointer-events:none;transform:translate(-50%,-50%);text-align:center;transition:opacity .3s;white-space:nowrap}
+#yesbk.out{opacity:0}
+#yesbk .ff{color:#F2B81C;-webkit-text-stroke-color:#551309;filter:drop-shadow(0 0 8px rgba(242,184,28,.55));white-space:nowrap;line-height:.95}
+#yesbk .ff i{display:inline-block;margin:0}
+@media (prefers-reduced-motion:reduce){#yesbk{transition:opacity .9s ease!important}#yesbk .ff i{animation:none;opacity:1;transform:none}}
 /* Luke t238u: a big 0 flies into the streak disc after Streak broken finishes */
 .zfly{position:fixed;z-index:9;pointer-events:none;font-family:'Fredoka','Arial Rounded MT Bold',Arial,sans-serif;font-weight:700;line-height:1;color:#9c1c14;-webkit-text-stroke:max(4px,.08em) #F4E8CB;paint-order:stroke fill;text-shadow:0 .06em .08em rgba(40,20,14,.45);transform:translate(-50%,-50%);white-space:nowrap}
 #end .ep.dsc{max-width:440px}
@@ -406,7 +412,7 @@ const UNLOCKKEY='ckDiscoveryEnduranceUnlocked';                                 
 const HSKEY='ckDiscoveryHighScore';                                                          /* best total (correct + best streak) per device (Luke t212u) */
 const STRUGKEY='ckDiscoveryStruggle';                                                        /* per-card miss streak + flag, this browser only (Luke t252u). Not cleared by the test BUILD reset (new flags can be added; existing entries are kept). */
 /* TEST ONLY (Luke t247u/t263u/t264u): bump BUILD on every Discovery commit so testers get a fresh high score (and a fresh best streak on reload; best streak is session-only, no storage key) and 4 random cards marked as struggle cards (as if missed in 3 games in a row). ?hard=N also marks N more, then strips the flag and plays a normal game. Remove this auto-reset and ?hard= before Discovery goes on the Wix site. */
-const BUILD='2026-11-25-0735',BUILDKEY='ckDiscoveryBuild';
+const BUILD='2026-11-25-0750',BUILDKEY='ckDiscoveryBuild';
 function seedHardCards(n){n=+n;if(!(n>0)||!DECK_ALL||!DECK_ALL.length)return;try{const raw=JSON.parse(localStorage.getItem(STRUGKEY)||'{}'),m=(raw&&typeof raw==='object'&&!Array.isArray(raw))?raw:{};const ids=DECK_ALL.map(c=>c.id);const sh=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)),x=a[i];a[i]=a[j];a[j]=x}return a};const pick=sh(ids.filter(id=>!m[id])).concat(sh(ids.filter(id=>m[id]&&!m[id].flagged)));pick.slice(0,Math.min(n,pick.length)).forEach(id=>{m[id]={miss:3,flagged:true}});localStorage.setItem(STRUGKEY,JSON.stringify(m))}catch(e){}}
 try{if(localStorage.getItem(BUILDKEY)!==BUILD){localStorage.removeItem(HSKEY);seedHardCards(4);localStorage.setItem(BUILDKEY,BUILD)}}catch(e){}
 (function(){const h=location.search.match(/[?&]hard=(\d+)/);if(!h)return;seedHardCards(+h[1]);try{const u=new URL(location.href);u.searchParams.delete('hard');history.replaceState(null,'',u.pathname+u.search+u.hash)}catch(e){}})();
@@ -640,6 +646,8 @@ function fitBig(o){const f=o.querySelector('.ff'),w=$('#tlw').getBoundingClientR
   const top=c?Math.max(0,Math.min(c.getBoundingClientRect().top-w.top,w.height*.4)):0;o.style.paddingTop=Math.round(top)+'px';
   const lines=f.querySelectorAll('i').length,W=o.clientWidth-16,H=o.clientHeight-top-8;let fs=Math.min(150,W*.27,H/(lines>=3?3.15:2.3));f.style.fontSize=Math.max(30,Math.floor(fs))+'px';
   let n=0;while(n++<30&&(f.scrollWidth>W||f.scrollHeight>H)&&fs>30){fs-=3;f.style.fontSize=Math.floor(fs)+'px'}}
+function placeYes(o){const el=o&&o._el;if(!o||!el||!el.isConnected)return;const r=el.getBoundingClientRect(),vw=innerWidth,vh=innerHeight;let x=r.left+r.width/2,y=r.top+r.height/2;const fw=o.offsetWidth||0,fh=o.offsetHeight||0;x=Math.max(fw/2+4,Math.min(vw-fw/2-4,x));y=Math.max(fh/2+4,Math.min(vh-fh/2-4,y));o.style.left=Math.round(x)+'px';o.style.top=Math.round(y)+'px'}
+function yesFlash(e){const old=$('#yesbk');if(old)old.remove();const o=document.createElement('div');o.id='yesbk';o.setAttribute('aria-live','assertive');o.innerHTML='<span class="ff"><i>YES!</i></span>';o._el=e&&e.el;document.body.appendChild(o);const r=o._el&&o._el.getBoundingClientRect(),fs=r?Math.max(28,Math.min(72,r.width*.48)):48;o.querySelector('.ff').style.fontSize=Math.round(fs)+'px';placeYes(o);window.__ev&&window.__ev.push('yes:'+(e&&e.c&&e.c.id||''));clearTimeout(yesFlash.t);clearTimeout(yesFlash.u);const hold=TEST?600:1100,fall=TEST?400:400;yesFlash.t=setTimeout(()=>{if(o.isConnected)o.classList.add('out')},hold);yesFlash.u=setTimeout(()=>{o.remove()},hold+fall)}
 function streakBroken(){bigFlash('brk','<i>Streak</i><i>broken!</i>','streakBroken')}
 function zeroFly(){clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const old=document.querySelector('.zfly');if(old)old.remove();
  const k=$('#stats .stk');if(!k)return;window.__ev.push('zeroFly');
@@ -776,7 +784,7 @@ function timeline(){const sc=$('#tl'),keep=sc.scrollTop,choose=phase==='choose',
   add(r0,-g/2,'ls');                             /* left end of EVERY row: the gap before this row's first card (same index as the end of the row above) */
   row.forEach((e,j)=>add(r0+j+1,(j+1)*cw+j*g+g/2,j===row.length-1?'le':''));
   w.appendChild(tb);w.appendChild(cs);sc.appendChild(w)}
- refreshLit();sc.scrollTop=keep;updatePill();syncConquerFx()}
+ refreshLit();sc.scrollTop=keep;updatePill();syncConquerFx();placeYes($('#yesbk'))}
 /* hover / focus / press on a marker lights every marker and bar for that same gap (row end + next row start) */
 function hover(p,on){const sc=$('#tl');sc.querySelectorAll('[data-p="'+p+'"]').forEach(el=>{if(el.classList.contains('bar'))el.classList.toggle('hl',on||lit.has(p));else el.classList.toggle('hv',on)})}
 function refreshLit(){const sc=$('#tl');
@@ -882,11 +890,12 @@ function ensureConquerOverlay(e,animate){const box=$('#cfx');if(!box||!e||!e.c||
  if(!item){item=document.createElement('div');item.className='cfx-item'+(animate?'':' settled');item.dataset.id=e.c.id;item.innerHTML='<div class="cfx-rays"><i></i></div>';const clone=e.el.cloneNode(true);clone.classList.remove('pop');clone.classList.add('cfx-card');item.appendChild(clone);box.appendChild(item)}syncConquerFx()}
 function conquerFx(e){const sl=e.el&&e.el.parentElement;if(!sl)return;sl.classList.add('good','conquered');ensureConquerOverlay(e,true);const item=$('#cfx .cfx-item[data-id="'+e.c.id+'"]');if(item&&!RM.matches){sparkleAt(item,item.offsetWidth/2,item.offsetHeight/2,18);setTimeout(()=>{item.querySelectorAll('.csp').forEach(n=>n.remove());item.classList.add('settled')},1800)}else if(item)item.classList.add('settled');window.__ev&&window.__ev.push('conquer:'+e.c.id)}   /* Luke t260u/t270u: unclipped overlay; glow stays and gently shines for the rest of the run */
 function correct(e){clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const zf=document.querySelector('.zfly');if(zf)zf.remove();
- const prevBest=best;streak++;nRight++;runBest=Math.max(runBest,streak);const isNewHigh=streak>prevBest;
- if(isNewHigh)bigFlash('stf gold','<i>New best</i><i>streak</i><i class="n">'+streak+'</i>','newBestStreak:'+streak);
+ const prevBest=best;streak++;nRight++;runBest=Math.max(runBest,streak);const isNewHigh=streak>prevBest;const conquered=isStruggling(e.c);
+ if(conquered)yesFlash(e);   /* Luke t272u/t273u: gold YES! on the card replaces the streak pop-up for this placement */
+ else if(isNewHigh)bigFlash('stf gold','<i>New best</i><i>streak</i><i class="n">'+streak+'</i>','newBestStreak:'+streak);
  else bigFlash('stf','<i>Streak</i><i class="n">'+streak+'</i>','streak:'+streak);
  best=Math.max(best,streak);setBest(best);stkCold=false;stkRed=false;stats();streakPop();phase='result';learned=true;
- const conquered=isStruggling(e.c);noteCard(e.c,true);
+ noteCard(e.c,true);
  if(conquered){e.conquered=true;sfx('conquer');conquerFx(e);if(e.newBest)newBestBurst()}   /* own sound for the struggled-card moment; skip streakpop/jingle so they don't clash (Luke t253u / t254u) */
  else if(e.newBest){sfx('jingle');newBestBurst()}else sfx('streakpop');   /* jingle + header burst on the first new best after a break (or the start of the run); later new bests in the same streak get the gold pop-up and streakpop (Luke t238u / t244u / t258u) */
  const last=!deck.length;if(e.newBest)nbShown=true;
@@ -964,7 +973,7 @@ function viewTimeline(){$('#end').style.display='none';phase='review';hideYc();a
  timeline();$('#tl').scrollTop=0;b.focus({preventScroll:true})}
 function relayout(){applyFrame();if(!phase||!hand&&phase==='choose')return;if(phase==='review'){sizeStage('verdict');timeline();return}if(phase==='choose')renderStage();else sizeStage('verdict');if(phase==='flipping')fitFF();timeline();positionS0();fitZoom();if(ycFor)ycCheck(ycFor)}
 let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(relayout,120)});
-$('#tl').addEventListener('scroll',syncConquerFx,{passive:true});
+$('#tl').addEventListener('scroll',()=>{syncConquerFx();placeYes($('#yesbk'))},{passive:true});addEventListener('resize',()=>placeYes($('#yesbk')));
 document.addEventListener('click',ev=>{if(!(ev.target.closest&&ev.target.closest('#mute, #vol, #rst, #rsq')))skipFlip()},true);
 newRun();
 })();
