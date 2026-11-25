@@ -400,10 +400,12 @@ const BUY_D=BUY+'?utm_source=solo-game&utm_medium=web-game&utm_campaign=discover
 const ENDURANCE_URL='https://reuniongames.github.io/solo-game/';                       /* the live Endurance game (repo root) */
 const UNLOCKKEY='ckDiscoveryEnduranceUnlocked';                                          /* set on a perfect run (all placed cards right, Luke 24 Nov) */
 const HSKEY='ckDiscoveryHighScore';                                                          /* best total (correct + best streak) per device (Luke t212u) */
-const STRUGKEY='ckDiscoveryStruggle';                                                        /* per-card miss streak + flag, this browser only (Luke t252u). Not cleared by the test BUILD reset. */
-/* TEST ONLY (Luke t247u): bump BUILD on every Discovery commit so testers get a fresh high score (and a fresh best streak on reload; best streak is session-only, no storage key). Remove this auto-reset before Discovery goes on the Wix site. */
-const BUILD='2026-11-25-0720',BUILDKEY='ckDiscoveryBuild';
-try{if(localStorage.getItem(BUILDKEY)!==BUILD){localStorage.removeItem(HSKEY);localStorage.setItem(BUILDKEY,BUILD)}}catch(e){}
+const STRUGKEY='ckDiscoveryStruggle';                                                        /* per-card miss streak + flag, this browser only (Luke t252u). Not cleared by the test BUILD reset (new flags can be added; existing entries are kept). */
+/* TEST ONLY (Luke t247u/t263u/t264u): bump BUILD on every Discovery commit so testers get a fresh high score (and a fresh best streak on reload; best streak is session-only, no storage key) and 4 random cards marked as struggle cards (as if missed in 3 games in a row). ?hard=N also marks N more, then strips the flag and plays a normal game. Remove this auto-reset and ?hard= before Discovery goes on the Wix site. */
+const BUILD='2026-11-25-0730',BUILDKEY='ckDiscoveryBuild';
+function seedHardCards(n){n=+n;if(!(n>0)||!DECK_ALL||!DECK_ALL.length)return;try{const raw=JSON.parse(localStorage.getItem(STRUGKEY)||'{}'),m=(raw&&typeof raw==='object'&&!Array.isArray(raw))?raw:{};const ids=DECK_ALL.map(c=>c.id);const sh=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)),x=a[i];a[i]=a[j];a[j]=x}return a};const pick=sh(ids.filter(id=>!m[id])).concat(sh(ids.filter(id=>m[id]&&!m[id].flagged)));pick.slice(0,Math.min(n,pick.length)).forEach(id=>{m[id]={miss:3,flagged:true}});localStorage.setItem(STRUGKEY,JSON.stringify(m))}catch(e){}}
+try{if(localStorage.getItem(BUILDKEY)!==BUILD){localStorage.removeItem(HSKEY);seedHardCards(4);localStorage.setItem(BUILDKEY,BUILD)}}catch(e){}
+(function(){const h=location.search.match(/[?&]hard=(\d+)/);if(!h)return;seedHardCards(+h[1]);try{const u=new URL(location.href);u.searchParams.delete('hard');history.replaceState(null,'',u.pathname+u.search+u.hash)}catch(e){}})();
 const LEADER_URL='https://www.chroniclesofthekingdom.co.uk/post/leader-s-guide-preview-try-the-first-four-sessions-for-free';  /* free Leader's Guide preview (media-press.md) */
 /* PLACEHOLDER theme line: Qohelet's example wording from the workshop (24 Nov), NOT final. Qohelet to draft, Ezra to check. Set THEME_FINAL=true once approved. */
 const THEME_LINE='From Creation to Jesus\u2019 return: one story.',THEME_FINAL=false;                        /* bests are kept per deck: a full-deck beta gets its own id */
