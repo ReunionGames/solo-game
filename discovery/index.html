@@ -453,7 +453,7 @@ function markHard(id){if(!id)return;try{const raw=JSON.parse(localStorage.getIte
 function grantUnlock(c){if(!c||!c.id||STARTER_IDS.indexOf(c.id)>=0)return false;const st=loadUnlockState();if(st.ids.indexOf(c.id)>=0)return false;st.ids.push(c.id);saveUnlockState(st);markHard(c.id);return true}
 function pickUnlock(){const left=lockedPlayable();if(!left.length)return null;const a=left.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)),x=a[i];a[i]=a[j];a[j]=x}return a[0]}
 /* TEST ONLY (Luke t247u/t263u/t264u/t287u): bump BUILD on every Discovery commit so testers get a fresh high score (and a fresh best streak on reload; best streak is session-only, no storage key), cleared card unlocks, and 1 random owned card marked as a struggle card (as if missed in 3 games in a row). ?hard=N also marks N more, then strips the flag and plays a normal game. ?test=1&unlock=1 jumps a run to a perfect end so the unlock reveal can be checked quickly. Remove this auto-reset, the unlock clear, ?hard= and ?test=1&unlock=1 before Discovery goes on the Wix site. */
-const BUILD='2026-11-25-1030',BUILDKEY='ckDiscoveryBuild';
+const BUILD='2026-11-25-1055',BUILDKEY='ckDiscoveryBuild';
 function seedHardCards(n){n=+n;if(!(n>0)||!DECK_ALL||!DECK_ALL.length)return;try{const raw=JSON.parse(localStorage.getItem(STRUGKEY)||'{}'),m=(raw&&typeof raw==='object'&&!Array.isArray(raw))?raw:{};const pool=ownedDeck(),ids=(pool.length?pool:DECK_ALL).map(c=>c.id);const sh=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)),x=a[i];a[i]=a[j];a[j]=x}return a};const pick=sh(ids.filter(id=>!m[id])).concat(sh(ids.filter(id=>m[id]&&!m[id].flagged)));pick.slice(0,Math.min(n,pick.length)).forEach(id=>{m[id]={miss:3,flagged:true}});localStorage.setItem(STRUGKEY,JSON.stringify(m))}catch(e){}}
 try{if(localStorage.getItem(BUILDKEY)!==BUILD){localStorage.removeItem(HSKEY);localStorage.removeItem(UNLOCKCARDSKEY);seedHardCards(1);localStorage.setItem(BUILDKEY,BUILD)}}catch(e){}
 (function(){const h=location.search.match(/[?&]hard=(\d+)/);if(!h)return;seedHardCards(+h[1]);try{const u=new URL(location.href);u.searchParams.delete('hard');history.replaceState(null,'',u.pathname+u.search+u.hash)}catch(e){}})();
@@ -656,7 +656,7 @@ function draw(){if(!deck.length)return over();applyFrame();
  big=!learned;loud=(turn===1);pulseOn=false;step3=false;pulseUntil=0;                /* loud markers until the first correct card; one pulse when the step 3 prompt appears */
  $('#tlh').style.display='none';
  s0Active=(turn===1&&!s0Seen());
- stats();renderStage();timeline();$('#tl').scrollTop=0;if(s0Active)showS0();else zoomHand()}   /* every new card opens large: read it, tap off to place it */
+ stats();renderStage();if(s0Active)$('#stage').style.display='none';timeline();$('#tl').scrollTop=0;if(s0Active)showS0();else zoomHand();applyHandBar()}   /* every new card opens large: read it, tap off to place it. Your card bar waits until that zoom is dismissed (Luke t292u). */
 function getHS(){try{return Math.max(0,+localStorage.getItem(HSKEY)||0)}catch(e){return 0}}   /* stored best total (correct + best streak), Luke t212u / t238u */
 function stats(){const st=$('#stats');let k=st.querySelector('.stk');
  if(!k||!st.querySelector('.hs')||!st.querySelector('.hl')){st.innerHTML='<div class="scw"><span class="sl">Streak</span><span class="stk"></span><div class="bl">Best streak <b class="bv"></b></div></div><div class="hs"><span class="hl">High score</span><b class="hv"></b></div>';k=st.querySelector('.stk')}
@@ -770,9 +770,12 @@ function positionS0(){const s=$('#s0');if(s.hidden)return;
  ar.style.cssText='left:'+cx+'px;top:'+y0+'px;height:'+Math.max(len,0)+'px;--hw:'+hw+'px;--hh:'+Math.min(hh,Math.max(len,0))+'px;'+(len<8?'display:none':'');
  ar.classList.toggle('bob',!RM.matches)}
 function dismissS0(){const s=$('#s0');if(s.hidden)return;s.hidden=true;s0Active=false;s0Mark();swallowUntil=performance.now()+(TEST?100:350);
- renderStage();zoomHand()}
+ renderStage();$('#stage').style.display='none';zoomHand();applyHandBar()}
 $('#s0').onclick=ev=>{ev.stopPropagation();ev.preventDefault();if(performance.now()-(+$("#s0").dataset.at||0)<250)return;tapAt={x:ev.clientX,y:ev.clientY};if(!$('#s0').hidden)ui('tap');dismissS0()};
 addEventListener('keydown',ev=>{if((ev.key==='Escape'||ev.key==='Enter')&&!$('#s0').hidden){ev.preventDefault();ui('tap');dismissS0()}});
+function applyHandBar(){const s=$('#stage');if(!s||phase!=='choose')return;
+ const want=!!hand&&!s0Active&&$('#zoom').style.display!=='flex',hide=s.style.display==='none';
+ if(want===!hide)return;s.style.display=want?'':'none';sizeStage('choose');timeline();if(s0Active)positionS0()}   /* Your card bar only once the first-card zoom is dismissed (Luke t292u) */
 function updatePill(){const p=$('#pill'),zo=$('#zoom').style.display==='flex';
  const show=loud&&phase==='choose'&&!zo&&!s0Active&&(sel!=null||step3);
  if(!show){p.hidden=true;return}
@@ -896,7 +899,7 @@ function fitZoom(){const z=$('#zoom');if(z.style.display!=='flex')return;
  positionFc()}
 function zoomOpen(node,cap,label,kind){const z=$('#zoom'),b=z.querySelector('.z');b.innerHTML='';b.appendChild(node);zoomKind=kind||'';
   z.querySelector('.zt').innerHTML=cap||'';const zb=z.querySelector('.zb');zb.textContent=label;zb.disabled=false;zb.removeAttribute('aria-disabled');zb.classList.toggle('ros',kind==='placed');
- z.style.display='flex';zoomAt=performance.now();fitZoom();zb.focus({preventScroll:true});updatePill();
+ z.style.display='flex';zoomAt=performance.now();fitZoom();zb.focus({preventScroll:true});updatePill();applyHandBar();
  z.onclick=ev=>{ev.stopPropagation();ev.preventDefault();if(performance.now()-zoomAt<(TEST?40:250))return;
   if(fcOn()&&performance.now()<swallowUntil)return; /* leftover tap from dismissing step 0 must not clear the first-card overlay */
    const onBtn=!!(ev.target.closest&&ev.target.closest('.zb'));
@@ -913,7 +916,7 @@ document.addEventListener('click',ev=>{if(performance.now()<swallowUntil&&!ev.ta
 function zoomClose(){if(fcOn())dismissFc();const kind=zoomKind;zoomKind='';$('#zoom').style.display='none';swallowUntil=performance.now()+(TEST?100:350);
  if(lit.size)later(()=>{lit=new Set();refreshLit()},2500);
  if(kind==='hand'&&turn===1&&loud&&phase==='choose'&&sel==null){const first=!step3;step3=true;updatePill();if(first)pulseMarkers()}
- else updatePill()}
+ else updatePill();applyHandBar()}
 function zoom(e,i){const z=zoomOpen(build(e.c,{up:true}),'<b>'+e.c.title+'</b>','Read other side','placed');
  if(phase==='choose'&&sel==null&&i>=0){lit=new Set([i,i+1]);refreshLit()}}
 function zoomHand(){if(!hand||phase!=='choose')return;const n='Card '+turn+' of '+total;
@@ -1055,7 +1058,7 @@ function viewTimeline(){$('#end').style.display='none';phase='review';hideYc();a
  hr.innerHTML='<span class="big">Your timeline</span>';const b=document.createElement('button');b.className='btn';b.id='restart';b.textContent='Try again';b.onclick=()=>{ui('tap');newRun()};hr.appendChild(b);p.appendChild(hr);
  const v=document.createElement('div');v.className='vb';v.innerHTML='<b>'+nRight+' of '+total+'</b> correct · Best streak <b>'+runBest+'</b>';p.appendChild(v);s.appendChild(p);
  timeline();$('#tl').scrollTop=0;b.focus({preventScroll:true})}
-function relayout(){applyFrame();if(!phase||!hand&&phase==='choose')return;if(phase==='review'){sizeStage('verdict');timeline();return}if(phase==='choose')renderStage();else sizeStage('verdict');if(phase==='flipping')fitFF();timeline();positionS0();positionUnlock();fitZoom();if(ycFor)ycCheck(ycFor)}
+function relayout(){applyFrame();if(!phase||!hand&&phase==='choose')return;if(phase==='review'){sizeStage('verdict');timeline();return}if(phase==='choose')renderStage();else sizeStage('verdict');if(phase==='choose')applyHandBar();if(phase==='flipping')fitFF();timeline();positionS0();positionUnlock();fitZoom();if(ycFor)ycCheck(ycFor)}
 let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(relayout,120)});
 let cfxSync=0;$('#tl').addEventListener('scroll',()=>{if(!cfxSync)cfxSync=requestAnimationFrame(()=>{cfxSync=0;syncConquerFx();placeYes($('#yesbk'))})},{passive:true});addEventListener('resize',()=>placeYes($('#yesbk')));
 document.addEventListener('click',ev=>{if(!(ev.target.closest&&ev.target.closest('#mute, #vol, #rst, #rsq')))skipFlip()},true);
