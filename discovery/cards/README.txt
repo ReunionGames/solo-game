@@ -19,7 +19,6 @@ Examples:
   cards/back/1-2-creation-of-heavens-and-earth.webp
   cards/mystery/1-2-creation-of-heavens-and-earth.webp
 
-All 52 Bible Event cards have front, back and reveal art in the data. A card is
-only dealt when `playable` is true. The current playable pool is still the 13
-promo cards (7 starter, one per period, plus 6 unlocks). Opening the full 52
-is a small data change once the starter size is decided; do not flip that yet.
+All 52 Bible Event cards are playable and have front, back and reveal art.
+New players start with the original 13 promo cards (STARTER_IDS). The other 39
+join the deck one at a time after a perfect run.
