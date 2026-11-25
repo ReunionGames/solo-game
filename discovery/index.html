@@ -18,7 +18,7 @@
 html,body{height:100%;margin:0;overflow:hidden;background:var(--parch);color:var(--ink);font-family:'EB Garamond',Georgia,serif;-webkit-tap-highlight-color:transparent}
 #app{position:absolute;left:0;right:0;top:var(--vt,0px);height:var(--vh,100%);width:min(100%,1400px);margin:0 auto;display:flex;flex-direction:column}
 #vs{position:absolute;left:0;top:0;width:1px;height:100%;visibility:hidden;pointer-events:none}
-header{flex:none;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 12px;min-height:52px;border-bottom:1px solid #d8c79c}
+header{flex:none;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 12px;min-height:52px;border-bottom:1px solid #d8c79c;background:var(--parch)}
 .brand{min-width:0;flex:1 1 auto}.brand b{font-size:17px;font-variant:small-caps;color:var(--burg);line-height:1.2;display:block;white-space:nowrap}
 #stats{white-space:nowrap}
 /* stage: the drawn card and instructions, or the verdict */
@@ -64,7 +64,7 @@ header{flex:none;display:flex;justify-content:space-between;align-items:center;g
 .panel:has(.ff){align-self:stretch;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0;flex:1 1 auto;min-height:0}
 /* timeline */
 #tlw{position:relative;flex:1 1 auto;min-height:0}
-#tl{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:8px 18px 6px;--band:24px;--g:7px;--rg:10px;--tw:26px;--th:20px;--tf:19px}
+#tl{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:4px 18px 4px;--band:20px;--g:4px;--rg:4px;--tw:26px;--th:20px;--tf:19px}
 .rw{margin:0 auto;position:relative}
 .rw+.rw{margin-top:var(--rg)}
 .cards{display:flex;gap:var(--g)}
@@ -143,7 +143,7 @@ header{flex:none;display:flex;justify-content:space-between;align-items:center;g
  #tlh{padding:5px 24px 0}.lab{font-size:17px}
  .crow{max-width:760px;margin:0 auto;width:100%}.chip .ct{font-size:20px}.chip{min-height:52px}.chip .mc{width:30px}#hint{font-size:21px}#stage.loud #hint{font-size:21px}
  .vb{font-size:21px;text-align:center}.vh{justify-content:center;gap:24px}.nbst .lg{display:inline}
- #tl{padding:12px 32px;--band:32px;--g:12px;--rg:12px;--tw:32px;--th:24px;--tf:22px}   /* Luke t259u: extra side padding so the end + markers are not clipped */
+ #tl{padding:6px 32px;--band:24px;--g:6px;--rg:6px;--tw:32px;--th:24px;--tf:22px}   /* Luke t259u: extra side padding so the end + markers are not clipped. t300u: tighter gaps and a slimmer band so typical decks fit without scrolling. */
  .cue span{font-size:18px}
  .panel{font-size:21px}.panel .big{font-size:30px}
 }
@@ -316,12 +316,12 @@ header{position:relative;z-index:7}
 /* a corrected (wrong) card: keep the red glow on the timeline (Luke t251u); do not switch to gold */
 .slot.fixd .card img,.slot.moved.fixd .card img{filter:drop-shadow(0 0 2px #8a4b00) drop-shadow(0 0 6px #F3AE45) drop-shadow(0 0 12px rgba(243,174,69,.85))}
 .slot.fixd .card.bad img,.slot.moved .card.bad img,.slot.moved.fixd .card.bad img{filter:drop-shadow(0 0 5px #b3261e) drop-shadow(0 2px 6px rgba(0,0,0,.35))}
-/* Luke t252u / t260u: struggle-card celebration. Rays and glow live in #cfx (a fixed overlay) so they are not clipped by the timeline scroll box, and can sit in front of the header/stage. The card clone in the overlay sits above the rays. */
+/* Luke t252u / t260u: struggle-card celebration. Rays and glow live in #cfx (a fixed overlay) so they are not clipped by the timeline scroll box. The card clone in the overlay sits above the rays. #cfx is clipped to the timeline well so a scrolled hard card cannot paint over the header (Luke t300u). */
 /* Luke t284u: the card being placed (preview, slide, flip) sits above the rays; once it lands it goes back under */
 #tl .slot.pv,#tl .slot.lifting{z-index:9}
 #chip{position:relative;z-index:9}
 .slot.conquered{z-index:3}
-#cfx{position:fixed;inset:0;z-index:8;pointer-events:none;overflow:visible}
+#cfx{position:fixed;top:0;left:0;width:0;height:0;z-index:8;pointer-events:none;overflow:hidden} /* clipped to #tlw so rays/glow stay under the header when the board is scrolled (Luke t300u); pop-ups stay at z-index 40 */
 #cfx .cfx-item{position:absolute;overflow:visible;transform:translateZ(0)}
 #cfx .cfx-rays{position:absolute;left:50%;top:50%;width:175%;height:155%;transform:translate(-50%,-50%);z-index:0;pointer-events:none;opacity:.32;will-change:transform,opacity}
 #cfx .cfx-item:not(.settled) .cfx-rays{animation:rayburst .7s ease-out both,rayssettle 1.2s ease-out .7s forwards}
@@ -509,7 +509,7 @@ function markHard(id){if(!id)return;try{const raw=JSON.parse(localStorage.getIte
 function grantUnlock(c){if(!c||!c.id||STARTER_IDS.indexOf(c.id)>=0)return false;const st=loadUnlockState();if(st.ids.indexOf(c.id)>=0)return false;st.ids.push(c.id);saveUnlockState(st);markHard(c.id);return true}
 function pickUnlock(){const left=lockedPlayable();if(!left.length)return null;const have=ownedIds(),tot={},own={};playableDeck().forEach(c=>{const p=c.period;tot[p]=(tot[p]||0)+1;if(have.has(c.id))own[p]=(own[p]||0)+1});const open={};left.forEach(c=>open[c.period]=1);let bestO=0,bestT=1,cands=[];Object.keys(open).forEach(k=>{const p=+k,o=own[p]||0,n=tot[p]||0;if(!n)return;if(!cands.length||o*bestT<bestO*n){bestO=o;bestT=n;cands=[p]}else if(o*bestT===bestO*n)cands.push(p)});const period=cands[Math.floor(Math.random()*cands.length)],pool=left.filter(c=>c.period===period);return pool[Math.floor(Math.random()*pool.length)]||null} /* unlock the period with the lowest owned/total ratio among those still incomplete; ties at random, then a random locked card in that period (Luke t298u/t299u) */
 /* TEST ONLY (Luke t247u/t263u/t264u/t287u/t296u): bump BUILD on every Discovery commit so testers get a fresh high score (and a fresh best streak on reload; best streak is session-only, no storage key) and cleared card unlocks. Struggle flags are also cleared so a previous build's auto-marked hard card does not linger; new builds no longer mark a random hard card (Luke t296u). ?hard=N still marks N owned cards, then strips the flag and plays a normal game. ?test=1&unlock=1 jumps a run to a perfect end so the unlock reveal can be checked quickly. Remove this auto-reset, the unlock clear, ?hard= and ?test=1&unlock=1 before Discovery goes on the Wix site. */
-const BUILD='2026-11-25-1150',BUILDKEY='ckDiscoveryBuild';
+const BUILD='2026-11-25-1200',BUILDKEY='ckDiscoveryBuild';
 function seedHardCards(n){n=+n;if(!(n>0)||!DECK_ALL||!DECK_ALL.length)return;try{const raw=JSON.parse(localStorage.getItem(STRUGKEY)||'{}'),m=(raw&&typeof raw==='object'&&!Array.isArray(raw))?raw:{};const pool=ownedDeck(),ids=(pool.length?pool:DECK_ALL).map(c=>c.id);const sh=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)),x=a[i];a[i]=a[j];a[j]=x}return a};const pick=sh(ids.filter(id=>!m[id])).concat(sh(ids.filter(id=>m[id]&&!m[id].flagged)));pick.slice(0,Math.min(n,pick.length)).forEach(id=>{m[id]={miss:3,flagged:true}});localStorage.setItem(STRUGKEY,JSON.stringify(m))}catch(e){}}
 try{if(localStorage.getItem(BUILDKEY)!==BUILD){localStorage.removeItem(HSKEY);localStorage.removeItem(UNLOCKCARDSKEY);localStorage.removeItem(STRUGKEY);localStorage.setItem(BUILDKEY,BUILD)}}catch(e){}
 (function(){const h=location.search.match(/[?&]hard=(\d+)/);if(!h)return;seedHardCards(+h[1]);try{const u=new URL(location.href);u.searchParams.delete('hard');history.replaceState(null,'',u.pathname+u.search+u.hash)}catch(e){}})();
@@ -866,16 +866,22 @@ function fitFF(){const f=$('#stage .ff');if(!f)return;const s=$('#stage'),W=s.cl
  let fs=Math.min(110,(Hs)/3.15,W*.26);
  if(n>1&&fs>=46){f.classList.add('st');f.style.fontSize=fs+'px';return}
  f.classList.remove('st');f.style.fontSize=Math.floor(Math.min(110,Hs*.78,W/(n>1?8.2:3)))+'px'}
-/* ---- timeline layout: cards shrink in steps (whenever another row is needed) so the whole timeline fits ---- */
+/* ---- timeline layout (Luke t300u): tighter gaps, slightly smaller cards; prefer a packing that fits the visible area without scrolling. Only very long boards (around 40+) scroll, and they stay tight. ---- */
 function layout(count){const sc=$('#tl'),D=desk(),cs=getComputedStyle(sc);
- const g=D?12:7,band=D?32:24,rg=D?12:10,cueH=(loud&&phase==='choose')?(D?46:62):0;
+ const g=D?6:4,band=D?24:20,rg=D?6:4,cueH=(loud&&phase==='choose')?(D?46:62):0;
+ sc.style.setProperty('--g',g+'px');sc.style.setProperty('--rg',rg+'px');sc.style.setProperty('--band',band+'px');
  const W=sc.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight);
  const tlh=$('#tlh'),avail=FH-$('header').offsetHeight-(tlh.style.display==='none'?0:tlh.offsetHeight)-Math.max(VH,$('#stage').offsetHeight);   /* frame left for the timeline once the verdict stage is shown */
  const Hb=avail-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom)-cueH-1;
- const nMin=D?5:3,nMax=D?7:5,cap=D?200:130,minCw=D?90:70;let b=null;
- for(let n=nMin;n<=nMax;n++){const rows=Math.ceil(count/n),cwW=(W-g*(n-1))/n,chH=(Hb-rg*(rows-1))/rows-band;
-  const cw=Math.floor(Math.max(minCw,Math.min(cwW,chH>0?chH*R:cap,cap)));if(!b||cw>b.cw)b={N:n,cw}}   /* min width keeps cards readable on a long 52-card timeline; the list scrolls instead of shrinking to 36px */
- L={N:b.N,cw:b.cw,ch:Math.floor(b.cw/R),g}}
+ const nMin=D?5:3,nMax=D?7:6,cap=D?180:120,minCw=D?52:52,absMin=D?48:48;
+ const rowsOf=n=>Math.ceil(count/n),chOf=cw=>Math.floor(cw/R),hOf=(n,cw)=>rowsOf(n)*(chOf(cw)+band)+(rowsOf(n)-1)*rg,cwW=n=>(W-g*(n-1))/n;
+ let fit=null,tight=null;
+ for(let n=nMin;n<=nMax;n++){const rows=rowsOf(n),cW=cwW(n),chH=(Hb-rg*(rows-1))/rows-band;
+  const cwFit=Math.floor(Math.min(cW,chH>0?chH*R:cap,cap));
+  if(cwFit>=absMin&&hOf(n,cwFit)<=Hb+1){if(!fit||cwFit>fit.cw||(cwFit===fit.cw&&n<fit.N))fit={N:n,cw:cwFit}}
+  const cwFall=Math.floor(Math.max(1,Math.min(cW,minCw,cap))),over=Math.max(0,hOf(n,cwFall)-Hb);
+  if(!tight||over<tight.over||(over===tight.over&&(cwFall>tight.cw||(cwFall===tight.cw&&n<tight.N))))tight={N:n,cw:cwFall,over}}
+ const b=fit||tight||{N:nMin,cw:minCw};L={N:b.N,cw:b.cw,ch:Math.floor(b.cw/R),g}}
 function timeline(){const sc=$('#tl'),keep=sc.scrollTop,choose=phase==='choose',tcs=getComputedStyle(sc),padL=parseFloat(tcs.paddingLeft);
  sc.className=(choose?(loud?'loud':'quiet'):'noplace')+(choose&&pulseOn?' pulse':'');
  const items=tl.slice();let pvI=-1;if(choose&&sel!=null){items.splice(sel,0,{c:hand,preview:true});pvI=sel}
@@ -1011,7 +1017,8 @@ function isStruggling(c){if(conquerTestArmed)return true;const s=struggleMap()[c
 function noteCard(c,ok){const forced=conquerTestArmed;const m=struggleMap(),s=m[c.id]||{miss:0,flagged:false};if(ok){s.miss=0;s.flagged=false;if(forced)conquerTestArmed=false}else{s.miss=(s.miss||0)+1;if(s.miss>=3)s.flagged=true}if(!s.flagged&&!s.miss)delete m[c.id];else m[c.id]=s;saveStruggle(m)}
 function sparkleAt(host,cx,cy,n){if(RM.matches)return;n=Math.min(+n||0,10);for(let i=0;i<n;i++){const s=document.createElement('i');s.className=host.id==='nhs'?'sp':'csp';const a=(i/n)*Math.PI*2+Math.random()*.25,d=28+Math.random()*36;s.style.cssText='left:'+cx+'px;top:'+cy+'px;--tx:'+Math.round(Math.cos(a)*d*1.35)+'px;--ty:'+Math.round(Math.sin(a)*d)+'px;--d:'+(1.1+Math.random()*.5).toFixed(2)+'s;--dl:'+(Math.random()*.2).toFixed(2)+'s';host.appendChild(s)}if(host.id!=='nhs'){clearTimeout(host._spk);host._spk=setTimeout(()=>host.querySelectorAll('.csp').forEach(n=>n.remove()),2000)}}
 function clearConquerFx(){const b=$('#cfx');if(b)b.innerHTML=''}
-function syncConquerFx(){const b=$('#cfx');if(!b)return;const fr=b.getBoundingClientRect();
+function placeCfx(){const box=$('#cfx'),host=$('#tlw');if(!box||!host)return;const r=host.getBoundingClientRect();box.style.top=r.top+'px';box.style.left=r.left+'px';box.style.width=r.width+'px';box.style.height=r.height+'px'}
+function syncConquerFx(){const b=$('#cfx');if(!b)return;placeCfx();const fr=b.getBoundingClientRect();
  b.querySelectorAll('.cfx-item').forEach(item=>{const e=tl.find(x=>x.conquered&&x.c&&x.c.id===item.dataset.id),card=e&&e.el;if(!card||!card.isConnected){item.style.visibility='hidden';return}const r=card.getBoundingClientRect();item.style.visibility='visible';item.style.left=(r.left-fr.left)+'px';item.style.top=(r.top-fr.top)+'px';item.style.width=r.width+'px';item.style.height=r.height+'px'})}
 function ensureConquerOverlay(e,animate){const box=$('#cfx');if(!box||!e||!e.c||!e.el)return;let item=box.querySelector('.cfx-item[data-id="'+e.c.id+'"]');
  if(!item){item=document.createElement('div');item.className='cfx-item'+(animate?'':' settled');item.dataset.id=e.c.id;item.innerHTML='<div class="cfx-rays"><i></i></div><div class="cfx-glow" aria-hidden="true"></div>';const face=e.el.querySelector('.front img')||e.el.querySelector('img');if(face)item.querySelector('.cfx-glow').appendChild(face.cloneNode(true));const clone=e.el.cloneNode(true);clone.classList.remove('pop');clone.classList.add('cfx-card');item.appendChild(clone);box.appendChild(item)}syncConquerFx()}
@@ -1114,7 +1121,7 @@ function viewTimeline(){$('#end').style.display='none';phase='review';hideYc();a
  hr.innerHTML='<span class="big">Your timeline</span>';const b=document.createElement('button');b.className='btn';b.id='restart';b.textContent='Try again';b.onclick=()=>{ui('tap');newRun()};hr.appendChild(b);p.appendChild(hr);
  const v=document.createElement('div');v.className='vb';v.innerHTML='<b>'+nRight+' of '+total+'</b> correct · Best streak <b>'+runBest+'</b>';p.appendChild(v);s.appendChild(p);
  timeline();$('#tl').scrollTop=0;b.focus({preventScroll:true})}
-function relayout(){applyFrame();if(!phase||!hand&&phase==='choose')return;if(phase==='review'){sizeStage('verdict');timeline();return}if(phase==='choose')renderStage();else sizeStage('verdict');if(phase==='choose')applyHandBar();if(phase==='flipping')fitFF();timeline();positionS0();positionUnlock();fitZoom();if(ycFor)ycCheck(ycFor)}
+function relayout(){applyFrame();if(!phase||!hand&&phase==='choose')return;if(phase==='review'){sizeStage('verdict');timeline();syncConquerFx();return}if(phase==='choose')renderStage();else sizeStage('verdict');if(phase==='choose')applyHandBar();if(phase==='flipping')fitFF();timeline();positionS0();positionUnlock();fitZoom();if(ycFor)ycCheck(ycFor);syncConquerFx()}
 let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(relayout,120)});
 let cfxSync=0;$('#tl').addEventListener('scroll',()=>{if(!cfxSync)cfxSync=requestAnimationFrame(()=>{cfxSync=0;syncConquerFx();placeYes($('#yesbk'))})},{passive:true});addEventListener('resize',()=>placeYes($('#yesbk')));
 document.addEventListener('click',ev=>{if(!(ev.target.closest&&ev.target.closest('#mute, #vol, #rst, #rsq')))skipFlip()},true);
@@ -1124,6 +1131,12 @@ if(UNLOCKTEST){nRight=total;nWrong=0;later(over,40)}
 if(TEST)window.__ckUnlock={show:showUnlock,hide:hideUnlock,pick:pickUnlock,owned:()=>ownedDeck().map(c=>c.id),locked:()=>lockedPlayable().map(c=>c.id),grant:grantUnlock,total:()=>total,layout:()=>Object.assign({},L),
  fillAll(){const pool=ownedDeck().slice().sort((a,b)=>a.n-b.n);if(!pool.length)return;tl=pool.map(c=>({c,up:true}));hand=null;deck=[];total=Math.max(0,pool.length-1);nRight=total;nWrong=0;runBest=total;phase='review';
   $('#end').style.display='none';hideUnlock();hideYc();applyFrame();const s=$('#stage');clearNextClick(s);s.innerHTML='';s.className='pan v';sizeStage('verdict');timeline();$('#tl').scrollTop=0;window.__ev.push('fillAll:'+pool.length)},
+ board(n){const pool=playableDeck().slice(),k=Math.max(1,Math.min(+n||1,pool.length)),on=pool.slice(0,k),rest=pool.slice(k);
+  tl=on.map(c=>({c,up:true}));hand=rest[0]||null;deck=rest.slice(1);total=Math.max(0,k-1);sel=null;lit=new Set();loud=false;pulseOn=false;step3=false;s0Active=false;
+  $('#s0').hidden=true;$('#zoom').style.display='none';$('#fc').hidden=true;$('#end').style.display='none';hideUnlock();hideYc();applyFrame();
+  if(hand){phase='choose';renderStage();applyHandBar()}else{phase='review';const s=$('#stage');clearNextClick(s);s.innerHTML='';s.className='pan v';sizeStage('verdict')}timeline();window.__ev.push('board:'+k);return Object.assign({},L)},
+ conquerScroll(){if(!tl.length)return null;const e=tl[0];e.conquered=true;if(!e.el){const card=$('#tl .slot .card');if(card)e.el=card}ensureConquerOverlay(e,false);const item=$('#cfx .cfx-item');if(item)item.classList.add('settled');
+  const sc=$('#tl'),host=$('#tlw').getBoundingClientRect(),cr=e.el.getBoundingClientRect();sc.scrollTop=sc.scrollTop+(cr.bottom-host.top)+16;syncConquerFx();return true},
  endAll(){nRight=total;nWrong=0;over()}};
 })();
 </script></body></html>
