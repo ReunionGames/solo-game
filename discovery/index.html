@@ -499,24 +499,22 @@ const STRUGKEY='ckDiscoveryStruggle';                                           
 /* The original 13 promo cards (Luke t295u). The other 39 playable Bible Event cards are the unlock pool. */
 const STARTER_IDS=['1-2','1-7','2-2','2-5','3-2','3-5','4-6','5-3','5-7','6-3','6-7','7-3','7-6'];
 function playableDeck(){return DECK_ALL.filter(c=>c&&c.id&&c.playable&&c.front&&c.back)}
+const PLACED=(()=>{const m=location.search.match(/[?&]placed=(\d+)/);return m?+m[1]:0})();
+let placedSession=false,placedPending=!!PLACED;
 function loadUnlockState(){try{const raw=JSON.parse(localStorage.getItem(UNLOCKCARDSKEY)||'null');if(raw&&raw.v===1&&Array.isArray(raw.ids))return{v:1,ids:raw.ids.filter(id=>typeof id==='string')}}catch(e){}return{v:1,ids:[]}}
-function saveUnlockState(st){try{localStorage.setItem(UNLOCKCARDSKEY,JSON.stringify({v:1,ids:(st&&st.ids)||[]}))}catch(e){}}
+function saveUnlockState(st){if(placedSession)return;try{localStorage.setItem(UNLOCKCARDSKEY,JSON.stringify({v:1,ids:(st&&st.ids)||[]}))}catch(e){}}
 function ownedIds(){return new Set(STARTER_IDS.concat(loadUnlockState().ids))}
-function ownedDeck(){const have=ownedIds();return playableDeck().filter(c=>have.has(c.id))}
+function ownedDeck(){if(placedSession)return playableDeck();const have=ownedIds();return playableDeck().filter(c=>have.has(c.id))}
 function lockedPlayable(){const have=ownedIds();return playableDeck().filter(c=>!have.has(c.id))}
 function revealArt(c){return (c&&c.reveal)||(c&&c.front)}
-function markHard(id){if(!id)return;try{const raw=JSON.parse(localStorage.getItem(STRUGKEY)||'{}'),m=(raw&&typeof raw==='object'&&!Array.isArray(raw))?raw:{};m[id]={miss:3,flagged:true};localStorage.setItem(STRUGKEY,JSON.stringify(m))}catch(e){}}
+function markHard(id){if(!id||placedSession)return;try{const raw=JSON.parse(localStorage.getItem(STRUGKEY)||'{}'),m=(raw&&typeof raw==='object'&&!Array.isArray(raw))?raw:{};m[id]={miss:3,flagged:true};localStorage.setItem(STRUGKEY,JSON.stringify(m))}catch(e){}}
 function grantUnlock(c){if(!c||!c.id||STARTER_IDS.indexOf(c.id)>=0)return false;const st=loadUnlockState();if(st.ids.indexOf(c.id)>=0)return false;st.ids.push(c.id);saveUnlockState(st);markHard(c.id);return true}
 function pickUnlock(){const left=lockedPlayable();if(!left.length)return null;const have=ownedIds(),tot={},own={};playableDeck().forEach(c=>{const p=c.period;tot[p]=(tot[p]||0)+1;if(have.has(c.id))own[p]=(own[p]||0)+1});const open={};left.forEach(c=>open[c.period]=1);let bestO=0,bestT=1,cands=[];Object.keys(open).forEach(k=>{const p=+k,o=own[p]||0,n=tot[p]||0;if(!n)return;if(!cands.length||o*bestT<bestO*n){bestO=o;bestT=n;cands=[p]}else if(o*bestT===bestO*n)cands.push(p)});const period=cands[Math.floor(Math.random()*cands.length)],pool=left.filter(c=>c.period===period);return pool[Math.floor(Math.random()*pool.length)]||null} /* unlock the period with the lowest owned/total ratio among those still incomplete; ties at random, then a random locked card in that period (Luke t298u/t299u) */
-/* TEST ONLY (Luke t247u/t263u/t264u/t287u/t296u/t301u/t304u): bump BUILD on every Discovery commit so testers get a fresh high score (and a fresh best streak on reload; best streak is session-only, no storage key) and cleared card unlocks. Struggle flags are also cleared so a previous build's auto-marked hard card does not linger; new builds no longer mark a random hard card (Luke t296u). ?hard=N still marks N owned cards, then strips the flag and plays a normal game. ?test=1&unlock=1 jumps a run to a perfect end so the unlock reveal can be checked quickly. ?placed=N unlocks the full playable set (no hard-card flags), starts a live game with N cards already placed correctly on the timeline, and deals the rest as the remaining hand, then strips the flag. Remove this auto-reset, the unlock clear, ?hard=, ?placed= and ?test=1&unlock=1 before Discovery goes on the Wix site. */
+/* TEST ONLY (Luke t247u/t263u/t264u/t287u/t296u/t301u/t304u/t306u/t307u): bump BUILD on every Discovery commit so testers get a fresh high score (and a fresh best streak on reload; best streak is session-only, no storage key) and cleared card unlocks. Struggle flags are also cleared so a previous build's auto-marked hard card does not linger; new builds no longer mark a random hard card (Luke t296u). ?hard=N still marks N owned cards, then strips the flag and plays a normal game. ?test=1&unlock=1 jumps a run to a perfect end so the unlock reveal can be checked quickly. ?placed=N is a session-only mid-game test: it plays the full 52-card set in memory with N cards already placed correctly, then deals the rest as a live game, and writes nothing to localStorage (no unlocks, high score or struggle flags). Try again returns to the saved pool. The flag is then stripped. Leave BUILD unchanged when shipping only this test-state so testers' saved data is not reset. Remove this auto-reset, the unlock clear, ?hard=, ?placed= and ?test=1&unlock=1 before Discovery goes on the Wix site. */
 const BUILD='2026-11-25-1445',BUILDKEY='ckDiscoveryBuild';
 function seedHardCards(n){n=+n;if(!(n>0)||!DECK_ALL||!DECK_ALL.length)return;try{const raw=JSON.parse(localStorage.getItem(STRUGKEY)||'{}'),m=(raw&&typeof raw==='object'&&!Array.isArray(raw))?raw:{};const pool=ownedDeck(),ids=(pool.length?pool:DECK_ALL).map(c=>c.id);const sh=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)),x=a[i];a[i]=a[j];a[j]=x}return a};const pick=sh(ids.filter(id=>!m[id])).concat(sh(ids.filter(id=>m[id]&&!m[id].flagged)));pick.slice(0,Math.min(n,pick.length)).forEach(id=>{m[id]={miss:3,flagged:true}});localStorage.setItem(STRUGKEY,JSON.stringify(m))}catch(e){}}
 try{if(localStorage.getItem(BUILDKEY)!==BUILD){localStorage.removeItem(HSKEY);localStorage.removeItem(UNLOCKCARDSKEY);localStorage.removeItem(STRUGKEY);localStorage.setItem(BUILDKEY,BUILD)}}catch(e){}
 (function(){const h=location.search.match(/[?&]hard=(\d+)/);if(!h)return;seedHardCards(+h[1]);try{const u=new URL(location.href);u.searchParams.delete('hard');history.replaceState(null,'',u.pathname+u.search+u.hash)}catch(e){}})();
-function seedPlacedUnlocks(){const st=loadUnlockState();playableDeck().forEach(c=>{if(STARTER_IDS.indexOf(c.id)<0&&st.ids.indexOf(c.id)<0)st.ids.push(c.id)});saveUnlockState(st);return ownedDeck().length}
-const PLACED=(()=>{const m=location.search.match(/[?&]placed=(\d+)/);return m?+m[1]:0})();
-if(PLACED)seedPlacedUnlocks();
-
 const LEADER_URL='https://www.chroniclesofthekingdom.co.uk/post/leader-s-guide-preview-try-the-first-four-sessions-for-free';  /* free Leader's Guide preview (media-press.md) */
 /* PLACEHOLDER theme line: Qohelet's example wording from the workshop (24 Nov), NOT final. Qohelet to draft, Ezra to check. Set THEME_FINAL=true once approved. */
 const THEME_LINE='From Creation to Jesus\u2019 return: one story.',THEME_FINAL=false;                        /* bests are kept per deck: a full-deck beta gets its own id */
@@ -707,7 +705,9 @@ function watchImg(img,face,src){let n=0;face.classList.add('ld');
    setTimeout(()=>{img.src=u},TEST?20:400*n)};
   img.src=src;if(img.complete&&img.naturalWidth>0)face.classList.remove('ld')}
 const PRE=[];function preloadBacks(){ownedDeck().forEach(c=>{if(!c||!c.back)return;const i=new Image();i.src=c.back;PRE.push(i)})}
-function newRun(){musicBegin();clearT();$('#end').style.display='none';hideUnlock();const nh=$('#nhs');if(nh)nh.remove();hideYc();closeRsq();clearConquerFx();conquerTestArmed=CONQUERTEST;if(!PRE.length)preloadBacks();
+function newRun(){musicBegin();clearT();$('#end').style.display='none';hideUnlock();const nh=$('#nhs');if(nh)nh.remove();hideYc();closeRsq();clearConquerFx();conquerTestArmed=CONQUERTEST;
+ if(placedPending){placedPending=false;placedSession=true;if(!PRE.length)preloadBacks();showPlacedBoard();return}
+ placedSession=false;if(!PRE.length)preloadBacks();
  const pool=ownedDeck(),mid=pool.filter(c=>MID.includes(c.period)),start=shuffle((mid.length?mid:pool).slice())[0];
  deck=shuffle(pool.filter(c=>c!==start));if(TEST&&TK)deck=deck.slice(0,TK);total=deck.length;
  tl=[{c:start,up:true}];streak=0;turn=0;nRight=0;nWrong=0;runBest=0;nbShown=false;best=getBest();bestStart=best;stkLevel=-1;stkCold=false;stkRed=false;clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const zf=document.querySelector('.zfly');if(zf)zf.remove();draw()}
@@ -1016,7 +1016,7 @@ function resolve(e){if(resolved===e)return;resolved=e;clearT();phase='judging'; 
  showEl(e.el,false);if(e.ok)correct(e);else wrong(e)}
 /* Luke t252u: a card missed in 3 games in a row is flagged in this browser; the next time it is placed right, celebrate and clear the flag. Games that do not include the card leave the count alone. */
 function struggleMap(){try{const m=JSON.parse(localStorage.getItem(STRUGKEY)||'{}');return m&&typeof m==='object'?m:{}}catch(e){return {}}}
-function saveStruggle(m){try{localStorage.setItem(STRUGKEY,JSON.stringify(m))}catch(e){}}
+function saveStruggle(m){if(placedSession)return;try{localStorage.setItem(STRUGKEY,JSON.stringify(m))}catch(e){}}
 function isStruggling(c){if(conquerTestArmed)return true;const s=struggleMap()[c.id];return !!(s&&s.flagged)}
 function noteCard(c,ok){const forced=conquerTestArmed;const m=struggleMap(),s=m[c.id]||{miss:0,flagged:false};if(ok){s.miss=0;s.flagged=false;if(forced)conquerTestArmed=false}else{s.miss=(s.miss||0)+1;if(s.miss>=3)s.flagged=true}if(!s.flagged&&!s.miss)delete m[c.id];else m[c.id]=s;saveStruggle(m)}
 function sparkleAt(host,cx,cy,n){if(RM.matches)return;n=Math.min(+n||0,10);for(let i=0;i<n;i++){const s=document.createElement('i');s.className=host.id==='nhs'?'sp':'csp';const a=(i/n)*Math.PI*2+Math.random()*.25,d=28+Math.random()*36;s.style.cssText='left:'+cx+'px;top:'+cy+'px;--tx:'+Math.round(Math.cos(a)*d*1.35)+'px;--ty:'+Math.round(Math.sin(a)*d)+'px;--d:'+(1.1+Math.random()*.5).toFixed(2)+'s;--dl:'+(Math.random()*.2).toFixed(2)+'s';host.appendChild(s)}if(host.id!=='nhs'){clearTimeout(host._spk);host._spk=setTimeout(()=>host.querySelectorAll('.csp').forEach(n=>n.remove()),2000)}}
@@ -1078,7 +1078,7 @@ function over(){musicEnd();phase='over';applyFrame();$('#pill').hidden=true;$('#
  const perfect=nWrong===0&&nRight===total&&total>0,score=nRight+runBest;
  const unlockCard=perfect?pickUnlock():null;if(unlockCard)grantUnlock(unlockCard);
  let prevHS=0;try{prevHS=Math.max(0,+localStorage.getItem(HSKEY)||0)}catch(e){}
- const newHS=score>prevHS&&score>0;if(newHS){try{localStorage.setItem(HSKEY,String(score))}catch(e){}}
+ const newHS=score>prevHS&&score>0;if(newHS&&!placedSession){try{localStorage.setItem(HSKEY,String(score))}catch(e){}}
  window.__disc={nRight,nWrong,runBest,score,perfect,newHS,prevHS,unlockCard};window.__ev.push('over:'+nRight+'/'+nWrong+'/'+runBest+(unlockCard?':unlock:'+unlockCard.id:''));
  const stillLocked=lockedPlayable().length;
  const unlLine=unlockCard?'<div class="unl newcard" id="endu"><span>New card unlocked</span></div>'
@@ -1141,7 +1141,7 @@ function showPlacedBoard(){const pool=playableDeck().slice();if(!pool.length)ret
 const UNLOCKTEST=TEST&&/[?&]unlock=1\b/.test(location.search);
 newRun();
 if(UNLOCKTEST){nRight=total;nWrong=0;later(over,40)}
-if(PLACED){showPlacedBoard();try{const u=new URL(location.href);u.searchParams.delete('placed');history.replaceState(null,'',u.pathname+u.search+u.hash)}catch(e){}}
+if(PLACED){try{const u=new URL(location.href);u.searchParams.delete('placed');history.replaceState(null,'',u.pathname+u.search+u.hash)}catch(e){}}
 if(TEST)window.__ckUnlock={show:showUnlock,hide:hideUnlock,pick:pickUnlock,owned:()=>ownedDeck().map(c=>c.id),locked:()=>lockedPlayable().map(c=>c.id),grant:grantUnlock,total:()=>total,layout:()=>Object.assign({},L),
  fillAll(){const pool=ownedDeck().slice().sort((a,b)=>a.n-b.n);if(!pool.length)return;tl=pool.map(c=>({c,up:true}));hand=null;deck=[];total=Math.max(0,pool.length-1);nRight=total;nWrong=0;runBest=total;phase='review';
   $('#end').style.display='none';hideUnlock();hideYc();applyFrame();const s=$('#stage');clearNextClick(s);s.innerHTML='';s.className='pan v';sizeStage('verdict');timeline();$('#tl').scrollTop=0;window.__ev.push('fillAll:'+pool.length)},
