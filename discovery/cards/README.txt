@@ -1,27 +1,25 @@
-Discovery card art drop folder
-================================
+Discovery card art
+==================
 
-Mystery (unlock reveal) fronts, already in this repo:
-  discovery/cards/mystery/{period}-{event}-{slug}.webp
+Oholiab's web-sized card art (25 Nov 2026), copied as-is (600 x 838 WebP, RGBA,
+transparent rounded corners, same spec as the earlier Wix promo fronts).
 
-Normal (in-game) fronts, to be added when Oholiab delivers web versions of all 52:
-  discovery/cards/front/{period}-{event}-{slug}.webp
-
-Size and format (match the current promo fronts served from Wix):
-  600 x 838 pixels, WebP, RGBA, transparent rounded corners.
+  discovery/cards/front/{period}-{event}-{slug}.webp     in-game picture side
+  discovery/cards/back/{period}-{event}-{slug}.webp      in-game red side
+  discovery/cards/mystery/{period}-{event}-{slug}.webp   unlock-reveal (no period/event numbers)
+  discovery/cards/rules/53-… and 54-…                    two rules cards (not in the Discovery deck)
 
 {period}-{event} is the card id from Solomon's card-index (period and event_number),
 e.g. Creation of Heavens and Earth is 1-2, not the global set number 02.
-{slug} is the lowercase hyphenated title, the same slug O used on the mystery
-files (the part after the leading NN- and before -mystery-front).
+{slug} is the lowercase hyphenated title from O's filenames (the part after NN-
+and before -front / -back / -mystery-front).
 
 Examples:
-  cards/mystery/1-2-creation-of-heavens-and-earth.webp
   cards/front/1-2-creation-of-heavens-and-earth.webp
-  cards/front/1-1-gods-plan-to-create-a-holy-family.webp
+  cards/back/1-2-creation-of-heavens-and-earth.webp
+  cards/mystery/1-2-creation-of-heavens-and-earth.webp
 
-A card joins play only when it is marked playable and has both a front and a back.
-The 13 promo cards already play with their existing Wix fronts and backs.
-When a new front is dropped here, set that card's `front` to this path and
-`playable` to true, and add a `back` (a back image is also required before it
-can be dealt). Do not change the current playable pool until that art is in.
+All 52 Bible Event cards have front, back and reveal art in the data. A card is
+only dealt when `playable` is true. The current playable pool is still the 13
+promo cards (7 starter, one per period, plus 6 unlocks). Opening the full 52
+is a small data change once the starter size is decided; do not flip that yet.
