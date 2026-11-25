@@ -301,14 +301,18 @@ header{position:relative;z-index:7}
 .slot.conquered{z-index:3}
 #cfx{position:fixed;inset:0;z-index:8;pointer-events:none;overflow:visible}
 #cfx .cfx-item{position:absolute;overflow:visible}
-#cfx .cfx-rays{position:absolute;left:50%;top:50%;width:175%;height:155%;transform:translate(-50%,-50%);z-index:0;pointer-events:none;opacity:.95;animation:rayburst .7s ease-out both}
-#cfx .cfx-rays i{display:block;width:100%;height:100%;background:repeating-conic-gradient(from 0deg,rgba(242,184,28,0) 0 14deg,rgba(255,214,90,.95) 16deg 20deg,rgba(242,184,28,0) 22deg 45deg);-webkit-mask-image:radial-gradient(circle,rgba(0,0,0,.95) 8%,rgba(0,0,0,.55) 38%,transparent 70%);mask-image:radial-gradient(circle,rgba(0,0,0,.95) 8%,rgba(0,0,0,.55) 38%,transparent 70%);animation:rayspin 8s linear .7s infinite}
+#cfx .cfx-rays{position:absolute;left:50%;top:50%;width:175%;height:155%;transform:translate(-50%,-50%);z-index:0;pointer-events:none;opacity:.32}
+#cfx .cfx-item:not(.settled) .cfx-rays{animation:rayburst .7s ease-out both,rayssettle 1.2s ease-out .7s forwards}
+#cfx .cfx-rays i{display:block;width:100%;height:100%;background:repeating-conic-gradient(from 0deg,rgba(242,184,28,0) 0 14deg,rgba(255,214,90,.95) 16deg 20deg,rgba(242,184,28,0) 22deg 45deg);-webkit-mask-image:radial-gradient(circle,rgba(0,0,0,.95) 8%,rgba(0,0,0,.55) 38%,transparent 70%);mask-image:radial-gradient(circle,rgba(0,0,0,.95) 8%,rgba(0,0,0,.55) 38%,transparent 70%);animation:rayspin 18s linear infinite}
+#cfx .cfx-item:not(.settled) .cfx-rays i{animation:rayspin 8s linear .7s infinite}
 #cfx .cfx-card{position:absolute;inset:0;z-index:2;width:100%;height:100%;margin:0}
-#cfx .cfx-card img{filter:drop-shadow(0 0 3px #8a4b00) drop-shadow(0 0 10px #F2B81C) drop-shadow(0 0 22px rgba(255,214,90,1)) drop-shadow(0 0 36px rgba(242,184,28,.9))}
+#cfx .cfx-card img{filter:drop-shadow(0 0 3px #8a4b00) drop-shadow(0 0 10px #F2B81C) drop-shadow(0 0 22px rgba(255,214,90,1)) drop-shadow(0 0 36px rgba(242,184,28,.9));animation:glowshine 3.6s ease-in-out infinite}
 #cfx .csp{z-index:3}
 @keyframes rayburst{0%{opacity:0;transform:translate(-50%,-50%) scale(.35)}100%{opacity:.95;transform:translate(-50%,-50%) scale(1)}}
+@keyframes rayssettle{0%{opacity:.95;transform:translate(-50%,-50%) scale(1)}100%{opacity:.32;transform:translate(-50%,-50%) scale(1)}}
 @keyframes rayspin{to{transform:rotate(360deg)}}
-@media (prefers-reduced-motion:reduce){#cfx .cfx-rays,#cfx .cfx-rays i{animation:none}#cfx .cfx-rays{opacity:.7}#cfx .csp{animation:none!important;opacity:0}}
+@keyframes glowshine{0%,100%{filter:drop-shadow(0 0 3px #8a4b00) drop-shadow(0 0 8px #F2B81C) drop-shadow(0 0 18px rgba(255,214,90,.8)) drop-shadow(0 0 28px rgba(242,184,28,.65))}50%{filter:drop-shadow(0 0 4px #8a4b00) drop-shadow(0 0 14px #F2B81C) drop-shadow(0 0 28px rgba(255,214,90,1)) drop-shadow(0 0 44px rgba(242,184,28,.95))}}
+@media (prefers-reduced-motion:reduce){#cfx .cfx-card img,#cfx .cfx-rays,#cfx .cfx-rays i{animation:none}#cfx .cfx-rays{opacity:.32}#cfx .csp{animation:none!important;opacity:0}}
 #sbk{position:absolute;inset:0;z-index:6;display:flex;align-items:flex-start;box-sizing:border-box;justify-content:center;pointer-events:none;overflow:visible;transition:opacity .3s}
 #sbk.out{opacity:0}
 #sbk .ff{text-align:center;white-space:nowrap;line-height:.98;position:relative}
@@ -502,11 +506,16 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&silentEl&&
 /* v5.9.6 (Luke 24 Nov, t198u/t199u: no sound on the first click): the first tap of a game is in the tutorial (step 0 'Got it' or the
    first-card overlay). That tap creates the audio context and starts decoding the sounds, which finishes a few ms AFTER the tap's own
    sound is asked for, so that sound was dropped. Now a sound asked for while its sound is still decoding waits and plays the moment it is ready (up to 600 ms). */
-let pend=[];
-function flushPend(k){const now=performance.now();pend=pend.filter(p=>{if(p[0]!==k)return true;if(now-p[2]<600&&!quiet())play(k,p[1]);return false})}
-function sfx(k,rate){window.__ev.push((quiet()?'muted:':'snd:')+k);if(quiet()||!actx)return;if(!bufs[k]){pend.push([k,rate,performance.now()]);return}play(k,rate)}
+let pend=[],curSfx=null;
+const SFXPRI={conquer:5,jingle:4,smash:3,streakpop:2,tick:1};   /* Luke t271u: only one sound at a time; specials replace normals. Other sfx sit below tick. */
+function sfxPri(k){return SFXPRI[k]||0}
+function stopSfx(){if(!curSfx)return;try{curSfx.src.stop(0)}catch(e){}try{curSfx.src.disconnect()}catch(e){}try{curSfx.g&&curSfx.g.disconnect()}catch(e){}curSfx=null}
+function pendPri(){return pend.reduce((m,x)=>Math.max(m,sfxPri(x[0])),-1)}
+function wantSfx(k,rate){const p=sfxPri(k),cur=Math.max(curSfx?sfxPri(curSfx.k):-1,pendPri());if(cur>p){window.__ev&&window.__ev.push('sfxDrop:'+k);return}if(curSfx)stopSfx();pend=pend.filter(x=>sfxPri(x[0])>p);if(!bufs[k]){pend.push([k,rate,performance.now()]);return}play(k,rate)}
+function flushPend(k){const now=performance.now();pend=pend.filter(p=>{if(p[0]!==k)return true;if(now-p[2]<600&&!quiet())wantSfx(k,p[1]);return false})}
+function sfx(k,rate){window.__ev.push((quiet()?'muted:':'snd:')+k);if(quiet()||!actx)return;wantSfx(k,rate)}
 function play(k,rate){
-  try{if(actx.state!=='running')actx.resume().catch(()=>{});const s=actx.createBufferSource(),g=actx.createGain();s.buffer=bufs[k];if(rate)s.playbackRate.value=rate;g.gain.value=(VOL[k]||.7)*(masterVol/100);s.connect(g);g.connect(actx.destination);s.start(0)}catch(e){}}
+  try{if(actx.state!=='running')actx.resume().catch(()=>{});const s=actx.createBufferSource(),g=actx.createGain();s.buffer=bufs[k];if(rate)s.playbackRate.value=rate;g.gain.value=(VOL[k]||.7)*(masterVol/100);s.connect(g);g.connect(actx.destination);s.onended=()=>{if(curSfx&&curSfx.src===s)curSfx=null};s.start(0);curSfx={k,src:s,g}}catch(e){}}
 function ui(k){setTimeout(()=>sfx('tick'),0)}   /* Discovery (Luke 24 Nov 21:08): every button plays the tick */   /* v5.9.4: quiet acknowledgement, deferred so it always runs after this tap's unlockAudio/audioSession path */
 function cardSnd(){setTimeout(()=>sfx('clack'),0)}   /* v5.9.5 (Luke 23 Nov): every card action that had no sound uses the existing clack; every such button uses uitap */
 function closeVol(){const p=$('#vol');if(p)p.hidden=true;const m=$('#mute');if(m)m.setAttribute('aria-expanded','false')}
@@ -871,7 +880,7 @@ function syncConquerFx(){const b=$('#cfx');if(!b)return;const fr=b.getBoundingCl
  b.querySelectorAll('.cfx-item').forEach(item=>{const e=tl.find(x=>x.conquered&&x.c&&x.c.id===item.dataset.id),card=e&&e.el;if(!card||!card.isConnected){item.style.visibility='hidden';return}const r=card.getBoundingClientRect();item.style.visibility='visible';item.style.left=(r.left-fr.left)+'px';item.style.top=(r.top-fr.top)+'px';item.style.width=r.width+'px';item.style.height=r.height+'px'})}
 function ensureConquerOverlay(e,animate){const box=$('#cfx');if(!box||!e||!e.c||!e.el)return;let item=box.querySelector('.cfx-item[data-id="'+e.c.id+'"]');
  if(!item){item=document.createElement('div');item.className='cfx-item'+(animate?'':' settled');item.dataset.id=e.c.id;item.innerHTML='<div class="cfx-rays"><i></i></div>';const clone=e.el.cloneNode(true);clone.classList.remove('pop');clone.classList.add('cfx-card');item.appendChild(clone);box.appendChild(item)}syncConquerFx()}
-function conquerFx(e){const sl=e.el&&e.el.parentElement;if(!sl)return;sl.classList.add('good','conquered');ensureConquerOverlay(e,true);const item=$('#cfx .cfx-item[data-id="'+e.c.id+'"]');if(item&&!RM.matches){sparkleAt(item,item.offsetWidth/2,item.offsetHeight/2,18);setTimeout(()=>{item.querySelectorAll('.csp').forEach(n=>n.remove())},1800)}window.__ev&&window.__ev.push('conquer:'+e.c.id)}   /* Luke t260u: rays/glow in the unclipped #cfx overlay */
+function conquerFx(e){const sl=e.el&&e.el.parentElement;if(!sl)return;sl.classList.add('good','conquered');ensureConquerOverlay(e,true);const item=$('#cfx .cfx-item[data-id="'+e.c.id+'"]');if(item&&!RM.matches){sparkleAt(item,item.offsetWidth/2,item.offsetHeight/2,18);setTimeout(()=>{item.querySelectorAll('.csp').forEach(n=>n.remove());item.classList.add('settled')},1800)}else if(item)item.classList.add('settled');window.__ev&&window.__ev.push('conquer:'+e.c.id)}   /* Luke t260u/t270u: unclipped overlay; glow stays and gently shines for the rest of the run */
 function correct(e){clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const zf=document.querySelector('.zfly');if(zf)zf.remove();
  const prevBest=best;streak++;nRight++;runBest=Math.max(runBest,streak);const isNewHigh=streak>prevBest;
  if(isNewHigh)bigFlash('stf gold','<i>New best</i><i>streak</i><i class="n">'+streak+'</i>','newBestStreak:'+streak);
