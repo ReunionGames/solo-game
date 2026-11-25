@@ -18,9 +18,9 @@
 html,body{height:100%;margin:0;overflow:hidden;background:var(--parch);color:var(--ink);font-family:'EB Garamond',Georgia,serif;-webkit-tap-highlight-color:transparent}
 #app{position:absolute;left:0;right:0;top:var(--vt,0px);height:var(--vh,100%);width:min(100%,1400px);margin:0 auto;display:flex;flex-direction:column}
 #vs{position:absolute;left:0;top:0;width:1px;height:100%;visibility:hidden;pointer-events:none}
-header{flex:none;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 10px;min-height:48px;border-bottom:1px solid #d8c79c}
-.brand{min-width:0;flex:1 1 auto}.brand b{font-size:17px;font-variant:small-caps;color:var(--burg);line-height:1.15;display:block;white-space:normal}
-#stats{font-size:16px;font-weight:600;text-align:right;line-height:1.2;white-space:nowrap}
+header{flex:none;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 12px;min-height:52px;border-bottom:1px solid #d8c79c}
+.brand{min-width:0;flex:1 1 auto}.brand b{font-size:17px;font-variant:small-caps;color:var(--burg);line-height:1.2;display:block;white-space:nowrap}
+#stats{white-space:nowrap}
 /* stage: the drawn card and instructions, or the verdict */
 #stage{flex:none;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:4px 10px;text-align:center}
 #stage.ch{flex-direction:column;align-items:stretch;justify-content:center;gap:2px}
@@ -137,7 +137,7 @@ header{flex:none;display:flex;justify-content:space-between;align-items:center;g
 .ep .acts .btn:first-child{width:100%;max-width:300px}
 .short .ep{padding:12px 14px 10px}.short .ep .score{font-size:32px}.short .ep hr{margin:8px 0}.short .show{margin:4px 0 8px}.short .fan{height:100px}.short .fan img{width:70px}.short .box{width:96px}
 @media (min-width:700px){
- header{padding:6px 14px;min-height:52px}.brand b{font-size:19px}#stats{font-size:18px}
+ header{padding:8px 20px;min-height:56px}.brand b{font-size:19px;white-space:nowrap}
  #tlh{padding:5px 24px 0}.lab{font-size:17px}
  .crow{max-width:760px;margin:0 auto;width:100%}.chip .ct{font-size:20px}.chip{min-height:52px}.chip .mc{width:30px}#hint{font-size:21px}#stage.loud #hint{font-size:21px}
  .vb{font-size:21px;text-align:center}.vh{justify-content:center;gap:24px}.nbst .lg{display:inline}
@@ -210,18 +210,15 @@ header{flex:none;display:flex;justify-content:space-between;align-items:center;g
 @media (min-width:700px){.pill{font-size:21px}.pill small{display:inline;font-size:21px;font-weight:700;opacity:1}.pill small:before{content:"\00a0\00b7\00a0"}}
 
 /* ===== v5.6 ===== */
-/* header: brand | progress + (streak / best streak stacked) + high score | mute  (Luke t238u) */
+/* header: brand | streak group + high score | mute  (Luke t238u, tidied t242u; card count lives on the zoomed card and the hint line) */
 header{position:relative;z-index:7}
 #hr{display:flex;align-items:center;gap:2px;flex:none}
-#stats{display:flex;align-items:center;gap:5px;font-size:16px;color:var(--ink)}
-#stats .sep{opacity:.6}
-#stats .scw{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:0;line-height:1.05}
-#stats .srow{display:flex;align-items:center;gap:5px}
-#stats .sl{font-variant:small-caps;letter-spacing:.03em;font-size:13px;line-height:1;color:var(--ink);transition:color .4s ease}
-#stats .bl{font-size:11px;font-weight:600;color:var(--soft);line-height:1.15;margin-top:1px;white-space:nowrap}
+#stats{display:flex;align-items:center;gap:18px;color:var(--ink)}
+#stats .scw,#stats .hs{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;line-height:1;min-width:4.5em}
+#stats .sl,#stats .hl{font-variant:small-caps;letter-spacing:.04em;font-size:11px;font-weight:700;color:var(--soft);line-height:1;transition:color .4s ease}
+#stats .hv{display:flex;align-items:center;justify-content:center;min-height:30px;font-family:'EB Garamond',Georgia,serif;font-weight:700;font-size:22px;font-variant-numeric:tabular-nums;color:var(--ink);line-height:1}
+#stats .bl{font-size:11px;font-weight:600;color:var(--soft);line-height:1.15;white-space:nowrap}
 #stats .bl b{color:var(--ink);font-weight:700}
-#stats .hs{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;line-height:1.1;font-size:11px;font-weight:600;color:var(--soft);margin-left:4px;white-space:nowrap}
-#stats .hs b{font-size:18px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.05}
 /* Luke t238u: red after a break, gold + shine while this is the best streak so far */
 #stats.broken .sl{color:var(--red);transition:none}
 #stats.broken .stk{color:var(--red);background:#F4E8CB;border-color:var(--red);box-shadow:none;transition:none}
@@ -232,13 +229,13 @@ header{position:relative;z-index:7}
 .stk{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-width:30px;height:30px;padding:0 6px 2px;border-radius:999px;background:#551309;border:2px solid var(--sr,#cdb98a);color:var(--sf,#F4E8CB);font-family:'EB Garamond',Georgia,serif;font-weight:700;font-size:21px;line-height:1;box-shadow:var(--sg,none);transition:color .6s ease,border-color .6s ease,box-shadow .6s ease;will-change:transform}
 .stk.pop{animation:stkpop .25s ease-out}
 @keyframes stkpop{0%{transform:scale(1)}50%{transform:scale(1.25)}100%{transform:scale(1)}}
-@media (min-width:700px){.stk{min-width:34px;height:34px;font-size:24px}#stats{font-size:18px;gap:8px}#stats .bl{font-size:12px}#stats .hs{font-size:13px}#stats .hs b{font-size:20px}}
+@media (min-width:700px){.stk{min-width:34px;height:34px;font-size:24px}#stats{gap:24px}#stats .sl,#stats .hl{font-size:12px}#stats .hv{font-size:24px;min-height:34px}#stats .bl{font-size:12px}#stats .scw,#stats .hs{min-width:5em}}
 /* mute toggle: 44px tap target, 30px ring */
 #mute{position:relative;width:44px;height:44px;margin:-5px -8px -5px 0;flex:none;border:0;background:none;padding:0;cursor:pointer;color:var(--burg);touch-action:manipulation}
 #mute:before{content:"";position:absolute;left:8px;top:8px;width:28px;height:28px;border-radius:50%;border:1.5px solid #cdb98a;box-sizing:border-box}
 #mute svg{position:absolute;left:13px;top:13px;width:18px;height:18px}
 #mute .x{display:none}#mute[aria-pressed="true"] .x{display:inline}#mute[aria-pressed="true"] .w{display:none}
-@media (max-width:380px){.brand b{font-size:14px}#stats{font-size:14px;gap:4px}#stats .sl{font-size:12px}#stats .bl{font-size:10px}#stats .hs{font-size:10px}#stats .hs b{font-size:16px}header{gap:4px;padding-left:8px;padding-right:8px}}
+@media (max-width:420px){.brand b{white-space:normal;font-size:16px;line-height:1.15}#stats{gap:12px}header{gap:8px;padding:5px 10px}}
 /* new best: gold sparkle out of the streak area + a tag; never blocks a tap */
 #fx{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:8}
 #fx .sp{position:absolute;width:13px;height:13px;margin:-6.5px 0 0 -6.5px;background:#F2B81C;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);filter:drop-shadow(0 0 1px #7a4a00) drop-shadow(0 0 4px rgba(255,200,60,.9));opacity:0;animation:spk var(--d,1.2s) ease-out var(--dl,0s) forwards}
@@ -283,7 +280,6 @@ header{position:relative;z-index:7}
 .face.ld img{opacity:0}
 
 /* ===== Discovery v1 (24 Nov 2026, Luke t197u) ===== */
-#stats .pg{font-variant-numeric:tabular-nums;color:var(--soft);font-weight:700}
 /* a corrected (wrong) card: soft amber outline that stays on the timeline */
 .slot.fixd .card img,.slot.moved.fixd .card img{filter:drop-shadow(0 0 2px #8a4b00) drop-shadow(0 0 6px #F3AE45) drop-shadow(0 0 12px rgba(243,174,69,.85))}
 #sbk{position:absolute;inset:0;z-index:6;display:flex;align-items:flex-start;box-sizing:border-box;justify-content:center;pointer-events:none;overflow:visible;transition:opacity .3s}
@@ -406,7 +402,7 @@ const desk=()=>innerWidth>=700;
    v5.9: place = Casino Audio chip-lay-3 (Place it on the timeline), pop = Interface Sounds drop_003 (each Flip, flip, flip! word, pitched up per word).
    Discovery (24 Nov, Luke t219u/t222u): smash = Impact Sounds impactGlass_medium_004, placeholder for Streak broken. Other sounds unchanged.
    Discovery (25 Nov, Luke t234u): streakpop = Impact Sounds impactGlass_medium_001 (smash 2 from the 24 Nov audition), used for the streak pop-up so it is no longer the same tick as the buttons. smash (Streak broken) unchanged.
-   Discovery (25 Nov, Luke t239u): streakpop replaced with a sound made by Spielberg (team bot) for the streak pop-up, loudness-matched to smash 2. Golden New high streak pop-ups use it too (jingle still only on the first new high of a run).
+   Discovery (25 Nov, Luke t239u): streakpop replaced with a sound made by Spielberg (team bot) for the streak pop-up, loudness-matched to smash 2. Golden New best streak pop-ups use it too (jingle still only on the first new best streak of a run).
    Discovery (25 Nov, Luke t241u): jingle replaced with a file supplied by Luke (source unknown), loudness-matched to the previous STEEL02 jingle.
    Trimmed with ffmpeg (each under 0.4s except the jingle, about 1s), mono 22kHz mp3, inlined so the game stays one file.
    Web Audio starts on the player's first tap (autoplay rule). The mute choice is remembered on this device. */
@@ -515,8 +511,8 @@ function draw(){if(!deck.length)return over();applyFrame();
  stats();renderStage();timeline();$('#tl').scrollTop=0;if(s0Active)showS0();else zoomHand()}   /* every new card opens large: read it, tap off to place it */
 function getHS(){try{return Math.max(0,+localStorage.getItem(HSKEY)||0)}catch(e){return 0}}   /* stored best total (correct + best streak), Luke t212u / t238u */
 function stats(){const st=$('#stats');let k=st.querySelector('.stk');
- if(!k||!st.querySelector('.hs')){st.innerHTML='<span class="pg"></span><div class="scw"><div class="srow"><span class="sl">Streak</span><span class="stk"></span></div><div class="bl">Best streak <b class="bv"></b></div></div><div class="hs">High score <b class="hv"></b></div>';k=st.querySelector('.stk')}
- k.textContent=streak;st.querySelector('.pg').textContent=Math.min(turn,total)+'/'+total;st.querySelector('.bv').textContent=Math.max(best,streak);st.querySelector('.hv').textContent=getHS();st.setAttribute('aria-label','Card '+Math.min(turn,total)+' of '+total+'. Streak '+streak+', best streak '+Math.max(best,streak)+', high score '+getHS());streakLook()}
+ if(!k||!st.querySelector('.hs')||!st.querySelector('.hl')){st.innerHTML='<div class="scw"><span class="sl">Streak</span><span class="stk"></span><div class="bl">Best streak <b class="bv"></b></div></div><div class="hs"><span class="hl">High score</span><b class="hv"></b></div>';k=st.querySelector('.stk')}
+ k.textContent=streak;st.querySelector('.bv').textContent=Math.max(best,streak);st.querySelector('.hv').textContent=getHS();st.setAttribute('aria-label','Streak '+streak+', best streak '+Math.max(best,streak)+', high score '+getHS());streakLook()}
 let stkLevel=-1,stkCold=false,stkRed=false;
 function streakLook(){const k=$('#stats .stk'),st=$('#stats');if(!k||!st)return;
  const onbest=!stkCold&&streak>0&&streak>=best,broken=!!stkRed&&streak===0;
@@ -773,7 +769,7 @@ function place(){if(sel==null||phase!=='choose')return;const c=hand;hand=null;cl
  const pv=tl[i-1]&&tl[i-1].c,nx=tl[i+1]&&tl[i+1].c;
  const okP=(!pv||pv.period<=c.period)&&(!nx||c.period<=nx.period);
  e.ok=okP&&(!pv||key(pv)<key(c))&&(!nx||key(c)<key(nx));e.pv=pv;e.nx=nx;
- e.newBest=e.ok&&!nbShown&&streak+1>bestStart;   /* first new high streak of this run: jingle + New best! burst (Luke t238u; no longer requires a previous best) */
+ e.newBest=e.ok&&!nbShown&&streak+1>bestStart;   /* first new best streak of this run: jingle + New best! burst (Luke t238u; no longer requires a previous best) */
  e.full=turn===1||HARD.has(c.id)||deck.length===0||e.newBest;
  phase='flipping';cur=e;skipOK=false;
   stagePanel(e.full?'<div class="cp">Card placed.</div><span class="ff"><i>Flip,</i><i>flip,</i><i>flip!</i></span>':'<span class="ff q"><i>Flip!</i></span>');
@@ -793,10 +789,10 @@ function resolve(e){if(resolved===e)return;resolved=e;clearT();phase='judging'; 
  showEl(e.el,false);if(e.ok)correct(e);else wrong(e)}
 function correct(e){clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const zf=document.querySelector('.zfly');if(zf)zf.remove();
  const prevBest=best;streak++;nRight++;runBest=Math.max(runBest,streak);const isNewHigh=streak>prevBest;
- if(isNewHigh)bigFlash('stf gold','<i>New high</i><i>streak</i><i class="n">'+streak+'</i>','newHighStreak:'+streak);
+ if(isNewHigh)bigFlash('stf gold','<i>New best</i><i>streak</i><i class="n">'+streak+'</i>','newBestStreak:'+streak);
  else bigFlash('stf','<i>Streak</i><i class="n">'+streak+'</i>','streak:'+streak);
  best=Math.max(best,streak);setBest(best);stkCold=false;stkRed=false;stats();streakPop();phase='result';learned=true;
- if(e.newBest){sfx('jingle');newBestBurst()}else sfx('streakpop');   /* jingle + header burst only on the first new high of a run; later new highs get the gold pop-up and streakpop (Luke t238u) */
+ if(e.newBest){sfx('jingle');newBestBurst()}else sfx('streakpop');   /* jingle + header burst only on the first new best streak of a run; later new bests get the gold pop-up and streakpop (Luke t238u / t244u) */
  const last=!deck.length;if(e.newBest)nbShown=true;
  e.el.parentElement.classList.add('good');if(!RM.matches)e.el.classList.add('pop');
  const nb='';   /* v5.6: the header 'New best!' tag is the only new-best label */
