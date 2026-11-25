@@ -305,10 +305,10 @@ header{position:relative;z-index:7}
 /* Read other side: a quick 2D turn */
 #zoom .card.turn{animation:zturn .36s ease-in-out}
 @keyframes zturn{0%{transform:scaleX(1)}50%{transform:scaleX(0)}100%{transform:scaleX(1)}}
-/* card image still loading or failed: a red card with its title, so a card is always visible */
+/* card image still loading or failed (Luke t311u): a parchment outline with the card's corner radius, not the old garish red box. The title only appears if the image finally fails. */
 .face .ft{display:none}
-.face.ld{background:#9c1c14;border-radius:var(--card-rx)/var(--card-ry);box-shadow:inset 0 0 0 3px #E9D29E}
-.face.ld .ft{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:8%;text-align:center;color:#F4E8CB;font-weight:700;font-size:clamp(9px,9cqw,30px);line-height:1.15}
+.face.ld{background:var(--parch);border-radius:var(--card-rx)/var(--card-ry);box-shadow:inset 0 0 0 1.5px rgba(85,19,9,.28)}
+.face.ld.fail .ft{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:8%;text-align:center;color:var(--soft);font-weight:600;font-size:clamp(9px,9cqw,30px);line-height:1.15}
 .face.ld{container-type:size}
 .face.ld img{opacity:0}
 
@@ -689,30 +689,43 @@ function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor
 function build(c,o){const el=document.createElement('div');el.className='card'+(o.up?' up':'');
   const inner=document.createElement('div');inner.className='inner';
   const b=document.createElement('div');b.className='face back';const bi=new Image();bi.alt='Bible event card';
-  const ft=document.createElement('span');ft.className='ft';ft.textContent=c.title;b.appendChild(ft);watchImg(bi,b,c.back);b.appendChild(bi);
- const f=document.createElement('div');f.className='face front';inner.appendChild(b);inner.appendChild(f);el.appendChild(inner);
+  const ft=document.createElement('span');ft.className='ft';ft.textContent=c.title;b.appendChild(ft);watchImg(bi,b,c.back,'high');b.appendChild(bi);
+ const f=document.createElement('div');f.className='face front';const fft=document.createElement('span');fft.className='ft';fft.textContent=c.title;f.appendChild(fft);
+ inner.appendChild(b);inner.appendChild(f);el.appendChild(inner);
  if(o.up)fillFront(el,c);return el}
-function fillFront(el,c){const f=el.querySelector('.front');if(f.firstChild)return null;
-  const i=new Image();i.alt=c.title;watchImg(i,f,c.front);f.appendChild(i);return i}
+function fillFront(el,c){const f=el.querySelector('.front');if(f.querySelector('img'))return null;
+  const i=new Image();i.alt=c.title;watchImg(i,f,c.front,'high');f.appendChild(i);return i}
 /* v5.9 fix (Emily: a new card once did not show, only the dark backdrop and the button): the card image had not arrived
-   (slow or failed download on a phone), so the enlarged card was blank. Now every card face shows a red card with the
-   title until its image has loaded, a failed image is retried (twice, then a resized copy), and all red sides preload. */
+   (slow or failed download on a phone), so the enlarged card was blank. Every face keeps a placeholder until its image
+   has loaded; a failed image is retried (twice, then a resized copy), and owned backs are preloaded. Luke t311u: the
+   placeholder is a parchment outline, not a red box, and the next card's front (and nearby fronts) are preloaded and
+   decoded ahead of dealing so the picture is ready before it is shown. */
 const IMGBAD=new Set();window.__imgTries=0;
-function watchImg(img,face,src){let n=0;face.classList.add('ld');
-  const ok=()=>{if(img.naturalWidth>0)face.classList.remove('ld')};
-  img.onload=ok;
-  img.onerror=()=>{if(n>=3){IMGBAD.add(src);return}n++;window.__imgTries++;const u=n<3?src+(src.includes('?')?'&':'?')+'r='+n:src+'/v1/fit/w_760,h_1062,q_85/card.webp';
-   setTimeout(()=>{img.src=u},TEST?20:400*n)};
-  img.src=src;if(img.complete&&img.naturalWidth>0)face.classList.remove('ld')}
-const PRE=[];function preloadBacks(){ownedDeck().forEach(c=>{if(!c||!c.back)return;const i=new Image();i.src=c.back;PRE.push(i)})}
+const PRE=new Map();
+function warmImg(src,pri){if(!src||IMGBAD.has(src))return PRE.get(src)||null;let im=PRE.get(src);
+ if(!im){im=new Image();im.decoding='async';im.loading='eager';if(pri)im.fetchPriority=pri;im.src=src;PRE.set(src,im)}
+ else if(pri==='high'){try{im.fetchPriority='high'}catch(e){}}
+ if(im.decode)im.decode().catch(()=>{});return im}
+function preloadOwned(){ownedDeck().forEach(c=>{if(c&&c.back)warmImg(c.back,'low')})}
+function preloadAhead(){const add=(c,pri)=>{if(!c)return;warmImg(c.back,pri);warmImg(c.front,pri)};
+ if(hand)add(hand,'high');
+ for(let i=1;i<=3;i++){const c=deck[deck.length-i];if(c)add(c,i===1?'high':'low')}
+ (tl||[]).forEach(e=>{if(e&&e.c){warmImg(e.c.front,e.up?'high':'low');if(!e.up)warmImg(e.c.back,'low')}})}
+function watchImg(img,face,src,pri){let n=0;face.classList.remove('fail');
+ img.decoding='async';img.loading='eager';img.fetchPriority=pri||'high';
+ const ready=()=>{if(img.naturalWidth<=0)return;const done=()=>{face.classList.remove('ld','fail')};if(img.decode)img.decode().then(done).catch(done);else done()};
+ img.onload=ready;
+ img.onerror=()=>{if(n>=3){IMGBAD.add(src);face.classList.add('ld','fail');return}n++;window.__imgTries++;const u=n<3?src+(src.includes('?')?'&':'?')+'r='+n:src+'/v1/fit/w_760,h_1062,q_85/card.webp';
+  setTimeout(()=>{img.src=u},TEST?20:400*n)};
+ img.src=src;if(img.complete&&img.naturalWidth>0){ready();return}face.classList.add('ld');warmImg(src,pri||'high')}
 function newRun(){musicBegin();clearT();$('#end').style.display='none';hideUnlock();const nh=$('#nhs');if(nh)nh.remove();hideYc();closeRsq();clearConquerFx();conquerTestArmed=CONQUERTEST;
- if(placedPending){placedPending=false;placedSession=true;if(!PRE.length)preloadBacks();showPlacedBoard();return}
- placedSession=false;if(!PRE.length)preloadBacks();
+ if(placedPending){placedPending=false;placedSession=true;preloadOwned();showPlacedBoard();return}
+ placedSession=false;preloadOwned();
  const pool=ownedDeck(),mid=pool.filter(c=>MID.includes(c.period)),start=shuffle((mid.length?mid:pool).slice())[0];
  deck=shuffle(pool.filter(c=>c!==start));if(TEST&&TK)deck=deck.slice(0,TK);total=deck.length;
- tl=[{c:start,up:true}];streak=0;turn=0;nRight=0;nWrong=0;runBest=0;nbShown=false;best=getBest();bestStart=best;stkLevel=-1;stkCold=false;stkRed=false;clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const zf=document.querySelector('.zfly');if(zf)zf.remove();draw()}
+ tl=[{c:start,up:true}];streak=0;turn=0;nRight=0;nWrong=0;runBest=0;nbShown=false;best=getBest();bestStart=best;stkLevel=-1;stkCold=false;stkRed=false;clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const zf=document.querySelector('.zfly');if(zf)zf.remove();preloadAhead();draw()}
 function draw(){if(!deck.length)return over();applyFrame();
- hand=deck.pop();turn++;sel=null;lit=new Set();phase='choose';hideYc();
+ hand=deck.pop();turn++;sel=null;lit=new Set();phase='choose';hideYc();preloadAhead();
  big=!learned;loud=(turn===1);pulseOn=false;step3=false;pulseUntil=0;                /* loud markers until the first correct card; one pulse when the step 3 prompt appears */
  $('#tlh').style.display='none';
  s0Active=(turn===1&&!s0Seen());
@@ -1136,6 +1149,7 @@ function showPlacedBoard(){const pool=playableDeck().slice();if(!pool.length)ret
  tl=on.map(c=>({c,up:true}));deck=rest;total=Math.max(0,pool.length-1);nRight=Math.max(0,k-1);nWrong=0;runBest=nRight;streak=nRight;
  nbShown=false;best=getBest();bestStart=best;turn=Math.max(0,k-1);
  window.__ev&&window.__ev.push('placed:'+k+'/'+pool.length);
+ preloadAhead();
  if(!deck.length){hand=null;phase='review';applyFrame();stats();viewTimeline();return}
  draw()}
 const UNLOCKTEST=TEST&&/[?&]unlock=1\b/.test(location.search);
