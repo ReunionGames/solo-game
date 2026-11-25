@@ -143,7 +143,7 @@ header{flex:none;display:flex;justify-content:space-between;align-items:center;g
  #tlh{padding:5px 24px 0}.lab{font-size:17px}
  .crow{max-width:760px;margin:0 auto;width:100%}.chip .ct{font-size:20px}.chip{min-height:52px}.chip .mc{width:30px}#hint{font-size:21px}#stage.loud #hint{font-size:21px}
  .vb{font-size:21px;text-align:center}.vh{justify-content:center;gap:24px}.nbst .lg{display:inline}
- #tl{padding:12px 16px;--band:32px;--g:12px;--rg:12px;--tw:32px;--th:24px;--tf:22px}
+ #tl{padding:12px 32px;--band:32px;--g:12px;--rg:12px;--tw:32px;--th:24px;--tf:22px}   /* Luke t259u: extra side padding so the end + markers are not clipped */
  .cue span{font-size:18px}
  .panel{font-size:21px}.panel .big{font-size:30px}
 }
@@ -391,7 +391,7 @@ const UNLOCKKEY='ckDiscoveryEnduranceUnlocked';                                 
 const HSKEY='ckDiscoveryHighScore';                                                          /* best total (correct + best streak) per device (Luke t212u) */
 const STRUGKEY='ckDiscoveryStruggle';                                                        /* per-card miss streak + flag, this browser only (Luke t252u). Not cleared by the test BUILD reset. */
 /* TEST ONLY (Luke t247u): bump BUILD on every Discovery commit so testers get a fresh high score (and a fresh best streak on reload; best streak is session-only, no storage key). Remove this auto-reset before Discovery goes on the Wix site. */
-const BUILD='2026-11-25-0659',BUILDKEY='ckDiscoveryBuild';
+const BUILD='2026-11-25-0707',BUILDKEY='ckDiscoveryBuild';
 try{if(localStorage.getItem(BUILDKEY)!==BUILD){localStorage.removeItem(HSKEY);localStorage.setItem(BUILDKEY,BUILD)}}catch(e){}
 const LEADER_URL='https://www.chroniclesofthekingdom.co.uk/post/leader-s-guide-preview-try-the-first-four-sessions-for-free';  /* free Leader's Guide preview (media-press.md) */
 /* PLACEHOLDER theme line: Qohelet's example wording from the workshop (24 Nov), NOT final. Qohelet to draft, Ezra to check. Set THEME_FINAL=true once approved. */
@@ -816,7 +816,7 @@ function place(){if(sel==null||phase!=='choose')return;const c=hand;hand=null;cl
  const pv=tl[i-1]&&tl[i-1].c,nx=tl[i+1]&&tl[i+1].c;
  const okP=(!pv||pv.period<=c.period)&&(!nx||c.period<=nx.period);
  e.ok=okP&&(!pv||key(pv)<key(c))&&(!nx||key(c)<key(nx));e.pv=pv;e.nx=nx;
- e.newBest=e.ok&&!nbShown&&streak+1>bestStart;   /* first new best streak of this run: jingle + New best! burst (Luke t238u; no longer requires a previous best) */
+ e.newBest=e.ok&&!nbShown&&streak+1>best;   /* first new best of this unbroken streak (after a break, or the start of the run): jingle + New best! burst (Luke t238u / t258u) */
  e.full=turn===1||HARD.has(c.id)||deck.length===0||e.newBest;
  phase='flipping';cur=e;skipOK=false;
   stagePanel(e.full?'<div class="cp">Card placed.</div><span class="ff"><i>Flip,</i><i>flip,</i><i>flip!</i></span>':'<span class="ff q"><i>Flip!</i></span>');
@@ -848,7 +848,7 @@ function correct(e){clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const zf=doc
  best=Math.max(best,streak);setBest(best);stkCold=false;stkRed=false;stats();streakPop();phase='result';learned=true;
  const conquered=isStruggling(e.c);noteCard(e.c,true);
  if(conquered){e.conquered=true;sfx('conquer');conquerFx(e);if(e.newBest)newBestBurst()}   /* own sound for the struggled-card moment; skip streakpop/jingle so they don't clash (Luke t253u / t254u) */
- else if(e.newBest){sfx('jingle');newBestBurst()}else sfx('streakpop');   /* jingle + header burst only on the first new best streak of a run; later new bests get the gold pop-up and streakpop (Luke t238u / t244u) */
+ else if(e.newBest){sfx('jingle');newBestBurst()}else sfx('streakpop');   /* jingle + header burst on the first new best after a break (or the start of the run); later new bests in the same streak get the gold pop-up and streakpop (Luke t238u / t244u / t258u) */
  const last=!deck.length;if(e.newBest)nbShown=true;
  e.el.parentElement.classList.add('good');if(e.conquered)e.el.parentElement.classList.add('conquered');if(!RM.matches)e.el.classList.add('pop');
  const nb='';   /* v5.6: the header 'New best!' tag is the only new-best label */
@@ -858,7 +858,7 @@ function correct(e){clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const zf=doc
  }
 function when(e){const k=tl.indexOf(e),pv=tl[k-1]&&tl[k-1].c,nx=tl[k+1]&&tl[k+1].c,b=t=>'<b>'+t+'</b>';
  return b(e.c.title)+' happens '+(pv&&nx?'after '+b(pv.title)+' and before '+b(nx.title):pv?'after '+b(pv.title):'before '+b(nx.title))+'.'}
-function wrong(e){e.el.classList.add('bad');noteCard(e.c,false);sfx('thud');nWrong++;const lost=streak;streak=0;stkCold=true;stats();if(lost>0)streakBroken();verdict('Not quite…');ycCheck(e);later(()=>miss(e),1300*TS);
+function wrong(e){e.el.classList.add('bad');noteCard(e.c,false);sfx('thud');nWrong++;const lost=streak;streak=0;nbShown=false;stkCold=true;stats();if(lost>0)streakBroken();   /* Luke t258u: a break re-arms the new-best jingle */verdict('Not quite…');ycCheck(e);later(()=>miss(e),1300*TS);
  setTimeout(()=>{if(phase==='judging'&&cur===e&&!e.moved){window.__ev.push('failsafe:miss');miss(e)}},1000*TS+1200)}   /* v5.9.1 failsafe: never stuck on 'Not quite…' */
 function miss(e){const old=e.el.getBoundingClientRect();
  tl.splice(tl.indexOf(e),1);const k=tl.filter(x=>key(x.c)<key(e.c)).length;
