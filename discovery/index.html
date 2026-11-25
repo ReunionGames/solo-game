@@ -408,6 +408,48 @@ header{position:relative;z-index:7}
  #end .ep.dsc .e2{grid-row:1/2}
  #end .ep.dsc .acts{grid-column:2;grid-row:2}
 }
+
+/* Scoreboard v1 (Luke t329u; Oholiab layout): one big burgundy total, Your best, 3 small rows, Play again, two distinct calls to action, one italic line */
+#end .ep.dsc.sb{max-width:440px}
+.sb .pts{position:relative;padding:8px 0 4px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.sb .bigw{position:relative;display:inline-block;overflow:hidden;border-radius:8px;padding:0 10px}
+.sb .big{display:block;font-family:'EB Garamond',Georgia,serif;font-size:64px;line-height:1;font-weight:700;color:var(--burg);font-variant-numeric:tabular-nums}
+.sb .ptl{display:block;font-size:15px;font-weight:600;color:var(--soft);margin-top:-2px}
+.sb .yb{font-size:15px;color:var(--soft);margin-top:4px}.sb .yb span{font-weight:700;color:var(--burg)}
+.sb .nbt{height:0;overflow:hidden;font-weight:700;color:var(--burg);font-size:18px;transition:height .2s}
+.sb .newbest .nbt{height:24px;margin-top:2px}
+.sb .stars{display:flex;justify-content:center;gap:8px;height:0;overflow:visible}
+.sb .stars svg{width:30px;height:30px;fill:#D4A537;stroke:var(--burg);stroke-width:1;opacity:0;transform:translateY(-6px) scale(.2)}
+.sb .newbest .stars{height:32px;margin-bottom:2px}
+.sb .newbest .stars svg{animation:starpop .45s cubic-bezier(.3,1.6,.5,1) forwards}
+.sb .newbest .stars svg:nth-child(2){animation-delay:.15s;transform:translateY(-10px) scale(.2)}.sb .newbest .stars svg:nth-child(3){animation-delay:.3s}
+@keyframes starpop{to{opacity:1;transform:none}}
+.sb .newbest .stars svg:nth-child(2){width:36px;height:36px}
+.sb .newbest .bigw:after{content:"";position:absolute;top:0;bottom:0;width:45%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.85),transparent);animation:shim .9s ease-out .35s 1}
+.sb .landed .big{text-shadow:0 0 14px rgba(233,210,158,.95)}
+.sb .rm.newbest .stars svg{animation:none;opacity:1;transform:none}.sb .rm .bigw:after{display:none}
+.sb .rows{margin:6px 0 2px;border-top:1px solid var(--gold)}
+.sb .rows>div{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:3px 6px;border-bottom:1px solid #e4d4a8}
+.sb .rows small{font-size:14px;color:var(--soft);font-weight:600;text-align:left}.sb .rows b{font-size:17px;color:var(--burg);font-variant-numeric:tabular-nums}
+.btn.plain{background:transparent;color:var(--burg);border:2px solid var(--burg)}
+.sb .e2{display:flex;flex-direction:column;align-items:center;gap:6px}
+.sb .cta{font:inherit;display:flex;align-items:center;gap:10px;width:100%;max-width:340px;min-height:52px;border-radius:10px;padding:6px 14px;cursor:pointer;text-decoration:none;text-align:left;line-height:1.2;box-sizing:border-box}
+.sb .cta .ct{flex:1;font-weight:700;font-size:16px}
+.sb .cta.web{background:var(--gold);color:var(--burg);border:2px solid var(--burg);box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.sb .cta.web .ic{width:30px;height:30px;flex:none}
+.sb .wnote{margin:-2px 0 4px;font-size:13px;color:var(--soft)}.sb .wnote.soon{color:var(--burg);font-weight:700}
+.sb .cta.boxb{background:var(--parch);color:var(--burg);border:2px solid var(--burg)}
+.sb .cta.boxb img{width:46px;height:46px;object-fit:contain;flex:none;border-radius:4px}
+.sb .pline{margin:6px 0 2px;font-size:14px;color:var(--soft);line-height:1.3}
+.sb .endb{min-height:42px;font-size:16px;padding:0 18px}
+.short .sb .big{font-size:50px}.short .sb .cta{min-height:46px}
+@media (min-width:700px){
+ #end .ep.dsc.sb{max-width:860px;grid-template-columns:1fr 1fr}
+ #end .ep.dsc.sb .e1{grid-column:1;grid-row:1}
+ #end .ep.dsc.sb .acts{grid-column:1;grid-row:2}
+ #end .ep.dsc.sb .e2{grid-column:2;grid-row:1/3;border-left:2px solid var(--gold);padding-left:28px;justify-content:center}
+}
+@media (prefers-reduced-motion:reduce){.sb .stars svg{animation:none!important;opacity:1!important;transform:none!important}.sb .bigw:after{display:none}}
 </style></head><body>
 <div id="vs"></div>
 <div id="app">
@@ -496,6 +538,10 @@ const BUY_D=BUY+'?utm_source=solo-game&utm_medium=web-game&utm_campaign=discover
 const ENDURANCE_URL='https://reuniongames.github.io/solo-game/';                       /* the live Endurance game (repo root) */
 const UNLOCKKEY='ckDiscoveryEnduranceUnlocked';                                          /* leftover from the old Endurance unlock; no longer written on a perfect run (Luke t287u) */
 const UNLOCKCARDSKEY='ckDiscoveryUnlocked';                                                 /* {v:1,ids:[...]} this browser only (Luke t287u). Same shape can be synced to a Wix Members account later. */
+const BESTPTSKEY='ckDiscoveryBestPoints',SEENKEY='ckDiscoverySeen';   /* scoreboard v1 (Luke t329u): best points total and the cards this device has ever been dealt (for the +5 first-time bonus). New keys; the old keys are left alone. */
+function seenSet(){try{const r=JSON.parse(localStorage.getItem(SEENKEY)||'null');if(r&&r.v===1&&Array.isArray(r.ids))return new Set(r.ids)}catch(e){}return new Set()}
+function markSeen(id){if(!id||placedSession)return;try{const st=seenSet();if(st.has(id))return;st.add(id);localStorage.setItem(SEENKEY,JSON.stringify({v:1,ids:[...st]}))}catch(e){}}
+function getBestPts(){try{return Math.max(0,+localStorage.getItem(BESTPTSKEY)||0)}catch(e){return 0}}
 const HSKEY='ckDiscoveryHighScore';                                                          /* best total (correct + best streak) per device (Luke t212u) */
 const STRUGKEY='ckDiscoveryStruggle';                                                        /* per-card miss streak + flag, this browser only (Luke t252u). A test BUILD reset now clears this too, so a previous auto-marked hard card does not linger (Luke t296u); ?hard=N can still add flags after that. Newly unlocked cards are flagged here so the first correct placement gets the hard-card treatment (Luke t288u/t289u). */
 /* The original 13 promo cards (Luke t295u). The other 39 playable Bible Event cards are the unlock pool. */
@@ -515,7 +561,7 @@ function pickUnlock(){const left=lockedPlayable();if(!left.length)return null;co
 /* TEST ONLY (Luke t247u/t263u/t264u/t287u/t296u/t301u/t304u/t306u/t307u): bump BUILD on every Discovery commit so testers get a fresh high score (and a fresh best streak on reload; best streak is session-only, no storage key) and cleared card unlocks. Struggle flags are also cleared so a previous build's auto-marked hard card does not linger; new builds no longer mark a random hard card (Luke t296u). ?hard=N still marks N owned cards, then strips the flag and plays a normal game. ?test=1&unlock=1 jumps a run to a perfect end so the unlock reveal can be checked quickly. ?placed=N is a session-only mid-game test: it plays the full 52-card set in memory with N cards already placed correctly, then deals the rest as a live game, and writes nothing to localStorage (no unlocks, high score or struggle flags). Try again returns to the saved pool. The flag is then stripped. Leave BUILD unchanged when shipping only this test-state so testers' saved data is not reset. Remove this auto-reset, the unlock clear, ?hard=, ?placed= and ?test=1&unlock=1 before Discovery goes on the Wix site. */
 const BUILD='2026-11-25-1445',BUILDKEY='ckDiscoveryBuild';
 function seedHardCards(n){n=+n;if(!(n>0)||!DECK_ALL||!DECK_ALL.length)return;try{const raw=JSON.parse(localStorage.getItem(STRUGKEY)||'{}'),m=(raw&&typeof raw==='object'&&!Array.isArray(raw))?raw:{};const pool=ownedDeck(),ids=(pool.length?pool:DECK_ALL).map(c=>c.id);const sh=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)),x=a[i];a[i]=a[j];a[j]=x}return a};const pick=sh(ids.filter(id=>!m[id])).concat(sh(ids.filter(id=>m[id]&&!m[id].flagged)));pick.slice(0,Math.min(n,pick.length)).forEach(id=>{m[id]={miss:3,flagged:true}});localStorage.setItem(STRUGKEY,JSON.stringify(m))}catch(e){}}
-try{if(localStorage.getItem(BUILDKEY)!==BUILD){localStorage.removeItem(HSKEY);localStorage.removeItem(UNLOCKCARDSKEY);localStorage.removeItem(STRUGKEY);localStorage.setItem(BUILDKEY,BUILD)}}catch(e){}
+try{if(localStorage.getItem(BUILDKEY)!==BUILD){localStorage.removeItem(HSKEY);localStorage.removeItem(UNLOCKCARDSKEY);localStorage.removeItem(STRUGKEY);localStorage.removeItem(BESTPTSKEY);localStorage.removeItem(SEENKEY);localStorage.setItem(BUILDKEY,BUILD)}}catch(e){}
 (function(){const h=location.search.match(/[?&]hard=(\d+)/);if(!h)return;seedHardCards(+h[1]);try{const u=new URL(location.href);u.searchParams.delete('hard');history.replaceState(null,'',u.pathname+u.search+u.hash)}catch(e){}})();
 const LEADER_URL='https://www.chroniclesofthekingdom.co.uk/post/leader-s-guide-preview-try-the-first-four-sessions-for-free';  /* free Leader's Guide preview (media-press.md) */
 /* PLACEHOLDER theme line: Qohelet's example wording from the workshop (24 Nov), NOT final. Qohelet to draft, Ezra to check. Set THEME_FINAL=true once approved. */
@@ -537,7 +583,7 @@ const R=1512/2112;                              /* card width / height */
 /* best streak per deck, for this page session only (Luke, 16 Nov: no storage for the best streak) */
 function getBest(){return BESTS[DECK_ID]||0}
 function setBest(v){BESTS[DECK_ID]=Math.max(BESTS[DECK_ID]||0,v)}
-let nRight=0,nWrong=0,runBest=0;
+let nRight=0,nWrong=0,runBest=0,ptsC=0,ptsRoll=0,ptsNew=0;   /* scoreboard v1 (Luke t329u): points per run, shown only on the end panel */
 let BESTS={},best=0,bestStart=0,nbShown=false,streak=0,deck=[],total=0,tl=[],hand=null,phase='',sel=null,lit=new Set(),timers=[],turn=0,cur=null,skipOK=false;
 let FT=0,FH=innerHeight,vis=null,visSeen=false;
 let s0Active=false,tapAt={x:-999,y:-999},step3=false,pulseUntil=0,swallowUntil=0,zoomKind='';
@@ -625,7 +671,7 @@ function unlockAudio(ev){try{
  if(actx.state!=='running')actx.resume().catch(()=>{});
  const s=actx.createBufferSource();s.buffer=actx.createBuffer(1,1,22050);s.connect(actx.destination);s.start(0);   /* iOS: a silent blip inside the tap unlocks output */
  Object.keys(SND).forEach(k=>{const bin=atob(SND[k]),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
-  actx.decodeAudioData(u.buffer,b=>{bufs[k]=b;flushPend(k)},()=>{})});kickMusic()}catch(e){}}
+  actx.decodeAudioData(u.buffer,b=>{bufs[k]=b;flushPend(k)},()=>{})});kickMusic();loadScoreSnds()}catch(e){}}
 ['pointerdown','touchend','keydown','click'].forEach(t=>addEventListener(t,unlockAudio,true));
 document.addEventListener('visibilitychange',()=>{
  if(document.hidden){if(silentEl&&!silentEl.paused)silentEl.pause();stopMusicSrc();if(actx&&musicGain){try{musicGain.gain.cancelScheduledValues(actx.currentTime);musicGain.gain.setValueAtTime(0,actx.currentTime)}catch(e){}}}
@@ -733,14 +779,14 @@ function newRun(){musicBegin();clearT();$('#end').style.display='none';hideUnloc
  placedSession=false;preloadOwned();
  const pool=ownedDeck(),mid=pool.filter(c=>MID.includes(c.period)),start=shuffle((mid.length?mid:pool).slice())[0];
  deck=shuffle(pool.filter(c=>c!==start));if(TEST&&TK)deck=deck.slice(0,TK);total=deck.length;
- tl=[{c:start,up:true}];streak=0;turn=0;nRight=0;nWrong=0;runBest=0;nbShown=false;best=getBest();bestStart=best;stkLevel=-1;stkCold=false;stkRed=false;clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const zf=document.querySelector('.zfly');if(zf)zf.remove();preloadAhead();draw()}
+ tl=[{c:start,up:true}];streak=0;turn=0;nRight=0;nWrong=0;runBest=0;ptsC=0;ptsRoll=0;ptsNew=0;nbShown=false;best=getBest();bestStart=best;stkLevel=-1;stkCold=false;stkRed=false;clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const zf=document.querySelector('.zfly');if(zf)zf.remove();preloadAhead();draw()}
 function draw(){if(!deck.length)return over();applyFrame();
  hand=deck.pop();turn++;sel=null;lit=new Set();phase='choose';hideYc();preloadAhead();
  big=!learned;loud=(turn===1);pulseOn=false;step3=false;pulseUntil=0;                /* loud markers until the first correct card; one pulse when the step 3 prompt appears */
  $('#tlh').style.display='none';
  s0Active=(turn===1&&!s0Seen());
  stats();renderStage();if(s0Active)$('#stage').style.display='none';timeline();$('#tl').scrollTop=0;if(s0Active)showS0();else zoomHand();applyHandBar()}   /* every new card opens large: read it, tap off to place it. Your card bar waits until that zoom is dismissed (Luke t292u). */
-function getHS(){try{return Math.max(0,+localStorage.getItem(HSKEY)||0)}catch(e){return 0}}   /* stored best total (correct + best streak), Luke t212u / t238u */
+function getHS(){return getBestPts()}   /* header High score = best points total (scoreboard v1, Luke t329u); the old correct + best streak key is no longer read */
 function stats(){const st=$('#stats');let k=st.querySelector('.stk');
  if(!k||!st.querySelector('.hs')||!st.querySelector('.hl')){st.innerHTML='<div class="scw"><span class="sl">Streak</span><span class="stk"></span><div class="bl">Best streak <b class="bv"></b></div></div><div class="hs"><span class="hl">High score</span><b class="hv"></b></div>';k=st.querySelector('.stk')}
  k.textContent=streak;st.querySelector('.bv').textContent=Math.max(best,streak);st.querySelector('.hv').textContent=getHS();st.setAttribute('aria-label','Streak '+streak+', best streak '+Math.max(best,streak)+', high score '+getHS());streakLook()}
@@ -1051,7 +1097,8 @@ function ensureConquerOverlay(e,animate){const box=$('#cfx');if(!box||!e||!e.c||
  if(!item){item=document.createElement('div');item.className='cfx-item'+(animate?'':' settled');item.dataset.id=e.c.id;item.innerHTML='<div class="cfx-rays"><i></i></div><div class="cfx-glow" aria-hidden="true"></div>';const face=e.el.querySelector('.front img')||e.el.querySelector('img');if(face)item.querySelector('.cfx-glow').appendChild(face.cloneNode(true));const clone=e.el.cloneNode(true);clone.classList.remove('pop');clone.classList.add('cfx-card');item.appendChild(clone);box.appendChild(item)}syncConquerFx()}
 function conquerFx(e){const sl=e.el&&e.el.parentElement;if(!sl)return;sl.classList.add('good','conquered');ensureConquerOverlay(e,true);const item=$('#cfx .cfx-item[data-id="'+e.c.id+'"]');if(item&&!RM.matches){sparkleAt(item,item.offsetWidth/2,item.offsetHeight/2,10);setTimeout(()=>{item.querySelectorAll('.csp').forEach(n=>n.remove());item.classList.add('settled')},1800)}else if(item)item.classList.add('settled');window.__ev&&window.__ev.push('conquer:'+e.c.id)}   /* Luke t260u/t270u: unclipped overlay; glow stays and gently shines for the rest of the run */
 function correct(e){clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const zf=document.querySelector('.zfly');if(zf)zf.remove();
- const prevBest=best;streak++;nRight++;runBest=Math.max(runBest,streak);const isNewHigh=streak>prevBest;const conquered=isStruggling(e.c);
+ const prevBest=best;streak++;nRight++;runBest=Math.max(runBest,streak);
+ ptsC+=10;if(streak>=5)ptsRoll+=5;if(!placedSession&&!seenSet().has(e.c.id))ptsNew+=5;markSeen(e.c.id);   /* Luke t329u: +10 per card, +5 on a roll from a streak of 5, +5 the first time this device ever gets the card right on its first deal */const isNewHigh=streak>prevBest;const conquered=isStruggling(e.c);
  if(conquered)yesFlash(e);   /* Luke t272u/t273u/t279u: YES! replaces Streak / New best streak for this placement, and cancels any leftover or queued streak pop-up */
  else if(isNewHigh)bigFlash('stf gold','<i>New best</i><i>streak</i><i class="n">'+streak+'</i>','newBestStreak:'+streak);
  else bigFlash('stf','<i>Streak</i><i class="n">'+streak+'</i>','streak:'+streak);
@@ -1068,7 +1115,7 @@ function correct(e){clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const zf=doc
  }
 function when(e){const k=tl.indexOf(e),pv=tl[k-1]&&tl[k-1].c,nx=tl[k+1]&&tl[k+1].c,b=t=>'<b>'+t+'</b>';
  return b(e.c.title)+' happens '+(pv&&nx?'after '+b(pv.title)+' and before '+b(nx.title):pv?'after '+b(pv.title):'before '+b(nx.title))+'.'}
-function wrong(e){e.el.classList.add('bad');noteCard(e.c,false);sfx('thud');nWrong++;const lost=streak;streak=0;nbShown=false;stkCold=true;stats();if(lost>0)streakBroken();   /* Luke t258u: a break re-arms the new-best jingle */verdict('Not quite…');ycCheck(e);later(()=>miss(e),1300*TS);
+function wrong(e){e.el.classList.add('bad');noteCard(e.c,false);markSeen(e.c.id);sfx('thud');nWrong++;const lost=streak;streak=0;nbShown=false;stkCold=true;stats();if(lost>0)streakBroken();   /* Luke t258u: a break re-arms the new-best jingle */verdict('Not quite…');ycCheck(e);later(()=>miss(e),1300*TS);
  setTimeout(()=>{if(phase==='judging'&&cur===e&&!e.moved){window.__ev.push('failsafe:miss');miss(e)}},1000*TS+1200)}   /* v5.9.1 failsafe: never stuck on 'Not quite…' */
 function miss(e){const old=e.el.getBoundingClientRect();
  tl.splice(tl.indexOf(e),1);const k=tl.filter(x=>key(x.c)<key(e.c)).length;
@@ -1097,42 +1144,67 @@ function scheduleUnlock(){if(!(window.__disc&&window.__disc.unlockCard))return;
  const wait=window.__disc.newHS?(TEST?1200:2000):(TEST?250:700);later(showUnlock,wait)}
 $('#ulock').onclick=ev=>{ev.stopPropagation();ev.preventDefault();if(performance.now()-(+$('#ulock').dataset.at||0)<250)return;if(!$('#ulock').hidden)ui('tap');hideUnlock()};
 $('#ulgo').onclick=ev=>{ev.stopPropagation();ev.preventDefault();ui('tap');hideUnlock()};
-function over(){musicEnd();phase='over';applyFrame();$('#pill').hidden=true;$('#s0').hidden=true;s0Active=false;$('#fc').hidden=true;$('#zoom').style.display='none';hideUnlock();resolved=null;sel=null;hideYc();best=Math.max(best,streak);setBest(best);stats();
- const perfect=nWrong===0&&nRight===total&&total>0,score=nRight+runBest;
+/* ---- Scoreboard v1 (Luke t329u, workshop 25 Nov) ----
+   Sounds by Spielberg (harp, B major): one countup-tick per count-up step, each step x1.06 playbackRate, so a bigger score climbs
+   higher; end-note when the total lands. New best plays NEWBEST_SND instead of end-note (never both). The 'ding ding ding' sting is
+   not delivered yet, so the existing jingle stands in: to swap, add {ding:'audio/new-best-ding'} to SCORE_SND and set NEWBEST_SND='ding'.
+   Score sounds play outside the one-sound queue (they are the only sound at the end), only after the music has faded, and obey quiet(). */
+const SCORE_SND={cutick:'audio/countup-tick',endnote:'audio/end-note'},SCORE_VOL={cutick:.5,endnote:.6,jingle:.55};
+let NEWBEST_SND='jingle',scoreLoading=false,scoreSrcs=[];
+const SCORE_MUSIC_FADE=.5,CU_DELAY=600,CU_STEP=75,CU_RATE=1.06;
+function loadScoreSnds(){if(scoreLoading||!actx)return;scoreLoading=true;const a=document.createElement('audio'),ogg=!!(a.canPlayType&&a.canPlayType('audio/ogg; codecs=vorbis'));
+ Object.keys(SCORE_SND).forEach(k=>{const exts=ogg?['.ogg','.mp3']:['.mp3'];const next=list=>{if(!list.length)return;fetch(SCORE_SND[k]+list[0]).then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()}).then(buf=>new Promise((res,rej)=>actx.decodeAudioData(buf,res,rej))).then(b=>{bufs[k]=b}).catch(()=>next(list.slice(1)))};next(exts)})}
+function playScore(k,rate){window.__ev&&window.__ev.push((quiet()?'muted:':'snd:')+k);if(quiet()||!actx||!bufs[k])return;
+ try{if(actx.state!=='running')actx.resume().catch(()=>{});stopSfx();const s=actx.createBufferSource(),g=actx.createGain();s.buffer=bufs[k];if(rate)s.playbackRate.value=rate;g.gain.value=(SCORE_VOL[k]||VOL[k]||.6)*(masterVol/100);s.connect(g);g.connect(actx.destination);s.onended=()=>{scoreSrcs=scoreSrcs.filter(x=>x!==s)};s.start(0);scoreSrcs.push(s)}catch(e){}}
+function cutScore(){scoreSrcs.forEach(s=>{try{s.stop(0)}catch(e){}});scoreSrcs=[]}
+const STAR='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.2l2.9 6.2 6.8.8-5 4.7 1.3 6.7L12 17.3l-6 3.3 1.3-6.7-5-4.7 6.8-.8z"/></svg>';
+const ICON_SCREEN='<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="4" width="19" height="12.5" rx="1.8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 20.5h8M12 16.5v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+function over(){musicOver=true;musicPendingIn=false;if(musicGain)fadeMusic(0,SCORE_MUSIC_FADE);window.__ev&&window.__ev.push('musicOut');loadScoreSnds();   /* music fades out before the count-up starts */
+ phase='over';applyFrame();$('#pill').hidden=true;$('#s0').hidden=true;s0Active=false;$('#fc').hidden=true;$('#zoom').style.display='none';hideUnlock();resolved=null;sel=null;hideYc();best=Math.max(best,streak);setBest(best);stats();
+ const perfect=nWrong===0&&nRight===total&&total>0,full=total>=51,finish=full?50:0,score=ptsC+ptsRoll+ptsNew+finish;
+ const maxRun=full&&ptsC+ptsRoll+finish===795;   /* max-score prize logic later: only full 51-placement runs count, judged without the first-time bonus */
  const unlockCard=perfect?pickUnlock():null;if(unlockCard)grantUnlock(unlockCard);
- let prevHS=0;try{prevHS=Math.max(0,+localStorage.getItem(HSKEY)||0)}catch(e){}
- const newHS=score>prevHS&&score>0;if(newHS&&!placedSession){try{localStorage.setItem(HSKEY,String(score))}catch(e){}}
- window.__disc={nRight,nWrong,runBest,score,perfect,newHS,prevHS,unlockCard};window.__ev.push('over:'+nRight+'/'+nWrong+'/'+runBest+(unlockCard?':unlock:'+unlockCard.id:''));
- const stillLocked=lockedPlayable().length;
- const unlLine=unlockCard?'<div class="unl newcard" id="endu"><span>New card unlocked</span></div>'
-  :(perfect?'<div class="unl" id="endu"><span>You\'ve unlocked every Discovery card we have so far.</span></div>'
-  :(stillLocked?'<div class="unl" id="endu"><span>Get all '+total+' right in one go to unlock a new card</span></div>':''));
+ const prevHS=getBestPts(),newHS=score>prevHS&&score>0;if(newHS&&!placedSession){try{localStorage.setItem(BESTPTSKEY,String(score))}catch(e){}}
+ window.__disc={nRight,nWrong,runBest,score,ptsC,ptsRoll,ptsNew,finish,maxRun,perfect,newHS,prevHS,unlockCard};window.__ev.push('over:'+nRight+'/'+nWrong+'/'+runBest+':pts'+score+(unlockCard?':unlock:'+unlockCard.id:''));
+ const allOpen=!lockedPlayable().length;
+ let line='';
+ if(allOpen)line=(unlockCard?'New card unlocked. ':'')+'Endurance mode unlocked: all 52 cards are yours.';
+ else if(unlockCard)line='New card unlocked.';
+ else line='Get all '+total+' right in one go to unlock a new card.';
+ const row=(cls,lab,v)=>'<div class="'+cls+'"><small>'+lab+'</small><b>'+v+'</b></div>';
  const end=$('#end');
- end.innerHTML='<div class="ep dsc" role="dialog" aria-label="Your result"><div class="e1">'+
-  /* theme line removed per Luke 24 Nov 20:59 */
-  '<div class="slist"><div class="sc">'+
-  '<div class="inc" data-v="'+nWrong+'"><small>Incorrect</small><b>0</b></div>'+
-  '<div class="okn" data-v="'+nRight+'"><small>Correct</small><b>0</b></div>'+
-  '<div class="bst" data-v="'+runBest+'"><small>Best streak</small><b>0</b></div></div>'+
-  '<div class="tot" data-v="'+score+'"><small>Total<br>correct + best streak</small><b>0</b></div></div>'+
-  (perfect?'<div class="perf">Perfect!</div>':'')+
-  unlLine+
-  '</div><hr><div class="e2">'+
-  '<a class="btn green" id="buy" href="'+BUY_D+'" target="_blank" rel="noopener">Get the full game</a>'+
-  '<div class="sell"><img class="box" src="'+BOX+'" alt="The Chronicles of the Kingdom game box"><p>This web game uses '+ownedDeck().length+' of the 52 cards.<br><b>52</b> Bible Event Cards &middot; <b>1+</b> players &middot; <b>Age 9+</b></p></div>'+
-  '<p class="lead">Leading a group? Try the <a href="'+LEADER_URL+'" target="_blank" rel="noopener">free Leader\'s Guide preview</a>.</p>'+
-  '</div><div class="acts"><div class="a2"><button class="btn" id="again">Try again</button><button class="btn gold" id="viewtl">View the timeline</button></div></div></div>';
- end.style.display='flex';$('#again').onclick=()=>{ui('tap');newRun()};$('#viewtl').onclick=()=>{ui('tap');viewTimeline()};$('#buy').addEventListener('click',()=>ui('tap'));
+ end.innerHTML='<div class="ep dsc sb" role="dialog" aria-label="Your result">'+
+  '<div class="e1"><div class="pts" id="pts" title="Tap to skip">'+
+   '<div class="stars" aria-hidden="true">'+STAR+STAR+STAR+'</div>'+
+   '<div class="bigw"><b class="big" data-v="'+score+'">0</b></div><small class="ptl">points</small>'+
+   '<div class="nbt" aria-live="polite"></div>'+
+   '<div class="yb">Your best: <span>'+(prevHS||'–')+'</span></div></div>'+
+   '<div class="rows">'+row('r1','Correct ('+nRight+' &times; 10)',ptsC)+row('r2','On a roll (streak of 5+)',ptsRoll)+row('r3','First-time cards',ptsNew)+(finish?row('r4','Finished all 51',finish):'')+'</div></div>'+
+  '<div class="acts"><div class="a2"><button class="btn gold" id="again">Play again</button><button class="btn plain" id="viewtl">View the timeline</button></div></div>'+
+  '<div class="e2">'+
+   '<button class="cta web" id="webu" type="button">'+ICON_SCREEN+'<span class="ct">Unlock all 52 cards online, &pound;4.99</span></button>'+
+   '<p class="wnote" id="wnote">Beta price, not final. Coming soon.</p>'+
+   '<a class="cta boxb" id="buy" href="'+BUY_D+'" target="_blank" rel="noopener"><img src="'+BOX+'" alt="The Chronicles of the Kingdom game box"><span class="ct">Get the box for game night with family and friends</span></a>'+
+   '<p class="pline"><i>'+line+'</i></p>'+
+   (allOpen?'<a class="btn green endb" id="endb" href="'+ENDURANCE_URL+'">Play Endurance mode</a>':'')+
+  '</div></div>';
+ end.style.display='flex';$('#again').onclick=()=>{ui('tap');cutScore();newRun()};$('#viewtl').onclick=()=>{ui('tap');cutScore();viewTimeline()};$('#buy').addEventListener('click',()=>ui('tap'));
+ $('#webu').onclick=()=>{ui('tap');const n=$('#wnote');n.textContent='Coming soon. No payment is taken in the beta.';n.classList.add('soon');window.__ev.push('webUnlockTap')};   /* no checkout yet: never takes a payment */
+ const eb=$('#endb');if(eb)eb.addEventListener('click',()=>ui('tap'));
  $('#again').focus({preventScroll:true});countUp()}
-/* the score counts up in Luke's order: incorrect, correct, best streak, then the total (correct + best streak) */
-function countUp(){const els=[...document.querySelectorAll('#end .sc>div'),$('#end .tot')],D=TEST?20:420,GAP=TEST?10:200;let t=TEST?0:350;
- const fin=()=>{if(window.__disc){window.__disc.counted=true;window.__ev.push('counted');if(window.__disc.newHS)highScore();scheduleUnlock()}};
- if(RM.matches){els.forEach(el=>{el.classList.add('on');el.querySelector('b').textContent=el.dataset.v});fin();return}
- els.forEach((el,i)=>{const v=+el.dataset.v,b=el.querySelector('b'),last=i===els.length-1;
-  setTimeout(()=>{if(phase!=='over')return;el.classList.add('on');const t0=performance.now(),dur=v?D:1;
-   sfx('pop',1+i*.12);
-   const step=()=>{const k=Math.min(1,(performance.now()-t0)/dur);b.textContent=Math.round(v*k);if(k<1)requestAnimationFrame(step);else if(last){sfx(window.__disc&&window.__disc.perfect?'jingle':'tick');fin()}};step()},t);
-  t+=D+GAP+(last?0:0)})}
+/* Scoreboard v1: one big total counts up in steps (one rising harp tick per step), tap to skip; then end-note, or on a new best the
+   stars, shimmer, 'New best!' and the new-best sound, all within 1.5s. Reduced motion: total shown at once with a steady glow. */
+function countUp(){const d=window.__disc||{},big=$('#end .big'),pts=$('#pts'),v=+big.dataset.v||0;if(!big)return;
+ let done=false,timers2=[];
+ const land=()=>{if(done||phase!=='over')return;done=true;timers2.forEach(clearTimeout);cutScore();big.textContent=v;pts.classList.add('landed');
+  if(d.newHS){playScore(NEWBEST_SND);celebrate()}else playScore('endnote');
+  d.counted=true;window.__ev.push('counted');scheduleUnlock()};
+ if(RM.matches){big.textContent=v;pts.classList.add('rm');setTimeout(land,TEST?0:CU_DELAY);return}
+ const n=v>0?Math.max(3,Math.min(16,Math.round(v/50))):0,step=TEST?10:CU_STEP,t0=TEST?0:CU_DELAY;
+ pts.onclick=()=>{if(!done){window.__ev.push('skip');land()}};
+ for(let i=0;i<n;i++)timers2.push(setTimeout(()=>{if(done||phase!=='over')return;big.textContent=Math.round(v*(i+1)/n);playScore('cutick',Math.pow(CU_RATE,i))},t0+i*step));
+ timers2.push(setTimeout(land,t0+n*step+(n?40:0)))}
+function celebrate(){const pts=$('#pts');if(!pts)return;pts.classList.add('newbest');const t=pts.querySelector('.nbt');if(t)t.textContent='New best!';const yb=pts.querySelector('.yb span');if(yb&&window.__disc)yb.textContent=window.__disc.score;window.__ev.push('newBestPts')}
 /* Discovery v5 (Luke t212u): after the total counts up, a New high score! pop-up if this total beats the stored best (first game only if total > 0). About 1.5s, then fade. */
 function highScore(){clearWordFlashes();let o=$('#nhs');if(o)o.remove();o=document.createElement('div');o.id='nhs';o.className='gold';o.setAttribute('aria-live','assertive');
  o.innerHTML='<span class="ff st"><i>New high</i><i>score!</i></span>';document.body.appendChild(o);fitNHS(o);o.setAttribute('aria-label','New high score!');window.__ev.push('highScore');
@@ -1156,7 +1228,7 @@ function showPlacedBoard(){const pool=playableDeck().slice();if(!pool.length)ret
  const k=Math.max(1,Math.min(PLACED,pool.length)),sh=shuffle(pool),on=sh.slice(0,k).sort((a,b)=>a.n-b.n),rest=shuffle(sh.slice(k));
  s0Active=false;learned=true;$('#s0').hidden=true;$('#zoom').style.display='none';$('#fc').hidden=true;
  $('#end').style.display='none';hideUnlock();hideYc();clearConquerFx();
- tl=on.map(c=>({c,up:true}));deck=rest;total=Math.max(0,pool.length-1);nRight=Math.max(0,k-1);nWrong=0;runBest=nRight;streak=nRight;
+ tl=on.map(c=>({c,up:true}));deck=rest;total=Math.max(0,pool.length-1);nRight=Math.max(0,k-1);nWrong=0;runBest=nRight;streak=nRight;ptsC=nRight*10;ptsRoll=Math.max(0,nRight-4)*5;ptsNew=0;
  nbShown=false;best=getBest();bestStart=best;turn=Math.max(0,k-1);
  window.__ev&&window.__ev.push('placed:'+k+'/'+pool.length);
  preloadAhead();
@@ -1164,7 +1236,7 @@ function showPlacedBoard(){const pool=playableDeck().slice();if(!pool.length)ret
  draw()}
 const UNLOCKTEST=TEST&&/[?&]unlock=1\b/.test(location.search);
 newRun();
-if(UNLOCKTEST){nRight=total;nWrong=0;later(over,40)}
+if(UNLOCKTEST){nRight=total;nWrong=0;ptsC=total*10;ptsRoll=Math.max(0,total-4)*5;later(over,40)}
 if(PLACED){try{const u=new URL(location.href);u.searchParams.delete('placed');history.replaceState(null,'',u.pathname+u.search+u.hash)}catch(e){}}
 if(TEST)window.__ckUnlock={show:showUnlock,hide:hideUnlock,pick:pickUnlock,owned:()=>ownedDeck().map(c=>c.id),locked:()=>lockedPlayable().map(c=>c.id),grant:grantUnlock,total:()=>total,layout:()=>Object.assign({},L),
  fillAll(){const pool=ownedDeck().slice().sort((a,b)=>a.n-b.n);if(!pool.length)return;tl=pool.map(c=>({c,up:true}));hand=null;deck=[];total=Math.max(0,pool.length-1);nRight=total;nWrong=0;runBest=total;phase='review';
