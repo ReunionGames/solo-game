@@ -870,21 +870,21 @@ function fitFF(){const f=$('#stage .ff');if(!f)return;const s=$('#stage'),W=s.cl
  let fs=Math.min(110,(Hs)/3.15,W*.26);
  if(n>1&&fs>=46){f.classList.add('st');f.style.fontSize=fs+'px';return}
  f.classList.remove('st');f.style.fontSize=Math.floor(Math.min(110,Hs*.78,W/(n>1?8.2:3)))+'px'}
-/* ---- timeline layout (Luke t300u): tighter gaps, slightly smaller cards; prefer a packing that fits the visible area without scrolling. Only very long boards (around 40+) scroll, and they stay tight. ---- */
+/* ---- timeline layout (Luke t300u/t308u): tighter gaps, slightly smaller cards; prefer a packing that fits the visible area without scrolling. On desktop the board may use as many columns as will fit at the minimum card size, up to the header/app width (no 7-column or 180px cap), and when two packs have the same card size it prefers the wider one. Phone packing is unchanged (3–6 columns, 120px cap). Only very long boards (around 40+ on a phone) scroll, and they stay tight. ---- */
 function layout(count){const sc=$('#tl'),D=desk(),cs=getComputedStyle(sc);
  const g=D?6:4,band=D?24:20,rg=D?6:4,cueH=(loud&&phase==='choose')?(D?46:62):0;
  sc.style.setProperty('--g',g+'px');sc.style.setProperty('--rg',rg+'px');sc.style.setProperty('--band',band+'px');
  const W=sc.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight);
  const tlh=$('#tlh'),avail=FH-$('header').offsetHeight-(tlh.style.display==='none'?0:tlh.offsetHeight)-Math.max(VH,$('#stage').offsetHeight);   /* frame left for the timeline once the verdict stage is shown */
  const Hb=avail-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom)-cueH-1;
- const nMin=D?5:3,nMax=D?7:6,cap=D?180:120,minCw=D?52:52,absMin=D?48:48;
+ const nMin=D?5:3,absMin=48,minCw=52,cap=D?W:120,nMax=D?Math.max(nMin,Math.floor((W+g)/(absMin+g))):6;
  const rowsOf=n=>Math.ceil(count/n),chOf=cw=>Math.floor(cw/R),hOf=(n,cw)=>rowsOf(n)*(chOf(cw)+band)+(rowsOf(n)-1)*rg,cwW=n=>(W-g*(n-1))/n;
  let fit=null,tight=null;
  for(let n=nMin;n<=nMax;n++){const rows=rowsOf(n),cW=cwW(n),chH=(Hb-rg*(rows-1))/rows-band;
   const cwFit=Math.floor(Math.min(cW,chH>0?chH*R:cap,cap));
-  if(cwFit>=absMin&&hOf(n,cwFit)<=Hb+1){if(!fit||cwFit>fit.cw||(cwFit===fit.cw&&n<fit.N))fit={N:n,cw:cwFit}}
+  if(cwFit>=absMin&&hOf(n,cwFit)<=Hb+1){if(!fit||cwFit>fit.cw||(cwFit===fit.cw&&(D?n>fit.N:n<fit.N)))fit={N:n,cw:cwFit}}
   const cwFall=Math.floor(Math.max(1,Math.min(cW,minCw,cap))),over=Math.max(0,hOf(n,cwFall)-Hb);
-  if(!tight||over<tight.over||(over===tight.over&&(cwFall>tight.cw||(cwFall===tight.cw&&n<tight.N))))tight={N:n,cw:cwFall,over}}
+  if(!tight||over<tight.over||(over===tight.over&&(cwFall>tight.cw||(cwFall===tight.cw&&(D?n>tight.N:n<tight.N)))))tight={N:n,cw:cwFall,over}}
  const b=fit||tight||{N:nMin,cw:minCw};L={N:b.N,cw:b.cw,ch:Math.floor(b.cw/R),g}}
 function timeline(){const sc=$('#tl'),keep=sc.scrollTop,choose=phase==='choose',tcs=getComputedStyle(sc),padL=parseFloat(tcs.paddingLeft);
  sc.className=(choose?(loud?'loud':'quiet'):'noplace')+(choose&&pulseOn?' pulse':'');
