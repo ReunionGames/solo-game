@@ -13,7 +13,7 @@
 /* v5.9 (21 Nov 2026) Place it click sound + Flip, flip, flip! word pops, Place it locked while the first-card overlay is up, 'Try again' in both places, tutorial keys versioned per release (RELEASE), Read other side on enlarged timeline cards (no Close button), card-not-showing fix (2D enlarged card + loading fallback + image retry + back preload) */
 /* v5.8 (21 Nov 2026) first-card overlay */
 /* v5.7 (21 Nov 2026): step 0 (This is your timeline pointer) now shows at the start of every playthrough, not only the first game. v5.6 (21 Nov 2026): workshop (g) stage one. Header streak number restyled (gold ring, pop on each correct card, colour steps at 3/5/10, data-driven milestones), new-best burst + 'New best!' tag from the header (best kept per deck for the session only, no storage), Kenney CC0 sounds (clack, flip, tick, thud, jingle) with a remembered mute toggle, a + marker at the left end of every timeline row (paired with the end of the row above: one insertion index, lit together), desktop zoomed card centred with the button and line below it. End of a run: no See your score step; the score pops up by itself after the verdict, with a View the timeline button that shows the final timeline and a Restart game button. Place it, Flip! and step 0 unchanged. v5.5 (17 Nov 2026): step 1 (Tap to read your first card) removed. Card 1 opens zoomed exactly like cards 2+ (after step 0, or straight away when step 0 is skipped), then the chip, then the Tap a gold marker prompt and marker pulse until the first marker tap. One stage layout for every turn, so the timeline top never moves. The Timeline: earliest to latest label is gone (the marker prompt says earliest on the left). v5.4 (17 Nov 2026): step 0 (the start card on the timeline, first game only), shared burgundy pill button for Tap to read your first card / Flip! / Got it, buttons centred on the card. v5.3 (17 Nov 2026): three-step start on card 1 (tap card to read, enlarged card says Got it place it, then a gold-marker prompt stays over the timeline until the first tap). v5.2 (17 Nov 2026): lays itself out in the part of the frame the visitor can actually see (IntersectionObserver), compact two-column end screen on desktop, quick Flip! text white again. v5.1 (17 Nov 2026): card 1 back to the side-by-side start; cards 2+ zoom (smaller on desktop, near the top); 2-line chip; fixed-height top zone. v5 (17 Nov 2026): every new card opens zoomed (read it, tap off to place); slim chip + one instruction line; timeline gets the frame */
-:root{--parch:#F4E8CB;--burg:#551309;--gold:#E9D29E;--red:#9c1c14;--ink:#2b1a10;--lab:#40110C;--soft:#7F5C4F}
+:root{--parch:#F4E8CB;--burg:#551309;--gold:#E9D29E;--red:#9c1c14;--ink:#2b1a10;--lab:#40110C;--soft:#7F5C4F;--card-rx:4.7619047619%;--card-ry:3.4090909091%} /* O's web cards: 3mm circular corner on a 63mm card (72px on 1512×2112 masters, 28.571px on the 600×838 WebPs). Two-value % keeps it circular as the card scales (a single % would be elliptical). */
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;overflow:hidden;background:var(--parch);color:var(--ink);font-family:'EB Garamond',Georgia,serif;-webkit-tap-highlight-color:transparent}
 #app{position:absolute;left:0;right:0;top:var(--vt,0px);height:var(--vh,100%);width:min(100%,1400px);margin:0 auto;display:flex;flex-direction:column}
@@ -197,7 +197,7 @@ header{flex:none;display:flex;justify-content:space-between;align-items:center;g
 /* step 0: dim the frame, light the start card, parchment box with the line, gold arrow */
 #s0{position:fixed;left:0;right:0;top:var(--vt,0px);height:var(--vh,100%);z-index:8;overflow:hidden;cursor:pointer}
 #s0[hidden]{display:none}
-.s0hole{position:absolute;border-radius:10px;pointer-events:none;box-shadow:0 0 0 3px #E9D29E,0 0 24px 9px rgba(233,210,158,.95),0 0 0 9999px rgba(35,17,9,.6)}
+.s0hole{position:absolute;border-radius:var(--card-rx)/var(--card-ry);pointer-events:none;box-shadow:0 0 0 3px #E9D29E,0 0 24px 9px rgba(233,210,158,.95),0 0 0 9999px rgba(35,17,9,.6)}
 .s0box{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:min(94%,640px);background:var(--parch);border:2px solid #E9D29E;outline:2px solid var(--burg);border-radius:14px;padding:10px 14px 12px;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.5);color:var(--burg);font-size:20px;font-weight:700;line-height:1.25}
 .s0box p{margin:0 0 10px}.s0box p b{color:#40110C}
 .s0box .gbtn{min-width:180px;cursor:pointer}
@@ -208,10 +208,10 @@ header{flex:none;display:flex;justify-content:space-between;align-items:center;g
 @keyframes arrbob{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
 .s0arrow.bob{animation:arrbob 1s ease-in-out 3}
 
-/* Unlock reveal (Luke t287u): tutorial-style spotlight, card bright, everything around faded */
+/* Unlock reveal (Luke t287u): tutorial-style spotlight, card bright, everything around faded. Hole radius matches the WebP corners (Luke t297u). */
 #ulock{position:fixed;left:0;right:0;top:var(--vt,0px);height:var(--vh,100%);z-index:42;overflow:hidden;cursor:pointer}
 #ulock[hidden]{display:none}
-.ulhole{position:absolute;border-radius:10px;pointer-events:none;box-shadow:0 0 0 3px #E9D29E,0 0 24px 9px rgba(233,210,158,.95),0 0 0 9999px rgba(35,17,9,.6)}
+.ulhole{position:absolute;border-radius:var(--card-rx)/var(--card-ry);pointer-events:none;box-shadow:0 0 0 3px #E9D29E,0 0 24px 9px rgba(233,210,158,.95),0 0 0 9999px rgba(35,17,9,.6)}
 .ulspot{position:absolute;left:50%;top:54%;transform:translate(-50%,-50%);width:min(58vw,260px);filter:drop-shadow(0 8px 22px rgba(0,0,0,.45));pointer-events:none}
 .ulcard{width:100%}
 .ulbox{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:min(94%,640px);background:var(--parch);border:2px solid #E9D29E;outline:2px solid var(--burg);border-radius:14px;padding:10px 14px 12px;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.5);color:var(--burg);font-size:20px;font-weight:700;line-height:1.25;z-index:1}
@@ -289,7 +289,7 @@ header{position:relative;z-index:7}
 }
 #end .ep .a2{display:flex;gap:8px;flex-wrap:nowrap;justify-content:center;width:100%;max-width:300px}#end .ep .a2 .btn{flex:1 1 auto;padding:0 10px;font-size:16px;white-space:nowrap}
 /* v5.8: first-card overlay covers the zoomed card only (not the header, button or 'Card N of M' line) */
-#fc{position:absolute;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;box-sizing:border-box;padding:10px 14px;background:rgba(30,14,7,.93);color:var(--gold);font-family:'EB Garamond',Georgia,serif;text-align:center;cursor:pointer;overflow:hidden;border-radius:6px;box-shadow:inset 0 0 0 2px rgba(233,210,158,.7);pointer-events:auto;touch-action:manipulation;container-type:size}
+#fc{position:absolute;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;box-sizing:border-box;padding:10px 14px;background:rgba(30,14,7,.93);color:var(--gold);font-family:'EB Garamond',Georgia,serif;text-align:center;cursor:pointer;overflow:hidden;border-radius:var(--card-rx)/var(--card-ry);box-shadow:inset 0 0 0 2px rgba(233,210,158,.7);pointer-events:auto;touch-action:manipulation;container-type:size}
 #fc[hidden]{display:none!important}
 #fc .fcmsg{margin:0;font-weight:700;text-shadow:0 1px 3px #000;font-size:clamp(14px,8cqw,22px);line-height:1.25;color:var(--gold)}
 #fc .fchint{margin:.55em 0 0;font-weight:400;font-size:clamp(12px,5.5cqw,16px);line-height:1.2;color:var(--parch);opacity:.92}
@@ -307,7 +307,7 @@ header{position:relative;z-index:7}
 @keyframes zturn{0%{transform:scaleX(1)}50%{transform:scaleX(0)}100%{transform:scaleX(1)}}
 /* card image still loading or failed: a red card with its title, so a card is always visible */
 .face .ft{display:none}
-.face.ld{background:#9c1c14;border-radius:4.5%;box-shadow:inset 0 0 0 3px #E9D29E}
+.face.ld{background:#9c1c14;border-radius:var(--card-rx)/var(--card-ry);box-shadow:inset 0 0 0 3px #E9D29E}
 .face.ld .ft{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:8%;text-align:center;color:#F4E8CB;font-weight:700;font-size:clamp(9px,9cqw,30px);line-height:1.15}
 .face.ld{container-type:size}
 .face.ld img{opacity:0}
@@ -495,7 +495,7 @@ const ENDURANCE_URL='https://reuniongames.github.io/solo-game/';                
 const UNLOCKKEY='ckDiscoveryEnduranceUnlocked';                                          /* leftover from the old Endurance unlock; no longer written on a perfect run (Luke t287u) */
 const UNLOCKCARDSKEY='ckDiscoveryUnlocked';                                                 /* {v:1,ids:[...]} this browser only (Luke t287u). Same shape can be synced to a Wix Members account later. */
 const HSKEY='ckDiscoveryHighScore';                                                          /* best total (correct + best streak) per device (Luke t212u) */
-const STRUGKEY='ckDiscoveryStruggle';                                                        /* per-card miss streak + flag, this browser only (Luke t252u). Not cleared by the test BUILD reset (new flags can be added; existing entries are kept). Newly unlocked cards are flagged here so the first correct placement gets the hard-card treatment (Luke t288u/t289u). */
+const STRUGKEY='ckDiscoveryStruggle';                                                        /* per-card miss streak + flag, this browser only (Luke t252u). A test BUILD reset now clears this too, so a previous auto-marked hard card does not linger (Luke t296u); ?hard=N can still add flags after that. Newly unlocked cards are flagged here so the first correct placement gets the hard-card treatment (Luke t288u/t289u). */
 /* The original 13 promo cards (Luke t295u). The other 39 playable Bible Event cards are the unlock pool. */
 const STARTER_IDS=['1-2','1-7','2-2','2-5','3-2','3-5','4-6','5-3','5-7','6-3','6-7','7-3','7-6'];
 function playableDeck(){return DECK_ALL.filter(c=>c&&c.id&&c.playable&&c.front&&c.back)}
@@ -508,10 +508,10 @@ function revealArt(c){return (c&&c.reveal)||(c&&c.front)}
 function markHard(id){if(!id)return;try{const raw=JSON.parse(localStorage.getItem(STRUGKEY)||'{}'),m=(raw&&typeof raw==='object'&&!Array.isArray(raw))?raw:{};m[id]={miss:3,flagged:true};localStorage.setItem(STRUGKEY,JSON.stringify(m))}catch(e){}}
 function grantUnlock(c){if(!c||!c.id||STARTER_IDS.indexOf(c.id)>=0)return false;const st=loadUnlockState();if(st.ids.indexOf(c.id)>=0)return false;st.ids.push(c.id);saveUnlockState(st);markHard(c.id);return true}
 function pickUnlock(){const left=lockedPlayable();if(!left.length)return null;const a=left.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)),x=a[i];a[i]=a[j];a[j]=x}return a[0]}
-/* TEST ONLY (Luke t247u/t263u/t264u/t287u): bump BUILD on every Discovery commit so testers get a fresh high score (and a fresh best streak on reload; best streak is session-only, no storage key), cleared card unlocks, and 1 random owned card marked as a struggle card (as if missed in 3 games in a row). ?hard=N also marks N more, then strips the flag and plays a normal game. ?test=1&unlock=1 jumps a run to a perfect end so the unlock reveal can be checked quickly. Remove this auto-reset, the unlock clear, ?hard= and ?test=1&unlock=1 before Discovery goes on the Wix site. */
-const BUILD='2026-11-25-1130',BUILDKEY='ckDiscoveryBuild';
+/* TEST ONLY (Luke t247u/t263u/t264u/t287u/t296u): bump BUILD on every Discovery commit so testers get a fresh high score (and a fresh best streak on reload; best streak is session-only, no storage key) and cleared card unlocks. Struggle flags are also cleared so a previous build's auto-marked hard card does not linger; new builds no longer mark a random hard card (Luke t296u). ?hard=N still marks N owned cards, then strips the flag and plays a normal game. ?test=1&unlock=1 jumps a run to a perfect end so the unlock reveal can be checked quickly. Remove this auto-reset, the unlock clear, ?hard= and ?test=1&unlock=1 before Discovery goes on the Wix site. */
+const BUILD='2026-11-25-1140',BUILDKEY='ckDiscoveryBuild';
 function seedHardCards(n){n=+n;if(!(n>0)||!DECK_ALL||!DECK_ALL.length)return;try{const raw=JSON.parse(localStorage.getItem(STRUGKEY)||'{}'),m=(raw&&typeof raw==='object'&&!Array.isArray(raw))?raw:{};const pool=ownedDeck(),ids=(pool.length?pool:DECK_ALL).map(c=>c.id);const sh=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)),x=a[i];a[i]=a[j];a[j]=x}return a};const pick=sh(ids.filter(id=>!m[id])).concat(sh(ids.filter(id=>m[id]&&!m[id].flagged)));pick.slice(0,Math.min(n,pick.length)).forEach(id=>{m[id]={miss:3,flagged:true}});localStorage.setItem(STRUGKEY,JSON.stringify(m))}catch(e){}}
-try{if(localStorage.getItem(BUILDKEY)!==BUILD){localStorage.removeItem(HSKEY);localStorage.removeItem(UNLOCKCARDSKEY);seedHardCards(1);localStorage.setItem(BUILDKEY,BUILD)}}catch(e){}
+try{if(localStorage.getItem(BUILDKEY)!==BUILD){localStorage.removeItem(HSKEY);localStorage.removeItem(UNLOCKCARDSKEY);localStorage.removeItem(STRUGKEY);localStorage.setItem(BUILDKEY,BUILD)}}catch(e){}
 (function(){const h=location.search.match(/[?&]hard=(\d+)/);if(!h)return;seedHardCards(+h[1]);try{const u=new URL(location.href);u.searchParams.delete('hard');history.replaceState(null,'',u.pathname+u.search+u.hash)}catch(e){}})();
 const LEADER_URL='https://www.chroniclesofthekingdom.co.uk/post/leader-s-guide-preview-try-the-first-four-sessions-for-free';  /* free Leader's Guide preview (media-press.md) */
 /* PLACEHOLDER theme line: Qohelet's example wording from the workshop (24 Nov), NOT final. Qohelet to draft, Ezra to check. Set THEME_FINAL=true once approved. */
