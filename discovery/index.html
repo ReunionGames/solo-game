@@ -25,6 +25,8 @@ header{flex:none;display:flex;justify-content:space-between;align-items:center;g
 #stage{flex:none;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:4px 10px;text-align:center}
 #stage.ch{flex-direction:column;align-items:stretch;justify-content:center;gap:2px}
 #stage.pan{flex-direction:column}
+/* Luke t257u: on desktop, the whole verdict panel advances to the next card (not on links or buttons) */
+@media (min-width:700px) and (hover:hover) and (pointer:fine){#stage.nextclick{cursor:pointer}}
 .lab{display:flex;align-items:center;gap:10px;font-weight:700;font-variant:small-caps;font-size:16px;line-height:1.1;letter-spacing:.04em;color:var(--lab)}
 .lab .rule{flex:1;height:2px;background:var(--gold);position:relative;min-width:20px}
 .lab .rule:after{content:"";position:absolute;right:-2px;top:-4px;border-left:8px solid var(--gold);border-top:5px solid transparent;border-bottom:5px solid transparent}
@@ -389,7 +391,7 @@ const UNLOCKKEY='ckDiscoveryEnduranceUnlocked';                                 
 const HSKEY='ckDiscoveryHighScore';                                                          /* best total (correct + best streak) per device (Luke t212u) */
 const STRUGKEY='ckDiscoveryStruggle';                                                        /* per-card miss streak + flag, this browser only (Luke t252u). Not cleared by the test BUILD reset. */
 /* TEST ONLY (Luke t247u): bump BUILD on every Discovery commit so testers get a fresh high score (and a fresh best streak on reload; best streak is session-only, no storage key). Remove this auto-reset before Discovery goes on the Wix site. */
-const BUILD='2026-11-25-0652',BUILDKEY='ckDiscoveryBuild';
+const BUILD='2026-11-25-0659',BUILDKEY='ckDiscoveryBuild';
 try{if(localStorage.getItem(BUILDKEY)!==BUILD){localStorage.removeItem(HSKEY);localStorage.setItem(BUILDKEY,BUILD)}}catch(e){}
 const LEADER_URL='https://www.chroniclesofthekingdom.co.uk/post/leader-s-guide-preview-try-the-first-four-sessions-for-free';  /* free Leader's Guide preview (media-press.md) */
 /* PLACEHOLDER theme line: Qohelet's example wording from the workshop (24 Nov), NOT final. Qohelet to draft, Ezra to check. Set THEME_FINAL=true once approved. */
@@ -626,6 +628,8 @@ function sizeStage(mode){const D=desk(),H=FH,cl=(v,a,b)=>Math.max(a,Math.min(b,v
  /* card 1: the roomy side-by-side start (as v4 turn 1). Card 2 onwards: ONE constant height, so the timeline never moves */
  $('#stage').style.height=VH+'px'}
 function renderStage(){stageChoose()}
+function clearNextClick(s){s=s||$('#stage');if(!s)return;s.classList.remove('nextclick');s.onclick=null}
+function armNextClick(s,go){s.classList.add('nextclick');s.onclick=ev=>{if(!desk()||!matchMedia('(hover:hover) and (pointer:fine)').matches)return;if(ev.target.closest&&ev.target.closest('a,button,input,textarea,select,label,[role="button"]'))return;ui('tap');go(ev)}}   /* Luke t257u: desktop only; Next card when the panel is clicked */
 /* ---- step 0: shown at the start of every playthrough (v5.7) ---- */
 const TEST=/[?&]test=1\b/.test(location.search),TK=+((location.search.match(/[?&]cards=(\d+)/)||[])[1]||0),TS=TEST?.08:1;
 if(TEST){const st=document.createElement('style');st.textContent='*,*::before,*::after{animation:none!important;transition:none!important}';document.head.appendChild(st)}
@@ -664,7 +668,7 @@ function updatePill(){const p=$('#pill'),zo=$('#zoom').style.display==='flex';
  if(!show){p.hidden=true;return}
  p.innerHTML=sel==null?'Tap a gold marker where it goes<small>Earliest on the left</small>':'Tap <b>Flip!</b> to check<small>or tap another gold marker</small>';p.hidden=false}
 function pulseMarkers(){if(RM.matches)return;pulseUntil=performance.now()+1500;const sc=$('#tl');sc.classList.remove('pulse1');void sc.offsetWidth;sc.classList.add('pulse1');later(()=>sc.classList.remove('pulse1'),1500)}
-function stageChoose(){const s=$('#stage');s.innerHTML='';s.className='ch slim';sizeStage('choose');
+function stageChoose(){const s=$('#stage');clearNextClick(s);s.innerHTML='';s.className='ch slim';sizeStage('choose');
  const n='Card '+turn+' of '+total,row=document.createElement('div');row.className='crow';
  const chip=document.createElement('button');chip.className='chip';chip.id='chip';
  chip.setAttribute('aria-label','Your card: '+hand.title+'. Tap to read it large');
@@ -678,14 +682,14 @@ function stageChoose(){const s=$('#stage');s.innerHTML='';s.className='ch slim';
 h.innerHTML='<span><b>'+n+'</b> · '+(sel==null?'Tap <b>+</b> where it goes, then <b>Flip!</b>':'Tap <b>Flip!</b> to check, or another <b>+</b>')+'</span>';
  s.appendChild(h);
  const ct2=chip.querySelector('.ct');let fs=parseFloat(getComputedStyle(ct2).fontSize);while(fs>12&&ct2.scrollHeight>ct2.clientHeight+1){fs-=1;ct2.style.fontSize=fs+'px'}}
-function verdict(head,body,btn,nb){const s=$('#stage');s.innerHTML='';s.className='pan v';sizeStage('verdict');
+function verdict(head,body,btn,nb){const s=$('#stage');clearNextClick(s);s.innerHTML='';s.className='pan v';sizeStage('verdict');
  const p=document.createElement('div');p.className='panel vp';const hr=document.createElement('div');hr.className='vh';
  hr.innerHTML='<span class="big">'+head+'</span>'+(nb||'');
  if(btn){const b=document.createElement('button');b.className='btn';b.textContent=btn[0];b.onclick=ev=>{ui('tap');btn[1](ev)};hr.appendChild(b)}
  p.appendChild(hr);if(body){const v=document.createElement('div');v.className='vb';v.innerHTML=body;p.appendChild(v)}
- s.appendChild(p);const vb=p.querySelector('.vb');
+ s.appendChild(p);if(btn&&btn[0]==='Next card')armNextClick(s,btn[1]);const vb=p.querySelector('.vb');
  if(vb){let fs=parseFloat(getComputedStyle(vb).fontSize);while(fs>13&&p.scrollHeight>s.clientHeight-8){fs-=1;vb.style.fontSize=fs+'px'}}}
-function stagePanel(html,btn){const s=$('#stage');s.innerHTML='';s.className='pan';sizeStage('verdict');
+function stagePanel(html,btn){const s=$('#stage');clearNextClick(s);s.innerHTML='';s.className='pan';sizeStage('verdict');
  const p=document.createElement('div');p.className='panel';p.innerHTML=html;s.appendChild(p);
  if(btn){const b=document.createElement('button');b.className='btn';b.textContent=btn[0];b.onclick=ev=>{ui('tap');btn[1](ev)};s.appendChild(b)}
  fitFF()}
@@ -913,7 +917,7 @@ function fitNHS(o){const f=o.querySelector('.ff'),W=o.clientWidth-24,H=o.clientH
  let n=0;while(n++<30&&(f.scrollWidth>W||f.scrollHeight>H)&&fs>42){fs-=3;f.style.fontSize=Math.floor(fs)+'px'}}
 /* 'View the timeline' on the score: close it and show the finished timeline with a Try again button (v5.9: same words as the score) */
 function viewTimeline(){$('#end').style.display='none';phase='review';hideYc();applyFrame();
- const s=$('#stage');s.innerHTML='';s.className='pan v';sizeStage('verdict');
+ const s=$('#stage');clearNextClick(s);s.innerHTML='';s.className='pan v';sizeStage('verdict');
  const p=document.createElement('div');p.className='panel vp';const hr=document.createElement('div');hr.className='vh';
  hr.innerHTML='<span class="big">Your timeline</span>';const b=document.createElement('button');b.className='btn';b.id='restart';b.textContent='Try again';b.onclick=()=>{ui('tap');newRun()};hr.appendChild(b);p.appendChild(hr);
  const v=document.createElement('div');v.className='vb';v.innerHTML='<b>'+nRight+' of '+total+'</b> correct · Best streak <b>'+runBest+'</b>';p.appendChild(v);s.appendChild(p);
