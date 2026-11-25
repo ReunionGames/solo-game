@@ -1146,11 +1146,10 @@ $('#ulock').onclick=ev=>{ev.stopPropagation();ev.preventDefault();if(performance
 $('#ulgo').onclick=ev=>{ev.stopPropagation();ev.preventDefault();ui('tap');hideUnlock()};
 /* ---- Scoreboard v1 (Luke t329u, workshop 25 Nov) ----
    Sounds by Spielberg (harp, B major): one countup-tick per count-up step, each step x1.06 playbackRate, so a bigger score climbs
-   higher; end-note when the total lands. New best plays NEWBEST_SND instead of end-note (never both). The 'ding ding ding' sting is
-   not delivered yet, so the existing jingle stands in: to swap, add {ding:'audio/new-best-ding'} to SCORE_SND and set NEWBEST_SND='ding'.
+   higher; end-note when the total lands. New best plays NEWBEST_SND (Spielberg's new-best-ding, draft until Luke has heard it) instead of end-note (never both).
    Score sounds play outside the one-sound queue (they are the only sound at the end), only after the music has faded, and obey quiet(). */
-const SCORE_SND={cutick:'audio/countup-tick',endnote:'audio/end-note'},SCORE_VOL={cutick:.5,endnote:.6,jingle:.55};
-let NEWBEST_SND='jingle',scoreLoading=false,scoreSrcs=[];
+const SCORE_SND={cutick:'audio/countup-tick',endnote:'audio/end-note',ding:'audio/new-best-ding'},SCORE_VOL={cutick:.5,endnote:.6,ding:.6};
+let NEWBEST_SND='ding',scoreLoading=false,scoreSrcs=[];
 const SCORE_MUSIC_FADE=.5,CU_DELAY=600,CU_STEP=75,CU_RATE=1.06;
 function loadScoreSnds(){if(scoreLoading||!actx)return;scoreLoading=true;const a=document.createElement('audio'),ogg=!!(a.canPlayType&&a.canPlayType('audio/ogg; codecs=vorbis'));
  Object.keys(SCORE_SND).forEach(k=>{const exts=ogg?['.ogg','.mp3']:['.mp3'];const next=list=>{if(!list.length)return;fetch(SCORE_SND[k]+list[0]).then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()}).then(buf=>new Promise((res,rej)=>actx.decodeAudioData(buf,res,rej))).then(b=>{bufs[k]=b}).catch(()=>next(list.slice(1)))};next(exts)})}
