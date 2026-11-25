@@ -252,14 +252,14 @@ header{position:relative;z-index:7}
 #mute:before,#rst:before{content:"";position:absolute;left:8px;top:8px;width:28px;height:28px;border-radius:50%;border:1.5px solid #cdb98a;box-sizing:border-box}
 #mute svg,#rst svg{position:absolute;left:13px;top:13px;width:18px;height:18px}
 /* Luke t261u: Restart confirm, a small popover under the header button */
-#rsq{position:absolute;right:0;top:calc(100% - 2px);z-index:12;background:var(--parch);border:2px solid var(--gold);border-radius:12px;padding:10px 12px;box-shadow:0 4px 16px rgba(0,0,0,.4);min-width:180px;max-width:min(240px,calc(100vw - 16px))}
+#rsq{position:fixed;z-index:45;right:auto;top:auto;background:var(--parch);border:2px solid var(--gold);border-radius:12px;padding:10px 12px;box-shadow:0 4px 16px rgba(0,0,0,.4);min-width:180px;max-width:min(240px,calc(100vw - 16px))}
 #rsq[hidden]{display:none!important}
 #rsq p{margin:0 0 8px;font-weight:700;color:var(--burg);font-size:16px;line-height:1.2}
 #rsq .rsq-acts{display:flex;gap:8px;justify-content:flex-end}
 #rsq .btn{min-height:36px;font-size:15px;padding:0 12px}
 #mute .x{display:none}#mute .w{display:inline}#mute[data-level="0"] .x,#mute[aria-pressed="true"] .x{display:inline}#mute[data-level="0"] .w,#mute[aria-pressed="true"] .w{display:none}#mute[data-level="1"] .w2{display:none}
 /* Luke t245u/t275u: speaker opens a Sounds + Music panel on desktop and mobile */
-#vol{position:absolute;right:0;top:calc(100% - 2px);z-index:12;background:var(--parch);border:2px solid var(--gold);border-radius:12px;padding:10px 12px;box-shadow:0 4px 16px rgba(0,0,0,.4);display:flex;flex-direction:column;gap:8px;min-width:222px;max-width:min(280px,calc(100vw - 16px));box-sizing:border-box}
+#vol{position:fixed;z-index:45;right:auto;top:auto;background:var(--parch);border:2px solid var(--gold);border-radius:12px;padding:10px 12px;box-shadow:0 4px 16px rgba(0,0,0,.4);display:flex;flex-direction:column;gap:8px;min-width:222px;max-width:min(280px,calc(100vw - 16px));box-sizing:border-box}
 #vol[hidden]{display:none!important}
 #vol .vol-row{display:flex;align-items:center;gap:8px;min-height:44px}
 #vol .vol-lab{flex:none;width:3.7em;font-weight:700;color:var(--burg);font-size:15px;line-height:1.1}
@@ -411,11 +411,13 @@ header{position:relative;z-index:7}
 </style></head><body>
 <div id="vs"></div>
 <div id="app">
-<header><div class="brand"><b>Game Mode: Discovery</b></div><div id="hr"><div id="stats" aria-live="polite"></div><button id="rst" type="button" title="Restart" aria-label="Restart" aria-haspopup="dialog" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M20 4v6h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div id="rsq" hidden role="dialog" aria-label="Restart this run?"><p>Restart this run?</p><div class="rsq-acts"><button type="button" class="btn sec" id="rsq-no">Cancel</button><button type="button" class="btn" id="rsq-go">Restart</button></div></div><button id="mute" aria-pressed="false" aria-label="Sound on. Tap to mute"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3z" fill="currentColor"/><path class="w w1" d="M15.5 8.5a5 5 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="w w2" d="M18.5 5.5a9 9 0 0 1 0 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="x" d="M15.5 9.5l5 5M20.5 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button><div id="vol" hidden role="dialog" aria-label="Sounds and music"><div class="vol-row"><span class="vol-lab" id="sfx-lab">Sounds</span><button type="button" class="vol-tog" id="sfx-tog" role="switch" aria-checked="true" aria-labelledby="sfx-lab"></button><input id="volr" type="range" min="0" max="100" step="1" value="100" aria-label="Sounds volume"></div><div class="vol-row"><span class="vol-lab" id="mus-lab">Music</span><button type="button" class="vol-tog" id="mus-tog" role="switch" aria-checked="true" aria-labelledby="mus-lab"></button><input id="musr" type="range" min="0" max="100" step="1" value="100" aria-label="Music volume"></div></div></div><div id="fx"></div></header>
+<header><div class="brand"><b>Game Mode: Discovery</b></div><div id="hr"><div id="stats" aria-live="polite"></div><button id="rst" type="button" title="Restart" aria-label="Restart" aria-haspopup="dialog" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M20 4v6h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button id="mute" aria-pressed="false" aria-label="Sound on. Tap to mute"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3z" fill="currentColor"/><path class="w w1" d="M15.5 8.5a5 5 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="w w2" d="M18.5 5.5a9 9 0 0 1 0 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="x" d="M15.5 9.5l5 5M20.5 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button></div><div id="fx"></div></header>
 <div id="stage"></div>
 <div id="tlh"><div class="lab"><span>Timeline: earliest to latest</span><span class="rule"></span></div></div>
 <div id="tlw"><div id="tl"></div><div id="pill" class="pill" hidden></div><button id="yc" hidden>Your card ↓</button></div>
 </div>
+<div id="rsq" hidden role="dialog" aria-label="Restart this run?"><p>Restart this run?</p><div class="rsq-acts"><button type="button" class="btn sec" id="rsq-no">Cancel</button><button type="button" class="btn" id="rsq-go">Restart</button></div></div>
+<div id="vol" hidden role="dialog" aria-label="Sounds and music"><div class="vol-row"><span class="vol-lab" id="sfx-lab">Sounds</span><button type="button" class="vol-tog" id="sfx-tog" role="switch" aria-checked="true" aria-labelledby="sfx-lab"></button><input id="volr" type="range" min="0" max="100" step="1" value="100" aria-label="Sounds volume"></div><div class="vol-row"><span class="vol-lab" id="mus-lab">Music</span><button type="button" class="vol-tog" id="mus-tog" role="switch" aria-checked="true" aria-labelledby="mus-lab"></button><input id="musr" type="range" min="0" max="100" step="1" value="100" aria-label="Music volume"></div></div>
 <div id="zoom" role="dialog" aria-label="Your card, large"><div class="z"></div><div class="zs"><div class="zt"></div><button class="btn zb"></button></div><div id="fc" hidden role="dialog" aria-label="This is your first card"><p class="fcmsg">This is your first card. Read it, and then tap to place it on the timeline.</p><p class="fchint">Tap anywhere to read it</p></div></div>
 <div id="s0" hidden><div class="s0hole"></div><div class="s0arrow"></div><div class="s0box"><p></p><button class="gbtn" id="s0go">Got it</button></div></div>
 <div id="help"></div>
@@ -644,10 +646,13 @@ function play(k,rate){
   try{if(actx.state!=='running')actx.resume().catch(()=>{});const s=actx.createBufferSource(),g=actx.createGain();s.buffer=bufs[k];if(rate)s.playbackRate.value=rate;g.gain.value=(VOL[k]||.7)*(masterVol/100);s.connect(g);g.connect(actx.destination);s.onended=()=>{if(curSfx&&curSfx.src===s)curSfx=null};s.start(0);curSfx={k,src:s,g}}catch(e){}}
 function ui(k){setTimeout(()=>sfx('tick'),0)}   /* Discovery (Luke 24 Nov 21:08): every button plays the tick */   /* v5.9.4: quiet acknowledgement, deferred so it always runs after this tap's unlockAudio/audioSession path */
 function cardSnd(){setTimeout(()=>sfx('clack'),0)}   /* v5.9.5 (Luke 23 Nov): every card action that had no sound uses the existing clack; every such button uses uitap */
+function placePanel(el,anchor){if(!el||el.hidden||!anchor)return;const r=anchor.getBoundingClientRect(),w=el.offsetWidth,h=el.offsetHeight;let left=Math.round(r.right-w);left=Math.max(8,Math.min(left,innerWidth-w-8));let top=Math.round(r.bottom-2);if(top+h>innerHeight-8)top=Math.max(8,Math.round(r.top-h+2));el.style.left=left+'px';el.style.top=top+'px'}
+function placeVol(){placePanel($('#vol'),$('#mute'))}
+function placeRsq(){placePanel($('#rsq'),$('#rst'))}
 function closeVol(){const p=$('#vol');if(p)p.hidden=true;const m=$('#mute');if(m)m.setAttribute('aria-expanded','false')}
 function midRun(){return nRight+nWrong>0&&phase!=='over'&&phase!=='review'&&(!($('#end')&&$('#end').style.display==='flex'))}
 function closeRsq(){const q=$('#rsq'),b=$('#rst');if(q)q.hidden=true;if(b)b.setAttribute('aria-expanded','false')}
-function openRsq(){closeVol();const q=$('#rsq'),b=$('#rst');if(!q)return;q.hidden=false;if(b)b.setAttribute('aria-expanded','true');const no=$('#rsq-no');if(no)no.focus({preventScroll:true})}
+function openRsq(){closeVol();const q=$('#rsq'),b=$('#rst');if(!q)return;q.hidden=false;placeRsq();if(b)b.setAttribute('aria-expanded','true');const no=$('#rsq-no');if(no)no.focus({preventScroll:true})}
 function doRestart(){closeRsq();ui('tap');newRun();window.__ev&&window.__ev.push('restart')}
 function requestRestart(){if(!midRun()){doRestart();return}openRsq();window.__ev&&window.__ev.push('restartAsk')}
 function volUI(){const m=$('#mute'),r=$('#volr'),mr=$('#musr'),p=$('#vol'),st=$('#sfx-tog'),mt=$('#mus-tog');if(!m)return;
@@ -659,7 +664,7 @@ function volUI(){const m=$('#mute'),r=$('#volr'),mr=$('#musr'),p=$('#vol'),st=$(
   if(st){st.setAttribute('aria-checked',sOn?'true':'false');st.setAttribute('aria-label',sOn?'Sounds on':'Sounds off')}
   if(mt){mt.setAttribute('aria-checked',mOn?'true':'false');mt.setAttribute('aria-label',mOn?'Music on':'Music off')}}
 function applyVol(){try{localStorage.setItem(VOLKEY,String(masterVol));localStorage.setItem(MUTEKEY,muted?'1':'0')}catch(e){}volUI();if(bothSilent()&&silentEl)silentEl.pause();else if(audioWanted())iosPlayback()}
-$('#mute').onclick=ev=>{ev.stopPropagation();ev.preventDefault();closeRsq();const p=$('#vol');if(!p)return;if(p.hidden){p.hidden=false;volUI();unlockAudio();const r=$('#volr');if(r)r.focus()}else closeVol()};
+$('#mute').onclick=ev=>{ev.stopPropagation();ev.preventDefault();closeRsq();const p=$('#vol');if(!p)return;if(p.hidden){p.hidden=false;volUI();placeVol();unlockAudio();const r=$('#volr');if(r)r.focus()}else closeVol()};
 const volr=$('#volr');if(volr)volr.addEventListener('input',ev=>{masterVol=Math.max(0,Math.min(100,+ev.target.value||0));if(masterVol>0)muted=false;applyVol();window.__ev.push('vol:'+masterVol)});
 const musr=$('#musr');if(musr)musr.addEventListener('input',ev=>{musicVol=Math.max(0,Math.min(100,+ev.target.value||0));if(musicVol>0)musicOn=true;applyMusic();window.__ev.push('musVol:'+musicVol)});
 const sfxTog=$('#sfx-tog');if(sfxTog)sfxTog.addEventListener('click',ev=>{ev.stopPropagation();muted=!muted;if(!muted&&masterVol<=0)masterVol=100;applyVol();if(!quiet()){unlockAudio();ui('tap')}window.__ev.push(muted?'mute':'unmute')});
@@ -672,6 +677,7 @@ document.addEventListener('click',ev=>{const q=$('#rsq');if(!q||q.hidden)return;
 addEventListener('keydown',ev=>{if(ev.key==='Escape'&&$('#rsq')&&!$('#rsq').hidden){ev.preventDefault();closeRsq()}});
 addEventListener('keydown',ev=>{if(ev.key==='Escape'&&$('#vol')&&!$('#vol').hidden){ev.preventDefault();ev.stopPropagation();closeVol()}},true);
 volUI();
+addEventListener('resize',()=>{placeVol();placeRsq()});
 
 /* ---- fit to the part of the frame the visitor can see ----
    The game sits in a Wix iframe that can be taller than the browser window. An IntersectionObserver (its root is the
