@@ -208,6 +208,19 @@ header{flex:none;display:flex;justify-content:space-between;align-items:center;g
 @keyframes arrbob{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
 .s0arrow.bob{animation:arrbob 1s ease-in-out 3}
 
+/* Unlock reveal (Luke t287u): tutorial-style spotlight, card bright, everything around faded */
+#ulock{position:fixed;left:0;right:0;top:var(--vt,0px);height:var(--vh,100%);z-index:42;overflow:hidden;cursor:pointer}
+#ulock[hidden]{display:none}
+.ulhole{position:absolute;border-radius:10px;pointer-events:none;box-shadow:0 0 0 3px #E9D29E,0 0 24px 9px rgba(233,210,158,.95),0 0 0 9999px rgba(35,17,9,.6)}
+.ulspot{position:absolute;left:50%;top:54%;transform:translate(-50%,-50%);width:min(58vw,260px);filter:drop-shadow(0 8px 22px rgba(0,0,0,.45));pointer-events:none}
+.ulcard{width:100%}
+.ulbox{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:min(94%,640px);background:var(--parch);border:2px solid #E9D29E;outline:2px solid var(--burg);border-radius:14px;padding:10px 14px 12px;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.5);color:var(--burg);font-size:20px;font-weight:700;line-height:1.25;z-index:1}
+.ulbox p{margin:0 0 10px}.ulbox p b{color:#40110C}
+.ulbox .ultitle{margin:-4px 0 10px;font-size:18px;font-weight:700;color:#40110C}
+.ulbox .gbtn{min-width:180px;cursor:pointer;pointer-events:auto}
+@media (min-width:700px){.ulbox{font-size:23px}.ulbox .ultitle{font-size:20px}.ulspot{width:min(42vw,300px)}}
+.dsc .unl.newcard{border:2px solid var(--burg);background:var(--gold);color:var(--burg);font-weight:700;font-size:17px}
+
 #tl.pulse1 .tab span,#tl.pulse1 .bar{animation:glow .6s ease-in-out 2 alternate}
 @media (min-width:700px){.pill{font-size:21px}.pill small{display:inline;font-size:21px;font-weight:700;opacity:1}.pill small:before{content:"\00a0\00b7\00a0"}}
 
@@ -407,10 +420,13 @@ header{position:relative;z-index:7}
 <div id="s0" hidden><div class="s0hole"></div><div class="s0arrow"></div><div class="s0box"><p></p><button class="gbtn" id="s0go">Got it</button></div></div>
 <div id="help"></div>
 <div id="end"></div>
+<div id="ulock" hidden role="dialog" aria-label="You've unlocked a new card!"><div class="ulhole"></div><div class="ulspot"><div class="ulcard"></div></div><div class="ulbox"><p>You've unlocked a new card!</p><p class="ultitle"></p><button class="gbtn" id="ulgo">Continue</button></div></div>
 <div id="cfx" aria-hidden="true"></div>
 <script>
-/* ===== CARD DATA: the 13 promo cards (the game reads the deck from this list; nothing assumes 13) =====
+/* ===== CARD DATA: the 13 promo Bible Event cards that have web art (of 52 in the full set).
  id = period-number. title = card title from the card data (card-index). back = red side image, front = picture side.
+ Optional `reveal` is spoiler-free art for the unlock screen only (falls back to front). In-game placement always uses `front`.
+ New players start with STARTER_IDS (one card per period). The rest of this list join the deck once unlocked.
  Front images are only requested when the player taps Flip!. */
 const DECK_ALL=[{"id": "1-2", "period": 1, "number": 2, "title": "Creation of Heavens and Earth", "front": "https://static.wixstatic.com/media/551332_c508294323d54f64820e421d1a65fc28~mv2.webp", "back": "https://static.wixstatic.com/media/551332_3f1bbd011ebf4d2fbcdfde6132dface1~mv2.webp"}, {"id": "1-7", "period": 1, "number": 7, "title": "The Call of Abram", "front": "https://static.wixstatic.com/media/551332_6ef631011e59496b869faa10ba52ffb7~mv2.webp", "back": "https://static.wixstatic.com/media/551332_b5b4f146493543b2a28fd245f1859dd5~mv2.webp"}, {"id": "2-2", "period": 2, "number": 2, "title": "Moses Parts the Sea", "front": "https://static.wixstatic.com/media/551332_91d86390c8804b59af2a2630273a6184~mv2.webp", "back": "https://static.wixstatic.com/media/551332_10c47816cd714d76a37a8ea7739ea1cc~mv2.webp"}, {"id": "2-5", "period": 2, "number": 5, "title": "12 Spies and Israel's Rebellion", "front": "https://static.wixstatic.com/media/551332_cdb0aee7cef342c9a6b92f4cb7483ab6~mv2.webp", "back": "https://static.wixstatic.com/media/551332_4b7fab839dc144c8ae8b7b55782ac1a5~mv2.webp"}, {"id": "3-2", "period": 3, "number": 2, "title": "Gideon and the 300 Defeat Midian", "front": "https://static.wixstatic.com/media/551332_e75ecacd1f054a6bbcdb57bfb6c500ff~mv2.webp", "back": "https://static.wixstatic.com/media/551332_f3db04745f3548ca873f0e583c334852~mv2.webp"}, {"id": "3-5", "period": 3, "number": 5, "title": "God Calls Samuel in the Tabernacle", "front": "https://static.wixstatic.com/media/551332_8b54a4e08e264156922462a072caf8cd~mv2.webp", "back": "https://static.wixstatic.com/media/551332_77e60b5e828444ecb0178c9a4e495711~mv2.webp"}, {"id": "4-6", "period": 4, "number": 6, "title": "Jonah Sent to Nineveh", "front": "https://static.wixstatic.com/media/551332_c9e0cac9bc4648b4bb3444c837e9e37e~mv2.webp", "back": "https://static.wixstatic.com/media/551332_3e8a951126db4676b45abb86a2ac55e8~mv2.webp"}, {"id": "5-3", "period": 5, "number": 3, "title": "The Golden Statue and Fiery Furnace", "front": "https://static.wixstatic.com/media/551332_d78efc4881b94a0b88f365217dd0dd01~mv2.webp", "back": "https://static.wixstatic.com/media/551332_efcbbde6aab5458a8b20e7bb6e89081c~mv2.webp"}, {"id": "5-7", "period": 5, "number": 7, "title": "Esther Becomes Queen", "front": "https://static.wixstatic.com/media/551332_249bcd660cca4cb1b666157cc00e38c8~mv2.webp", "back": "https://static.wixstatic.com/media/551332_cf448221a2284102a58c2e86464e1416~mv2.webp"}, {"id": "6-3", "period": 6, "number": 3, "title": "Jesus Tempted in the Wilderness", "front": "https://static.wixstatic.com/media/551332_4f6adf19a784450f88f04ee646026df5~mv2.webp", "back": "https://static.wixstatic.com/media/551332_926dd11580984e158457a32e1d3d233b~mv2.webp"}, {"id": "6-7", "period": 6, "number": 7, "title": "Jesus Crucifixion and Resurrection", "front": "https://static.wixstatic.com/media/551332_835c124d70684946ab4980a034b251ba~mv2.webp", "back": "https://static.wixstatic.com/media/551332_051adb546a8b4b459a17a7881b176455~mv2.webp"}, {"id": "7-3", "period": 7, "number": 3, "title": "Jesus Converts Paul", "front": "https://static.wixstatic.com/media/551332_658770100d8c4f77b71d10af9722245c~mv2.webp", "back": "https://static.wixstatic.com/media/551332_af59cbaa86684a779f39265d029e244a~mv2.webp"}, {"id": "7-6", "period": 7, "number": 6, "title": "Jesus Visits John on Patmos", "front": "https://static.wixstatic.com/media/551332_0369faf5200b4cfc8f1ce079f7c4f9bf~mv2.webp", "back": "https://static.wixstatic.com/media/551332_a2a9eaf2560643afa312a543c40e5d4a~mv2.webp"}];
 const BUY="https://www.chroniclesofthekingdom.co.uk/product-page/bible-timeline-game";
@@ -420,13 +436,26 @@ const DECK_ID='promo13';
 const MODE='discovery';
 const BUY_D=BUY+'?utm_source=solo-game&utm_medium=web-game&utm_campaign=discovery';   /* same product page as Endurance, tagged so Wix Analytics shows sales from Discovery */
 const ENDURANCE_URL='https://reuniongames.github.io/solo-game/';                       /* the live Endurance game (repo root) */
-const UNLOCKKEY='ckDiscoveryEnduranceUnlocked';                                          /* set on a perfect run (all placed cards right, Luke 24 Nov) */
+const UNLOCKKEY='ckDiscoveryEnduranceUnlocked';                                          /* leftover from the old Endurance unlock; no longer written on a perfect run (Luke t287u) */
+const UNLOCKCARDSKEY='ckDiscoveryUnlocked';                                                 /* {v:1,ids:[...]} this browser only (Luke t287u). Same shape can be synced to a Wix Members account later. */
 const HSKEY='ckDiscoveryHighScore';                                                          /* best total (correct + best streak) per device (Luke t212u) */
-const STRUGKEY='ckDiscoveryStruggle';                                                        /* per-card miss streak + flag, this browser only (Luke t252u). Not cleared by the test BUILD reset (new flags can be added; existing entries are kept). */
-/* TEST ONLY (Luke t247u/t263u/t264u): bump BUILD on every Discovery commit so testers get a fresh high score (and a fresh best streak on reload; best streak is session-only, no storage key) and 1 random card marked as a struggle card (as if missed in 3 games in a row). ?hard=N also marks N more, then strips the flag and plays a normal game. Remove this auto-reset and ?hard= before Discovery goes on the Wix site. */
-const BUILD='2026-11-25-0850',BUILDKEY='ckDiscoveryBuild';
-function seedHardCards(n){n=+n;if(!(n>0)||!DECK_ALL||!DECK_ALL.length)return;try{const raw=JSON.parse(localStorage.getItem(STRUGKEY)||'{}'),m=(raw&&typeof raw==='object'&&!Array.isArray(raw))?raw:{};const ids=DECK_ALL.map(c=>c.id);const sh=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)),x=a[i];a[i]=a[j];a[j]=x}return a};const pick=sh(ids.filter(id=>!m[id])).concat(sh(ids.filter(id=>m[id]&&!m[id].flagged)));pick.slice(0,Math.min(n,pick.length)).forEach(id=>{m[id]={miss:3,flagged:true}});localStorage.setItem(STRUGKEY,JSON.stringify(m))}catch(e){}}
-try{if(localStorage.getItem(BUILDKEY)!==BUILD){localStorage.removeItem(HSKEY);seedHardCards(1);localStorage.setItem(BUILDKEY,BUILD)}}catch(e){}
+const STRUGKEY='ckDiscoveryStruggle';                                                        /* per-card miss streak + flag, this browser only (Luke t252u). Not cleared by the test BUILD reset (new flags can be added; existing entries are kept). Newly unlocked cards are flagged here so the first correct placement gets the hard-card treatment (Luke t288u/t289u). */
+/* One playable card per period, so a new player still has a full-timeline game. The other playable promo cards are the unlock pool. */
+const STARTER_IDS=['1-2','2-2','3-2','4-6','5-3','6-3','7-3'];
+function playableDeck(){return DECK_ALL.filter(c=>c&&c.id&&c.front&&c.back)}
+function loadUnlockState(){try{const raw=JSON.parse(localStorage.getItem(UNLOCKCARDSKEY)||'null');if(raw&&raw.v===1&&Array.isArray(raw.ids))return{v:1,ids:raw.ids.filter(id=>typeof id==='string')}}catch(e){}return{v:1,ids:[]}}
+function saveUnlockState(st){try{localStorage.setItem(UNLOCKCARDSKEY,JSON.stringify({v:1,ids:(st&&st.ids)||[]}))}catch(e){}}
+function ownedIds(){return new Set(STARTER_IDS.concat(loadUnlockState().ids))}
+function ownedDeck(){const have=ownedIds();return playableDeck().filter(c=>have.has(c.id))}
+function lockedPlayable(){const have=ownedIds();return playableDeck().filter(c=>!have.has(c.id))}
+function revealArt(c){return (c&&c.reveal)||(c&&c.front)}
+function markHard(id){if(!id)return;try{const raw=JSON.parse(localStorage.getItem(STRUGKEY)||'{}'),m=(raw&&typeof raw==='object'&&!Array.isArray(raw))?raw:{};m[id]={miss:3,flagged:true};localStorage.setItem(STRUGKEY,JSON.stringify(m))}catch(e){}}
+function grantUnlock(c){if(!c||!c.id||STARTER_IDS.indexOf(c.id)>=0)return false;const st=loadUnlockState();if(st.ids.indexOf(c.id)>=0)return false;st.ids.push(c.id);saveUnlockState(st);markHard(c.id);return true}
+function pickUnlock(){const left=lockedPlayable();if(!left.length)return null;const a=left.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)),x=a[i];a[i]=a[j];a[j]=x}return a[0]}
+/* TEST ONLY (Luke t247u/t263u/t264u/t287u): bump BUILD on every Discovery commit so testers get a fresh high score (and a fresh best streak on reload; best streak is session-only, no storage key), cleared card unlocks, and 1 random owned card marked as a struggle card (as if missed in 3 games in a row). ?hard=N also marks N more, then strips the flag and plays a normal game. ?test=1&unlock=1 jumps a run to a perfect end so the unlock reveal can be checked quickly. Remove this auto-reset, the unlock clear, ?hard= and ?test=1&unlock=1 before Discovery goes on the Wix site. */
+const BUILD='2026-11-25-0910',BUILDKEY='ckDiscoveryBuild';
+function seedHardCards(n){n=+n;if(!(n>0)||!DECK_ALL||!DECK_ALL.length)return;try{const raw=JSON.parse(localStorage.getItem(STRUGKEY)||'{}'),m=(raw&&typeof raw==='object'&&!Array.isArray(raw))?raw:{};const pool=ownedDeck(),ids=(pool.length?pool:DECK_ALL).map(c=>c.id);const sh=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)),x=a[i];a[i]=a[j];a[j]=x}return a};const pick=sh(ids.filter(id=>!m[id])).concat(sh(ids.filter(id=>m[id]&&!m[id].flagged)));pick.slice(0,Math.min(n,pick.length)).forEach(id=>{m[id]={miss:3,flagged:true}});localStorage.setItem(STRUGKEY,JSON.stringify(m))}catch(e){}}
+try{if(localStorage.getItem(BUILDKEY)!==BUILD){localStorage.removeItem(HSKEY);localStorage.removeItem(UNLOCKCARDSKEY);seedHardCards(1);localStorage.setItem(BUILDKEY,BUILD)}}catch(e){}
 (function(){const h=location.search.match(/[?&]hard=(\d+)/);if(!h)return;seedHardCards(+h[1]);try{const u=new URL(location.href);u.searchParams.delete('hard');history.replaceState(null,'',u.pathname+u.search+u.hash)}catch(e){}})();
 const LEADER_URL='https://www.chroniclesofthekingdom.co.uk/post/leader-s-guide-preview-try-the-first-four-sessions-for-free';  /* free Leader's Guide preview (media-press.md) */
 /* PLACEHOLDER theme line: Qohelet's example wording from the workshop (24 Nov), NOT final. Qohelet to draft, Ezra to check. Set THEME_FINAL=true once approved. */
@@ -618,9 +647,9 @@ function watchImg(img,face,src){let n=0;face.classList.add('ld');
    setTimeout(()=>{img.src=u},TEST?20:400*n)};
   img.src=src;if(img.complete&&img.naturalWidth>0)face.classList.remove('ld')}
 const PRE=[];function preloadBacks(){DECK_ALL.forEach(c=>{const i=new Image();i.src=c.back;PRE.push(i)})}
-function newRun(){musicBegin();clearT();$('#end').style.display='none';const nh=$('#nhs');if(nh)nh.remove();hideYc();closeRsq();clearConquerFx();conquerTestArmed=CONQUERTEST;if(!PRE.length)preloadBacks();
- const start=shuffle(DECK_ALL.filter(c=>MID.includes(c.period)))[0];
- deck=shuffle(DECK_ALL.filter(c=>c!==start));if(TEST&&TK)deck=deck.slice(0,TK);total=deck.length;
+function newRun(){musicBegin();clearT();$('#end').style.display='none';hideUnlock();const nh=$('#nhs');if(nh)nh.remove();hideYc();closeRsq();clearConquerFx();conquerTestArmed=CONQUERTEST;if(!PRE.length)preloadBacks();
+ const pool=ownedDeck(),mid=pool.filter(c=>MID.includes(c.period)),start=shuffle((mid.length?mid:pool).slice())[0];
+ deck=shuffle(pool.filter(c=>c!==start));if(TEST&&TK)deck=deck.slice(0,TK);total=deck.length;
  tl=[{c:start,up:true}];streak=0;turn=0;nRight=0;nWrong=0;runBest=0;nbShown=false;best=getBest();bestStart=best;stkLevel=-1;stkCold=false;stkRed=false;clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const zf=document.querySelector('.zfly');if(zf)zf.remove();draw()}
 function draw(){if(!deck.length)return over();applyFrame();
  hand=deck.pop();turn++;sel=null;lit=new Set();phase='choose';hideYc();
@@ -855,7 +884,7 @@ function help(){const h=$('#help');
   '<li>Each new card opens large. Read it, then tap anywhere to put it on the timeline.</li>'+
   '<li>Want to read it again? Tap <b>Your card</b> at the top.</li>'+
   '<li>Tap the <b>+</b> where you think it goes (earliest on the left, latest on the right). Your card slides in, red side up. Changed your mind? Tap another <b>+</b>.</li>'+
-  '<li>Tap <b>Flip!</b> on your card to check. If it\'s wrong, it slides to its true place and you carry on. Every right card adds to your streak.</li><li>Place all '+total+' cards. Get them all right in one go to unlock <b>Endurance</b>.</li></ol>'+
+  '<li>Tap <b>Flip!</b> on your card to check. If it\'s wrong, it slides to its true place and you carry on. Every right card adds to your streak.</li><li>Place all '+total+' cards.'+(lockedPlayable().length?' Get them all right in one go to unlock a new card.':'')+'</li></ol>'+
   '<button class="btn" id="gotit">Got it</button></div>';
  h.style.display='flex';h.onclick=()=>{ui('tap');h.style.display='none'};$('#gotit').focus({preventScroll:true})}
 function fitZoom(){const z=$('#zoom');if(z.style.display!=='flex')return;
@@ -959,14 +988,32 @@ function miss(e){const old=e.el.getBoundingClientRect();
   if(dx||dy){sl.style.transition='none';sl.style.transform='translate('+dx+'px,'+dy+'px)';sl.style.zIndex=4;sl.getBoundingClientRect();
    sl.style.transition='transform .6s ease-in-out';sl.style.transform='';later(()=>{sl.style.transition='';sl.style.zIndex=''},700)}}}
 /* ---- end screen ---- */
-function over(){musicEnd();phase='over';applyFrame();$('#pill').hidden=true;$('#s0').hidden=true;s0Active=false;$('#fc').hidden=true;$('#zoom').style.display='none';resolved=null;sel=null;hideYc();best=Math.max(best,streak);setBest(best);stats();
+function hideUnlock(){const s=$('#ulock');if(!s||s.hidden)return;s.hidden=true;const hold=s.querySelector('.ulcard');if(hold)hold.innerHTML=''}
+function positionUnlock(){const s=$('#ulock');if(!s||s.hidden)return;
+ const sr=s.getBoundingClientRect(),card=s.querySelector('.ulspot .card')||s.querySelector('.ulspot');if(!card)return;
+ const c=card.getBoundingClientRect(),hole=s.querySelector('.ulhole');
+ hole.style.cssText='left:'+(c.left-sr.left)+'px;top:'+(c.top-sr.top)+'px;width:'+c.width+'px;height:'+c.height+'px'}
+function showUnlock(){const c=window.__disc&&window.__disc.unlockCard;if(!c||phase!=='over')return;
+ const s=$('#ulock');if(!s)return;const hold=s.querySelector('.ulcard');hold.innerHTML='';
+ const el=build(c,{up:true}),f=el.querySelector('.front');
+ if(f){f.innerHTML='';const i=new Image();i.alt=c.title||'';watchImg(i,f,revealArt(c));f.appendChild(i)}
+ hold.appendChild(el);
+ const tit=s.querySelector('.ultitle');if(tit)tit.textContent=c.title||'';
+ s.hidden=false;s.dataset.at=performance.now();positionUnlock();requestAnimationFrame(positionUnlock);sfx('conquer');window.__ev.push('unlock:'+c.id);const go=$('#ulgo');if(go)go.focus({preventScroll:true})}
+function scheduleUnlock(){if(!(window.__disc&&window.__disc.unlockCard))return;
+ const wait=window.__disc.newHS?(TEST?1200:2000):(TEST?250:700);later(showUnlock,wait)}
+$('#ulock').onclick=ev=>{ev.stopPropagation();ev.preventDefault();if(performance.now()-(+$('#ulock').dataset.at||0)<250)return;if(!$('#ulock').hidden)ui('tap');hideUnlock()};
+$('#ulgo').onclick=ev=>{ev.stopPropagation();ev.preventDefault();ui('tap');hideUnlock()};
+function over(){musicEnd();phase='over';applyFrame();$('#pill').hidden=true;$('#s0').hidden=true;s0Active=false;$('#fc').hidden=true;$('#zoom').style.display='none';hideUnlock();resolved=null;sel=null;hideYc();best=Math.max(best,streak);setBest(best);stats();
  const perfect=nWrong===0&&nRight===total&&total>0,score=nRight+runBest;
- let was=false;try{was=localStorage.getItem(UNLOCKKEY)==='1';if(perfect)localStorage.setItem(UNLOCKKEY,'1')}catch(e){}
- const unlocked=perfect||was,fresh=perfect&&!was;
+ const unlockCard=perfect?pickUnlock():null;if(unlockCard)grantUnlock(unlockCard);
  let prevHS=0;try{prevHS=Math.max(0,+localStorage.getItem(HSKEY)||0)}catch(e){}
  const newHS=score>prevHS&&score>0;if(newHS){try{localStorage.setItem(HSKEY,String(score))}catch(e){}}
- window.__disc={nRight,nWrong,runBest,score,perfect,unlocked,fresh,newHS,prevHS};window.__ev.push('over:'+nRight+'/'+nWrong+'/'+runBest);
- const lock='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2" fill="currentColor"/><path d="M8 10.5V8a4 4 0 0 1 8 0'+(unlocked?'':'v2.5')+'" fill="none" stroke="currentColor" stroke-width="2.2"/></svg>';
+ window.__disc={nRight,nWrong,runBest,score,perfect,newHS,prevHS,unlockCard};window.__ev.push('over:'+nRight+'/'+nWrong+'/'+runBest+(unlockCard?':unlock:'+unlockCard.id:''));
+ const stillLocked=lockedPlayable().length;
+ const unlLine=unlockCard?'<div class="unl newcard" id="endu"><span>New card unlocked</span></div>'
+  :(perfect?'<div class="unl" id="endu"><span>You\'ve unlocked every Discovery card we have so far.</span></div>'
+  :(stillLocked?'<div class="unl" id="endu"><span>Get all '+total+' right in one go to unlock a new card</span></div>':''));
  const end=$('#end');
  end.innerHTML='<div class="ep dsc" role="dialog" aria-label="Your result"><div class="e1">'+
   /* theme line removed per Luke 24 Nov 20:59 */
@@ -976,19 +1023,17 @@ function over(){musicEnd();phase='over';applyFrame();$('#pill').hidden=true;$('#
   '<div class="bst" data-v="'+runBest+'"><small>Best streak</small><b>0</b></div></div>'+
   '<div class="tot" data-v="'+score+'"><small>Total<br>correct + best streak</small><b>0</b></div></div>'+
   (perfect?'<div class="perf">Perfect!</div>':'')+
-  (unlocked?'<a class="unl'+(fresh?' new':'')+'" id="endu" href="'+ENDURANCE_URL+'" target="_self">'+lock+'<span>'+(fresh?'Endurance unlocked! Play Endurance':'Play Endurance')+'</span></a>'
-   :'<div class="unl" id="endu">'+lock+'<span>Get all '+total+' right in one go to unlock <b>Endurance</b></span></div>')+
+  unlLine+
   '</div><hr><div class="e2">'+
   '<a class="btn green" id="buy" href="'+BUY_D+'" target="_blank" rel="noopener">Get the full game</a>'+
-  '<div class="sell"><img class="box" src="'+BOX+'" alt="The Chronicles of the Kingdom game box"><p>This web game uses '+DECK_ALL.length+' of the 52 cards.<br><b>52</b> Bible Event Cards &middot; <b>1+</b> players &middot; <b>Age 9+</b></p></div>'+
+  '<div class="sell"><img class="box" src="'+BOX+'" alt="The Chronicles of the Kingdom game box"><p>This web game uses '+ownedDeck().length+' of the 52 cards.<br><b>52</b> Bible Event Cards &middot; <b>1+</b> players &middot; <b>Age 9+</b></p></div>'+
   '<p class="lead">Leading a group? Try the <a href="'+LEADER_URL+'" target="_blank" rel="noopener">free Leader\'s Guide preview</a>.</p>'+
   '</div><div class="acts"><div class="a2"><button class="btn" id="again">Try again</button><button class="btn gold" id="viewtl">View the timeline</button></div></div></div>';
  end.style.display='flex';$('#again').onclick=()=>{ui('tap');newRun()};$('#viewtl').onclick=()=>{ui('tap');viewTimeline()};$('#buy').addEventListener('click',()=>ui('tap'));
- const eu=$('a#endu');if(eu)eu.addEventListener('click',()=>ui('tap'));
  $('#again').focus({preventScroll:true});countUp()}
 /* the score counts up in Luke's order: incorrect, correct, best streak, then the total (correct + best streak) */
 function countUp(){const els=[...document.querySelectorAll('#end .sc>div'),$('#end .tot')],D=TEST?20:420,GAP=TEST?10:200;let t=TEST?0:350;
- const fin=()=>{if(window.__disc){window.__disc.counted=true;window.__ev.push('counted');if(window.__disc.newHS)highScore()}};
+ const fin=()=>{if(window.__disc){window.__disc.counted=true;window.__ev.push('counted');if(window.__disc.newHS)highScore();scheduleUnlock()}};
  if(RM.matches){els.forEach(el=>{el.classList.add('on');el.querySelector('b').textContent=el.dataset.v});fin();return}
  els.forEach((el,i)=>{const v=+el.dataset.v,b=el.querySelector('b'),last=i===els.length-1;
   setTimeout(()=>{if(phase!=='over')return;el.classList.add('on');const t0=performance.now(),dur=v?D:1;
@@ -1010,10 +1055,13 @@ function viewTimeline(){$('#end').style.display='none';phase='review';hideYc();a
  hr.innerHTML='<span class="big">Your timeline</span>';const b=document.createElement('button');b.className='btn';b.id='restart';b.textContent='Try again';b.onclick=()=>{ui('tap');newRun()};hr.appendChild(b);p.appendChild(hr);
  const v=document.createElement('div');v.className='vb';v.innerHTML='<b>'+nRight+' of '+total+'</b> correct · Best streak <b>'+runBest+'</b>';p.appendChild(v);s.appendChild(p);
  timeline();$('#tl').scrollTop=0;b.focus({preventScroll:true})}
-function relayout(){applyFrame();if(!phase||!hand&&phase==='choose')return;if(phase==='review'){sizeStage('verdict');timeline();return}if(phase==='choose')renderStage();else sizeStage('verdict');if(phase==='flipping')fitFF();timeline();positionS0();fitZoom();if(ycFor)ycCheck(ycFor)}
+function relayout(){applyFrame();if(!phase||!hand&&phase==='choose')return;if(phase==='review'){sizeStage('verdict');timeline();return}if(phase==='choose')renderStage();else sizeStage('verdict');if(phase==='flipping')fitFF();timeline();positionS0();positionUnlock();fitZoom();if(ycFor)ycCheck(ycFor)}
 let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(relayout,120)});
 let cfxSync=0;$('#tl').addEventListener('scroll',()=>{if(!cfxSync)cfxSync=requestAnimationFrame(()=>{cfxSync=0;syncConquerFx();placeYes($('#yesbk'))})},{passive:true});addEventListener('resize',()=>placeYes($('#yesbk')));
 document.addEventListener('click',ev=>{if(!(ev.target.closest&&ev.target.closest('#mute, #vol, #rst, #rsq')))skipFlip()},true);
+const UNLOCKTEST=TEST&&/[?&]unlock=1\b/.test(location.search);
 newRun();
+if(UNLOCKTEST){nRight=total;nWrong=0;later(over,40)}
+if(TEST)window.__ckUnlock={show:showUnlock,hide:hideUnlock,pick:pickUnlock,owned:()=>ownedDeck().map(c=>c.id),locked:()=>lockedPlayable().map(c=>c.id),grant:grantUnlock};
 })();
 </script></body></html>
