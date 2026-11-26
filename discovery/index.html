@@ -896,7 +896,7 @@ function preloadAhead(){const add=(c,pri)=>{if(!c)return;warmImg(c.back,pri);war
  (tl||[]).forEach(e=>{if(e&&e.c){warmImg(e.c.front,e.up?'high':'low');if(!e.up)warmImg(e.c.back,'low')}})}
 function watchImg(img,face,src,pri){let n=0;face.classList.remove('fail');
  img.decoding='async';img.loading='eager';img.fetchPriority=pri||'high';
- const ready=()=>{if(img.naturalWidth<=0)return;const done=()=>{face.classList.remove('ld','fail')};if(img.decode)img.decode().then(done).catch(done);else done()};
+ const ready=()=>{if(img.naturalWidth<=0)return;face.classList.remove('ld','fail')};   /* show as soon as the bitmap is ready; do not wait for img.decode(), which can hang on iPhone when many cards are rebuilt at once (Luke t393u) */
  img.onload=ready;
  img.onerror=()=>{if(n>=3){IMGBAD.add(src);face.classList.add('ld','fail');return}n++;window.__imgTries++;const u=n<3?src+(src.includes('?')?'&':'?')+'r='+n:src+'/v1/fit/w_760,h_1062,q_85/card.webp';
   setTimeout(()=>{img.src=u},TEST?20:400*n)};
@@ -1092,7 +1092,7 @@ function layout(count){const sc=$('#tl'),D=desk(),cs=getComputedStyle(sc);
 function timeline(){const sc=$('#tl'),keep=sc.scrollTop,choose=phase==='choose',tcs=getComputedStyle(sc),padL=parseFloat(tcs.paddingLeft);
  sc.className=(choose?(loud?'loud':'quiet'):'noplace')+(choose&&pulseOn?' pulse':'');
  const items=tl.slice();let pvI=-1;if(choose&&sel!=null){items.splice(sel,0,{c:hand,preview:true});pvI=sel}
- sc.innerHTML='';layout(choose?tl.length+1:tl.length);
+ (tl||[]).forEach(e=>{if(e&&e.el)e.el.remove()});sc.innerHTML='';layout(choose?tl.length+1:tl.length);
  const {N,cw,ch,g}=L,len=items.length;sc.style.setProperty('--ch',ch+'px');const cwBox=sc.clientWidth,Wc=cwBox-padL-parseFloat(tcs.paddingRight);
  const gapPos=d=>pvI<0?d:(d===pvI||d===pvI+1)?-1:(d<pvI?d:d-1);
  for(let r=0;r*N<len;r++){const r0=r*N,row=items.slice(r0,r0+N);
@@ -1104,7 +1104,10 @@ function timeline(){const sc=$('#tl'),keep=sc.scrollTop,choose=phase==='choose',
     fb.innerHTML='<span class="gbtn" style="font-size:'+Math.round(Math.max(14,Math.min(22,cw*.3)))+'px">Flip!</span>';
     fb.onclick=ev=>{ev.stopPropagation();place()};sl.appendChild(fb);cs.appendChild(sl);return}
    sl.dataset.i=i;if(e.moved)sl.classList.add('moved');if(e.fixd)sl.classList.add('fixd');if(e.pending&&phase==='flipping')sl.classList.add('lifting');
-   const el=build(e.c,{up:e.up});if(e.ok===false)el.classList.add('bad');e.el=el;sl.appendChild(el);
+   let el=e.el;
+   if(el){el.classList.remove('flip','pop');el.classList.toggle('up',!!e.up);el.classList.toggle('bad',e.ok===false);el.style.removeProperty('--fd');if(e.up)fillFront(el,e.c)}
+   else{el=build(e.c,{up:e.up});if(e.ok===false)el.classList.add('bad')}
+   e.el=el;sl.appendChild(el);
     if(e.conquered){sl.classList.add('good','conquered')}
    sl.onclick=()=>{if(e.up&&phase!=='flipping'&&phase!=='judging'){cardSnd();zoom(e,tl.indexOf(e))}};cs.appendChild(sl)});
   const tb=document.createElement('div');tb.className='tabs';
