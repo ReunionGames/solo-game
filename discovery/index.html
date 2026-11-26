@@ -487,10 +487,18 @@ header{position:relative;z-index:7}
 .ptpop{position:fixed;left:0;top:0;transform:translate(-50%,-50%);font-family:'Fredoka','Arial Rounded MT Bold',Arial,sans-serif;font-weight:700;font-size:22px;line-height:1;letter-spacing:.3px;white-space:nowrap;paint-order:stroke fill;-webkit-text-stroke:max(3px,.11em) #28140E;text-shadow:0 .06em .06em rgba(40,20,14,.5);pointer-events:none;animation:ptpop .95s ease-out var(--dl,0s) both}
 .ptpop .ff{font-size:inherit;line-height:inherit;-webkit-text-stroke:inherit;text-shadow:inherit;color:inherit;filter:none}
 .ptpop .ff i{opacity:1;transform:none;animation:none;margin:0}
-.ptpop.gold{color:#F2B81C;-webkit-text-stroke-color:#551309}
-.ptpop.streak{color:#F3AE45;-webkit-text-stroke-color:#551309}
-.ptpop.speed{color:#3EC6C9;-webkit-text-stroke-color:#1A3A44}
-.ptpop.neu{color:#C9A6E0;-webkit-text-stroke-color:#3A2150}
+.ptpop.base{color:#FFFDF8;-webkit-text-stroke:max(3px,.12em) #28140E;text-shadow:0 1px 0 #28140E,0 .06em .08em rgba(40,20,14,.55)}   /* +10 white, dark outline so it reads on parchment (Luke t372u) */
+.ptpop.streak{color:#C084FC;-webkit-text-stroke-color:#3B1D63}
+.ptpop.s1{color:#C084FC;-webkit-text-stroke-color:#3B1D63}   /* light vivid purple, clearly not white */
+.ptpop.s2{color:#C084FC;-webkit-text-stroke-color:#3B1D63;text-shadow:0 0 8px rgba(192,132,252,.7),0 .06em .06em rgba(40,20,14,.5)}
+.ptpop.s3{color:#D946EF;-webkit-text-stroke-color:#4A0E5C;text-shadow:0 0 10px rgba(217,70,239,.8),0 .06em .06em rgba(40,20,14,.5)}
+.ptpop.s4{color:#E879F9;-webkit-text-stroke-color:#4A0E5C;font-size:24px;text-shadow:0 0 12px rgba(232,121,249,.9),0 .06em .06em rgba(40,20,14,.5)}
+.ptpop.s5{color:#F5D0FE;-webkit-text-stroke-color:#6B21A8;font-size:26px;text-shadow:0 0 16px rgba(245,208,254,1),0 0 8px rgba(192,132,252,.9),0 .06em .06em rgba(40,20,14,.5)}   /* bright violet burst */
+.ptpop.up{font-size:1.18em}
+.ptpop.quick{color:#2EE0E6;-webkit-text-stroke-color:#0F4A4E}   /* bright teal */
+.ptpop.steady{color:#5B8F99;-webkit-text-stroke-color:#1A3A44}   /* muted blue-teal */
+.ptpop.neu,.ptpop.conq{color:#F2B81C;-webkit-text-stroke-color:#551309}   /* New! / Conquered! gold */
+.ptpop.kept{color:#C084FC;-webkit-text-stroke-color:#3B1D63;font-size:18px}
 .ptpop.fin{color:#F2B81C;font-size:26px;-webkit-text-stroke-color:#551309}
 @keyframes ptpop{0%{opacity:0;transform:translate(-50%,-50%) scale(.75)}12%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,calc(-50% - 88px)) scale(.94)}}
 .ptpop.rm{animation:ptfade .9s ease-out var(--dl,0s) both}
@@ -619,13 +627,13 @@ function ownedIds(){return new Set(STARTER_IDS.concat(loadUnlockState().ids))}
 function ownedDeck(){if(placedSession)return playableDeck();const have=ownedIds();return playableDeck().filter(c=>have.has(c.id))}
 function lockedPlayable(){const have=ownedIds();return playableDeck().filter(c=>!have.has(c.id))}
 function revealArt(c){return (c&&c.reveal)||(c&&c.front)}
-function markHard(id){if(!id||placedSession)return;try{const raw=JSON.parse(localStorage.getItem(STRUGKEY)||'{}'),m=(raw&&typeof raw==='object'&&!Array.isArray(raw))?raw:{};m[id]={miss:3,flagged:true};localStorage.setItem(STRUGKEY,JSON.stringify(m))}catch(e){}}
+function markHard(id){if(!id||placedSession)return;try{const raw=JSON.parse(localStorage.getItem(STRUGKEY)||'{}'),m=(raw&&typeof raw==='object'&&!Array.isArray(raw))?raw:{},prev=m[id]||{};m[id]={miss:Math.max(prev.miss||0,3),flagged:true,viaUnlock:true,viaMiss:!!prev.viaMiss};localStorage.setItem(STRUGKEY,JSON.stringify(m))}catch(e){}}
 function grantUnlock(c){if(!c||!c.id||STARTER_IDS.indexOf(c.id)>=0)return false;const st=loadUnlockState();if(st.ids.indexOf(c.id)>=0)return false;st.ids.push(c.id);saveUnlockState(st);markHard(c.id);return true}
 function pickUnlock(){const left=lockedPlayable();if(!left.length)return null;const have=ownedIds(),tot={},own={};playableDeck().forEach(c=>{const p=c.period;tot[p]=(tot[p]||0)+1;if(have.has(c.id))own[p]=(own[p]||0)+1});const open={};left.forEach(c=>open[c.period]=1);let bestO=0,bestT=1,cands=[];Object.keys(open).forEach(k=>{const p=+k,o=own[p]||0,n=tot[p]||0;if(!n)return;if(!cands.length||o*bestT<bestO*n){bestO=o;bestT=n;cands=[p]}else if(o*bestT===bestO*n)cands.push(p)});const period=cands[Math.floor(Math.random()*cands.length)],pool=left.filter(c=>c.period===period);return pool[Math.floor(Math.random()*pool.length)]||null} /* unlock the period with the lowest owned/total ratio among those still incomplete; ties at random, then a random locked card in that period (Luke t298u/t299u) */
 /* TEST ONLY (Luke t247u/t263u/t264u/t287u/t296u/t301u/t304u/t306u/t307u): bump BUILD on every Discovery commit so testers get a fresh high score (and a fresh best streak on reload; best streak is session-only, no storage key) and cleared card unlocks. Struggle flags are also cleared so a previous build's auto-marked hard card does not linger; new builds no longer mark a random hard card (Luke t296u). ?hard=N still marks N owned cards, then strips the flag and plays a normal game. ?test=1&unlock=1 jumps a run to a perfect end so the unlock reveal can be checked quickly. ?placed=N is a session-only mid-game test: it plays the full 52-card set in memory with N cards already placed correctly, then deals the rest as a live game, and writes nothing to localStorage (no unlocks, high score or struggle flags). Try again returns to the saved pool. The flag is then stripped. Leave BUILD unchanged when shipping only this test-state so testers' saved data is not reset. Remove this auto-reset, the unlock clear, ?hard=, ?placed= and ?test=1&unlock=1 before Discovery goes on the Wix site. */
 const BUILD='2026-11-25-1445',BUILDKEY='ckDiscoveryBuild';
-function seedHardCards(n){n=+n;if(!(n>0)||!DECK_ALL||!DECK_ALL.length)return;try{const raw=JSON.parse(localStorage.getItem(STRUGKEY)||'{}'),m=(raw&&typeof raw==='object'&&!Array.isArray(raw))?raw:{};const pool=ownedDeck(),ids=(pool.length?pool:DECK_ALL).map(c=>c.id);const sh=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)),x=a[i];a[i]=a[j];a[j]=x}return a};const pick=sh(ids.filter(id=>!m[id])).concat(sh(ids.filter(id=>m[id]&&!m[id].flagged)));pick.slice(0,Math.min(n,pick.length)).forEach(id=>{m[id]={miss:3,flagged:true}});localStorage.setItem(STRUGKEY,JSON.stringify(m))}catch(e){}}
-try{if(localStorage.getItem(BUILDKEY)!==BUILD){localStorage.removeItem(HSKEY);localStorage.removeItem(UNLOCKCARDSKEY);localStorage.removeItem(STRUGKEY);localStorage.removeItem(BESTPTSKEY);localStorage.removeItem(SEENKEY);localStorage.removeItem(BESTSKILLKEY);localStorage.removeItem(BESTSKILLTIMEKEY);localStorage.setItem(BUILDKEY,BUILD)}}catch(e){}
+function seedHardCards(n){n=+n;if(!(n>0)||!DECK_ALL||!DECK_ALL.length)return;try{const raw=JSON.parse(localStorage.getItem(STRUGKEY)||'{}'),m=(raw&&typeof raw==='object'&&!Array.isArray(raw))?raw:{};const pool=ownedDeck(),ids=(pool.length?pool:DECK_ALL).map(c=>c.id);const sh=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)),x=a[i];a[i]=a[j];a[j]=x}return a};const pick=sh(ids.filter(id=>!m[id])).concat(sh(ids.filter(id=>m[id]&&!m[id].flagged)));pick.slice(0,Math.min(n,pick.length)).forEach(id=>{m[id]={miss:3,flagged:true,viaMiss:true}});localStorage.setItem(STRUGKEY,JSON.stringify(m))}catch(e){}}
+try{if(localStorage.getItem(BUILDKEY)!==BUILD){localStorage.removeItem(HSKEY);localStorage.removeItem(UNLOCKCARDSKEY);localStorage.removeItem(STRUGKEY);localStorage.removeItem(BESTPTSKEY);localStorage.removeItem(SEENKEY);localStorage.removeItem(BESTSKILLKEY);localStorage.removeItem(BESTSKILLTIMEKEY);localStorage.removeItem(GAMESKEY);localStorage.setItem(BUILDKEY,BUILD)}}catch(e){}
 (function(){const h=location.search.match(/[?&]hard=(\d+)/);if(!h)return;seedHardCards(+h[1]);try{const u=new URL(location.href);u.searchParams.delete('hard');history.replaceState(null,'',u.pathname+u.search+u.hash)}catch(e){}})();
 const LEADER_URL='https://www.chroniclesofthekingdom.co.uk/post/leader-s-guide-preview-try-the-first-four-sessions-for-free';  /* free Leader's Guide preview (media-press.md) */
 /* PLACEHOLDER theme line: Qohelet's example wording from the workshop (24 Nov), NOT final. Qohelet to draft, Ezra to check. Set THEME_FINAL=true once approved. */
@@ -647,7 +655,7 @@ const R=1512/2112;                              /* card width / height */
 /* best streak per deck, for this page session only (Luke, 16 Nov: no storage for the best streak) */
 function getBest(){return BESTS[DECK_ID]||0}
 function setBest(v){BESTS[DECK_ID]=Math.max(BESTS[DECK_ID]||0,v)}
-let nRight=0,nWrong=0,runBest=0,ptsC=0,ptsRoll=0,ptsNew=0,ptsSpeed=0,ptsRun=0,runMs=0,cardMs=[],placeLog=[];   /* scoreboard v1 + elapsed timer (Luke t341u/t355u) */
+let nRight=0,nWrong=0,runBest=0,ptsC=0,ptsRoll=0,ptsNew=0,ptsConq=0,ptsSpeed=0,ptsRun=0,runMs=0,cardMs=[],placeLog=[];   /* scoreboard v1 + elapsed timer (Luke t341u/t355u) */
 let decideStart=0,decideHold=0,decideOn=false,dealStart=0,cardOk=null;
 let BESTS={},best=0,bestStart=0,nbShown=false,streak=0,deck=[],total=0,tl=[],hand=null,phase='',sel=null,lit=new Set(),timers=[],turn=0,cur=null,skipOK=false;
 let FT=0,FH=innerHeight,vis=null,visSeen=false;
@@ -656,15 +664,28 @@ let learned=false,big=true,loud=false,pulseOn=false,ycFor=null,zoomAt=0,L={N:3,c
 const later=(f,ms)=>{const t=setTimeout(f,ms);timers.push(t);return t};
 const clearT=()=>{timers.forEach(clearTimeout);timers=[]};
 function fmtTime(ms){const s=Math.max(0,Math.round((ms||0)/1000)),m=Math.floor(s/60),r=s%60;return m+':'+(r<10?'0':'')+r}
-/* One place for speed tiers and the whole-run time tiebreaker (Luke t355u/t367u).
+/* One place for speed tiers, the whole-run time tiebreaker (Luke t355u/t367u) and the streak ladder (Luke t369u/t370u, Solomon r3).
    card tiers stay at 12s/+2 and 22s/+1 until retuned from Luke's logs.
    The run bonus is only for a finished 51-placement run, and is a tiny tiebreaker (Luke t367u):
    at most 5 points, always less than one card's +10. Under 12:00 scores 5, then 1 fewer points
    for every 2 minutes, down to 0 at 20:00 or slower. The 12:00 / 2:00 / 20:00 scale is provisional
-   until we have Luke's full-run times; change TIME_SCORE.run to retune. */
-const TIME_SCORE={card:{fastMs:12000,fastPts:2,steadyMs:22000,steadyPts:1},run:{enabled:true,cap:5,minPlacements:51,slowMs:20*60*1000,stepMs:2*60*1000}};
+   until we have Luke's full-run times; change TIME_SCORE.run to retune.
+   Streak bonus per correct card (Solomon r3, Luke t370u): 0-4 +0 (no pop-up), 5-9 +2, 10-19 +4, 20-29 +6, 30-39 +8, 40+ +10.
+   A miss drops one level: the streak count is set to the bottom of the previous level (23→10, 12→5, 7→0). The header shows that new count; best streak is unchanged. */
+const TIME_SCORE={card:{fastMs:12000,fastPts:2,steadyMs:22000,steadyPts:1},run:{enabled:true,cap:5,minPlacements:51,slowMs:20*60*1000,stepMs:2*60*1000},streak:{levels:[{min:0,pts:0,cls:null},{min:5,pts:2,cls:'s1'},{min:10,pts:4,cls:'s2'},{min:20,pts:6,cls:'s3'},{min:30,pts:8,cls:'s4'},{min:40,pts:10,cls:'s5'}]},neu:{mode:'perLocked',per:5,flat:25,floor:25}};   /* neu.mode: perLocked (Luke t372u/t375u: 5 x locked of the 52 base cards), perUnlocked, or flat. floor is for Conquered! 3-miss cards so a fully unlocked player still gets at least 25 (Luke t381u-t383u). Unlock-hard cards use 5 x locked with no floor. Off on the first game (t378u). */
 function speedPts(ms){ms=+ms||0;if(ms<=TIME_SCORE.card.fastMs)return TIME_SCORE.card.fastPts;if(ms<=TIME_SCORE.card.steadyMs)return TIME_SCORE.card.steadyPts;return 0}
 function runTimeBonus(ms,right,tot){const r=TIME_SCORE.run;if(!r.enabled||!(tot>=r.minPlacements)||!(r.stepMs>0))return 0;return Math.max(0,Math.min(r.cap,Math.ceil((r.slowMs-ms)/r.stepMs)))}
+function streakLevel(n){const lv=TIME_SCORE.streak.levels;let i=0;for(let k=0;k<lv.length;k++)if((+n||0)>=lv[k].min)i=k;return i}
+function rollPts(n){return TIME_SCORE.streak.levels[streakLevel(n)].pts}
+function rollTotal(n){let t=0;for(let i=1;i<=n;i++)t+=rollPts(i);return t}
+function dropStreak(n){const i=streakLevel(n);return i<=0?0:TIME_SCORE.streak.levels[i-1].min}
+const GAMESKEY='ckDiscoveryGames';
+function gamesPlayed(){try{return Math.max(0,+localStorage.getItem(GAMESKEY)||0)}catch(e){return 0}}
+function hasPlayedBefore(){if(gamesPlayed()>0)return true;try{if(+localStorage.getItem(BESTSKILLKEY)||0)return true;if((loadUnlockState().ids||[]).length)return true;if(seenSet().size)return true}catch(e){}return false}
+function bumpGames(){if(placedSession)return;try{localStorage.setItem(GAMESKEY,String(gamesPlayed()+1))}catch(e){}}
+function lockedBase(){return lockedPlayable().length}   /* locked among the 52 base playable cards (Luke t375u) */
+function neuAmount(kind){const n=TIME_SCORE.neu||{};let amt=0;if(n.mode==='flat')amt=Math.max(0,+n.flat||0);else if(n.mode==='perUnlocked')amt=Math.max(0,(+n.per||0)*ownedDeck().length);else amt=Math.max(0,(+n.per||0)*lockedBase());if(kind==='miss')amt=Math.max(amt,+n.floor||0);return amt}
+function struggleKind(c){if(!isStruggling(c))return null;const s=struggleMap()[c.id]||{};if(s.viaMiss)return 'miss';if(s.viaUnlock)return 'unlock';if(STARTER_IDS.indexOf(c.id)>=0)return 'miss';return 'unlock'}   /* both kinds of hard card (Luke t383u): markHard on unlock, and noteCard after 3 misses. If both apply, 'miss' wins so we do not double-count. */
 function resetDecide(){decideStart=0;decideHold=0;decideOn=false;dealStart=0}
 function decideBlocked(){if(phase==='over'||phase==='review')return true;const v=$('#vol');if(v&&!v.hidden)return true;const h=$('#help');if(h&&h.style.display==='flex')return true;return false}   /* Luke t355u: pause only for rules/help and settings. Clock starts in newRun before phase is 'choose', so first-card reading counts. */
 function pauseDecide(){if(!decideOn||!decideStart){decideOn=false;return}decideHold+=Math.max(0,performance.now()-decideStart);decideStart=0;decideOn=false}
@@ -685,8 +706,8 @@ function showTimingPanel(){const p=$('#tpanel');if(!p)return;p.hidden=false;p.in
 function pointsPop(el,items){if(!pointPops||!items||!items.length)return;let host=$('#ptsfx');if(!host){host=document.createElement('div');host.id='ptsfx';document.body.appendChild(host)}
  const r=(el&&el.isConnected&&el.getBoundingClientRect())||{left:innerWidth/2,top:innerHeight*.4,width:0,height:0};
  const cx=r.left+r.width/2,cy=r.top+4;
- const lane={gold:[0,-42],streak:[-86,-64],speed:[82,-50],neu:[0,-96],fin:[0,-118]};
- items.forEach((it,i)=>{const n=document.createElement('div'),[sx,sy]=lane[it.cls]||[0,-42-i*28];
+ const lane={base:[0,-42],gold:[0,-42],streak:[-86,-64],quick:[82,-50],steady:[82,-50],speed:[82,-50],neu:[0,-96],conq:[0,-96],kept:[0,-56],fin:[0,-118],s1:[-86,-64],s2:[-86,-64],s3:[-86,-64],s4:[-86,-68],s5:[-90,-80]};
+ items.forEach((it,i)=>{const n=document.createElement('div'),key=((it.cls||'').split(/\s+/).find(c=>lane[c])||'gold'),[sx,sy]=lane[key]||[0,-42-i*28];
   n.className='ptpop '+(it.cls||'gold')+(RM.matches?' rm':'');n.innerHTML='<span class="ff"><i>'+it.text+'</i></span>';
   n.style.left=(cx+sx)+'px';n.style.top=(cy+sy)+'px';n.style.setProperty('--dl',(i*60)+'ms');
   host.appendChild(n);setTimeout(()=>{if(n.parentNode)n.remove()},1150+i*60)})}
@@ -885,7 +906,7 @@ function newRun(){hintRestart(false);musicBegin();clearT();clearEnd();hideSbt();
  placedSession=false;preloadOwned();
  const pool=ownedDeck(),mid=pool.filter(c=>MID.includes(c.period)),start=shuffle((mid.length?mid:pool).slice())[0];
  deck=shuffle(pool.filter(c=>c!==start));if(TEST&&TK)deck=deck.slice(0,TK);total=deck.length;
- tl=[{c:start,up:true}];streak=0;turn=0;nRight=0;nWrong=0;runBest=0;ptsC=0;ptsRoll=0;ptsNew=0;ptsSpeed=0;ptsRun=0;runMs=0;cardMs=[];placeLog=[];resetDecide();startRunClock();nbShown=false;best=getBest();bestStart=best;stkLevel=-1;stkCold=false;stkRed=false;clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const zf=document.querySelector('.zfly');if(zf)zf.remove();preloadAhead();draw()}
+ tl=[{c:start,up:true}];streak=0;turn=0;nRight=0;nWrong=0;runBest=0;ptsC=0;ptsRoll=0;ptsNew=0;ptsConq=0;ptsSpeed=0;ptsRun=0;runMs=0;cardMs=[];placeLog=[];resetDecide();startRunClock();nbShown=false;best=getBest();bestStart=best;stkLevel=-1;stkCold=false;stkRed=false;clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const zf=document.querySelector('.zfly');if(zf)zf.remove();preloadAhead();draw()}
 function draw(){hintRestart(false);clearPointPops();bankCard();if(!deck.length)return over();applyFrame();
  hand=deck.pop();turn++;sel=null;lit=new Set();phase='choose';hideYc();preloadAhead();
  big=!learned;loud=(turn===1);pulseOn=false;step3=false;pulseUntil=0;                /* loud markers until the first correct card; one pulse when the step 3 prompt appears */
@@ -1204,7 +1225,7 @@ function resolve(e){if(resolved===e)return;resolved=e;clearT();phase='judging'; 
 function struggleMap(){try{const m=JSON.parse(localStorage.getItem(STRUGKEY)||'{}');return m&&typeof m==='object'?m:{}}catch(e){return {}}}
 function saveStruggle(m){if(placedSession)return;try{localStorage.setItem(STRUGKEY,JSON.stringify(m))}catch(e){}}
 function isStruggling(c){if(conquerTestArmed)return true;const s=struggleMap()[c.id];return !!(s&&s.flagged)}
-function noteCard(c,ok){const forced=conquerTestArmed;const m=struggleMap(),s=m[c.id]||{miss:0,flagged:false};if(ok){s.miss=0;s.flagged=false;if(forced)conquerTestArmed=false}else{s.miss=(s.miss||0)+1;if(s.miss>=3)s.flagged=true}if(!s.flagged&&!s.miss)delete m[c.id];else m[c.id]=s;saveStruggle(m)}
+function noteCard(c,ok){const forced=conquerTestArmed;const m=struggleMap(),s=m[c.id]||{miss:0,flagged:false};if(ok){s.miss=0;s.flagged=false;s.viaUnlock=false;s.viaMiss=false;if(forced)conquerTestArmed=false}else{s.miss=(s.miss||0)+1;if(s.miss>=3){s.flagged=true;s.viaMiss=true}}if(!s.flagged&&!s.miss)delete m[c.id];else m[c.id]=s;saveStruggle(m)}
 function sparkleAt(host,cx,cy,n){if(RM.matches)return;n=Math.min(+n||0,10);for(let i=0;i<n;i++){const s=document.createElement('i');s.className=host.id==='nhs'?'sp':'csp';const a=(i/n)*Math.PI*2+Math.random()*.25,d=28+Math.random()*36;s.style.cssText='left:'+cx+'px;top:'+cy+'px;--tx:'+Math.round(Math.cos(a)*d*1.35)+'px;--ty:'+Math.round(Math.sin(a)*d)+'px;--d:'+(1.1+Math.random()*.5).toFixed(2)+'s;--dl:'+(Math.random()*.2).toFixed(2)+'s';host.appendChild(s)}if(host.id!=='nhs'){clearTimeout(host._spk);host._spk=setTimeout(()=>host.querySelectorAll('.csp').forEach(n=>n.remove()),2000)}}
 function clearConquerFx(){const b=$('#cfx');if(b)b.innerHTML=''}
 function placeCfx(){const box=$('#cfx'),host=$('#tlw');if(!box||!host)return;const r=host.getBoundingClientRect();box.style.top=r.top+'px';box.style.left=r.left+'px';box.style.width=r.width+'px';box.style.height=r.height+'px'}
@@ -1216,13 +1237,13 @@ function conquerFx(e){const sl=e.el&&e.el.parentElement;if(!sl)return;sl.classLi
  window.__ev&&window.__ev.push('conquer:'+e.c.id)}
 function correct(e){clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const zf=document.querySelector('.zfly');if(zf)zf.remove();
  const prevBest=best;streak++;nRight++;runBest=Math.max(runBest,streak);
- const first=!placedSession&&!seenSet().has(e.c.id),sp=speedPts(e.dealtMs);ptsC+=10;if(streak>=5)ptsRoll+=5;ptsSpeed+=sp;cardOk=true;if(first)ptsNew+=5;markSeen(e.c.id);placeLog.push({id:e.c.id,dealtMs:e.dealtMs||0,ok:true,longFlips:!!longFlips,speed:sp,first:!!first});   /* Luke t329u/t355u: +10, +5 on a roll from 5, +2/+1/+0 from dealt-to-Flip time */const isNewHigh=streak>prevBest;const conquered=isStruggling(e.c);
+ const first=!placedSession&&!seenSet().has(e.c.id),sp=speedPts(e.dealtMs),rp=rollPts(streak),kind=(!placedSession&&hasPlayedBefore())?struggleKind(e.c):null;let neu=0,conq=0;if(kind==='miss')conq=neuAmount('miss');else if(kind==='unlock')neu=neuAmount('unlock');ptsC+=10;ptsRoll+=rp;ptsSpeed+=sp;ptsNew+=neu;ptsConq+=conq;cardOk=true;markSeen(e.c.id);placeLog.push({id:e.c.id,dealtMs:e.dealtMs||0,ok:true,longFlips:!!longFlips,speed:sp,first:!!first,roll:rp,neu,conq,kind:kind||''});   /* Luke t369u-t383u: streak ladder; New! for unlock-hard, Conquered! for 3-miss hard; none on the first game; both in the run score */const isNewHigh=streak>prevBest;const conquered=isStruggling(e.c);
  if(conquered)yesFlash(e);   /* Luke t272u/t273u/t279u: YES! replaces Streak / New best streak for this placement, and cancels any leftover or queued streak pop-up */
  else if(isNewHigh)bigFlash('stf gold','<i>New best</i><i>streak</i><i class="n">'+streak+'</i>','newBestStreak:'+streak);
  else bigFlash('stf','<i>Streak</i><i class="n">'+streak+'</i>','streak:'+streak);
  best=Math.max(best,streak);setBest(best);stkCold=false;stkRed=false;stats();streakPop();phase='result';learned=true;
  noteCard(e.c,true);
- const pops=[{text:'+10',cls:'gold'}];if(streak>=5)pops.push({text:'Streak \u00d7'+streak+' +5',cls:'streak'});if(sp===2)pops.push({text:'Quick +2',cls:'speed'});else if(sp===1)pops.push({text:'Steady +1',cls:'speed'});if(first)pops.push({text:'New! +5',cls:'neu'});if(!deck.length&&total>=51)pops.push({text:'Complete +50',cls:'fin'});pointsPop(e.el,pops);
+ const pops=[{text:'+10',cls:'base'}];if(rp){const lv=TIME_SCORE.streak.levels[streakLevel(streak)];pops.push({text:'Streak \u00d7'+streak+' +'+rp,cls:'streak '+(lv.cls||'')+(streak===lv.min?' up':'')})}if(sp===2)pops.push({text:'Quick +2',cls:'quick'});else if(sp===1)pops.push({text:'Steady +1',cls:'steady'});if(neu)pops.push({text:'New! +'+neu,cls:'neu'});if(conq)pops.push({text:'Conquered! +'+conq,cls:'conq'});if(!deck.length&&total>=51)pops.push({text:'Complete +50',cls:'fin'});pointsPop(e.el,pops);
  if(conquered){e.conquered=true;sfx('conquer');conquerFx(e);if(e.newBest)newBestBurst()}   /* own sound for the struggled-card moment; skip streakpop/jingle so they don't clash (Luke t253u / t254u) */
  else if(e.newBest){sfx('jingle');newBestBurst()}else sfx('streakpop');   /* jingle + header burst on the first new best after a break (or the start of the run); later new bests in the same streak get the gold pop-up and streakpop (Luke t238u / t244u / t258u) */
  const last=!deck.length;if(e.newBest)nbShown=true;
@@ -1234,7 +1255,7 @@ function correct(e){clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const zf=doc
  }
 function when(e){const k=tl.indexOf(e),pv=tl[k-1]&&tl[k-1].c,nx=tl[k+1]&&tl[k+1].c,b=t=>'<b>'+t+'</b>';
  return b(e.c.title)+' happens '+(pv&&nx?'after '+b(pv.title)+' and before '+b(nx.title):pv?'after '+b(pv.title):'before '+b(nx.title))+'.'}
-function wrong(e){e.el.classList.add('bad');noteCard(e.c,false);markSeen(e.c.id);cardOk=false;placeLog.push({id:e.c.id,dealtMs:e.dealtMs||0,ok:false,longFlips:!!longFlips,speed:0,first:false});sfx('thud');nWrong++;const lost=streak;streak=0;nbShown=false;stkCold=true;stats();hintRestart(true);if(lost>0)streakBroken();   /* Luke t354u: Restart glows after any wrong card; t258u: a break re-arms the new-best jingle */verdict('Not quite…');ycCheck(e);later(()=>miss(e),1300*TS);
+function wrong(e){e.el.classList.add('bad');noteCard(e.c,false);markSeen(e.c.id);cardOk=false;placeLog.push({id:e.c.id,dealtMs:e.dealtMs||0,ok:false,longFlips:!!longFlips,speed:0,first:false});sfx('thud');nWrong++;const lost=streak;streak=dropStreak(streak);nbShown=false;stkCold=true;stats();hintRestart(true);if(lost>0&&streak===0)streakBroken();else if(lost>streak){streakPop();pointsPop(e.el,[{text:'Streak kept at '+streak,cls:'kept s'+streakLevel(streak)}]);window.__ev&&window.__ev.push('streakDrop:'+lost+'>'+streak)}   /* Luke t369u/t370u, Solomon r4: a miss drops one level (23→10, 12→5, 7→0); only a drop to 0 is a break; a kept-level pop-up so it does not look like a bug */verdict('Not quite…');ycCheck(e);later(()=>miss(e),1300*TS);
  setTimeout(()=>{if(phase==='judging'&&cur===e&&!e.moved){window.__ev.push('failsafe:miss');miss(e)}},1000*TS+1200)}   /* v5.9.1 failsafe: never stuck on 'Not quite…' */
 function miss(e){const old=e.el.getBoundingClientRect();
  tl.splice(tl.indexOf(e),1);const k=tl.filter(x=>key(x.c)<key(e.c)).length;
@@ -1295,15 +1316,16 @@ function endLater(f,ms){const t=setTimeout(f,ms);endTimers.push(t);return t}
 function clearEnd(){endTok++;endTimers.forEach(clearTimeout);endTimers=[];cutScore();hideUnlock();const nh=$('#nhs');if(nh)nh.remove();clearTimeout(highScore.t);clearTimeout(highScore.u)}
 function over(){bankCard();flushPlay();clearPointPops();hintRestart(false);musicOver=true;musicPendingIn=false;if(musicGain)fadeMusic(0,SCORE_MUSIC_FADE);window.__ev&&window.__ev.push('musicOut');loadScoreSnds();   /* music fades out before the count-up starts */
  phase='over';applyFrame();$('#pill').hidden=true;$('#s0').hidden=true;s0Active=false;$('#fc').hidden=true;$('#zoom').style.display='none';hideUnlock();resolved=null;sel=null;hideYc();best=Math.max(best,streak);setBest(best);stats();
- const perfect=nWrong===0&&nRight===total&&total>0,full=total>=51,finish=full?50:0,ptsRun=runTimeBonus(runMs,nRight,total),score=ptsC+ptsRoll+ptsSpeed+ptsRun+finish;
- const maxRun=full&&ptsC+ptsRoll+finish===795;   /* max-score prize later: full 51-placement runs judged on 795, without per-card speed, the 0–5 time tiebreaker, or first-time bonus. A perfect, all-quick run under 12:00 can score 902. */
+ const perfect=nWrong===0&&nRight===total&&total>0,full=total>=51,finish=full?50:0,ptsRun=runTimeBonus(runMs,nRight,total),score=ptsC+ptsRoll+ptsSpeed+ptsRun+finish+ptsNew+ptsConq;
+ if(!placedSession)bumpGames();
+ const maxBase=51*10+rollTotal(51)+50,maxRun=full&&ptsC+ptsRoll+finish===maxBase;   /* prize later: 870 without speed, the 0-5 tiebreaker, New or Conquered. A fully unlocked perfect all-quick run under 12:00 can score 977 (New is 0 when nothing is locked). New and Conquered are in the run score (Luke t377u). */
  const unlockCard=perfect?pickUnlock():null;if(unlockCard)grantUnlock(unlockCard);
  const prevHS=getBestSkill(),newHS=score>prevHS&&score>0;if(!placedSession)saveBestSkill(score,runMs);
  /* old-style score (correct + best streak) and its old high-score key, kept only for the test toggle */
  const oldScore=nRight+runBest;let oldPrevHS=0;try{oldPrevHS=Math.max(0,+localStorage.getItem(HSKEY)||0)}catch(e){}
  const oldNewHS=oldScore>oldPrevHS&&oldScore>0;if(oldNewHS&&!placedSession){try{localStorage.setItem(HSKEY,String(oldScore))}catch(e){}}
- lastRun={nRight,nWrong,runBest,total,score,ptsC,ptsRoll,ptsNew,ptsSpeed,ptsRun,runMs,finish,maxRun,perfect,newHS,prevHS,unlockCard,oldScore,oldPrevHS,oldNewHS,stillLocked:lockedPlayable().length,owned:ownedDeck().length,cardMs:cardMs.slice(),placeLog:placeLog.slice(),longFlips:!!longFlips};
- if(!placedSession)saveTiming({at:new Date().toISOString(),who:'Luke',totalMs:runMs,longFlips:!!longFlips,nRight,nWrong,total,score,ptsSpeed,ptsRun,cards:placeLog.slice()});
+ lastRun={nRight,nWrong,runBest,total,score,ptsC,ptsRoll,ptsNew,ptsConq,ptsSpeed,ptsRun,runMs,finish,maxRun,perfect,newHS,prevHS,unlockCard,oldScore,oldPrevHS,oldNewHS,stillLocked:lockedPlayable().length,owned:ownedDeck().length,cardMs:cardMs.slice(),placeLog:placeLog.slice(),longFlips:!!longFlips};
+ if(!placedSession)saveTiming({at:new Date().toISOString(),who:'Luke',totalMs:runMs,longFlips:!!longFlips,nRight,nWrong,total,score,ptsSpeed,ptsRun,ptsNew,ptsConq,cards:placeLog.slice()});
  window.__ev.push('over:'+nRight+'/'+nWrong+'/'+runBest+':pts'+score+(unlockCard?':unlock:'+unlockCard.id:''));
  renderEnd()}
 /* TEST ONLY (Luke t331u): 'Scoreboard: old / new' toggle outside the panel. Choice kept in sessionStorage only. Strip renderEnd's
@@ -1330,7 +1352,7 @@ function endNew(r){window.__disc=Object.assign({},r,{style:'new'});
    '<div class="bigw"><b class="big" data-v="'+r.score+'">0</b></div><small class="ptl">points</small>'+
    '<div class="nbt" aria-live="polite"></div>'+
    '<div class="yb">Your best: <span>'+(r.prevHS||'–')+'</span></div></div>'+
-   '<div class="rows">'+row('r1','Correct ('+r.nRight+' &times; 10)',r.ptsC)+row('r2','On a roll (streak of 5+)',r.ptsRoll)+row('r3','Time ('+fmtTime(r.runMs)+')',r.ptsSpeed)+((r.finish||r.ptsRun)?row('r5','Time bonus',r.ptsRun||0):'')+(r.finish?row('r4','Finished all 51',r.finish):'')+'</div>'+(r.ptsNew?'<div class="pers" id="pers">First-time cards <b>+'+r.ptsNew+'</b><small>yours to keep, not in the run score</small></div>':'')+'</div>'+
+   '<div class="rows">'+row('r1','Correct ('+r.nRight+' &times; 10)',r.ptsC)+row('r2','On a roll',r.ptsRoll)+row('r3','Time ('+fmtTime(r.runMs)+')',r.ptsSpeed)+((r.finish||r.ptsRun)?row('r5','Time bonus',r.ptsRun||0):'')+(r.ptsNew?row('r6','New cards',r.ptsNew):'')+(r.ptsConq?row('r7','Conquered',r.ptsConq):'')+(r.finish?row('r4','Finished all 51',r.finish):'')+'</div></div>'+
   '<div class="acts"><div class="a2"><button class="btn" id="again">Play again</button><button class="btn gold" id="viewtl">View the timeline</button></div></div>'+
   '<div class="e2">'+
    '<button class="cta web" id="webu" type="button">'+ICON_SCREEN+'<span class="ct">Unlock all 52 cards online, &pound;4.99</span></button>'+
@@ -1375,12 +1397,13 @@ function endOld(r){const {nRight,nWrong,runBest,perfect,unlockCard,stillLocked}=
   '<div class="slist"><div class="sc">'+
   '<div class="inc" data-v="'+nWrong+'"><small>Incorrect</small><b>0</b></div>'+
   '<div class="okn" data-v="'+r.ptsC+'"><small>Correct ('+nRight+' &times; 10)</small><b>0</b></div>'+
-  '<div class="roll" data-v="'+r.ptsRoll+'"><small>On a roll (streak of 5+)</small><b>0</b></div>'+
+  '<div class="roll" data-v="'+r.ptsRoll+'"><small>On a roll</small><b>0</b></div>'+
   '<div class="tim" data-v="'+r.ptsSpeed+'"><small>Time ('+fmtTime(r.runMs)+')</small><b>0</b></div>'+
   ((r.finish||r.ptsRun)?'<div class="trun" data-v="'+(r.ptsRun||0)+'"><small>Time bonus</small><b>0</b></div>':'')+
+  (r.ptsNew?'<div class="nnew" data-v="'+r.ptsNew+'"><small>New cards</small><b>0</b></div>':'')+
+  (r.ptsConq?'<div class="nconq" data-v="'+r.ptsConq+'"><small>Conquered</small><b>0</b></div>':'')+
   (r.finish?'<div class="fin" data-v="'+r.finish+'"><small>Finished all 51</small><b>0</b></div>':'')+'</div>'+
   '<div class="tot" data-v="'+score+'"><small>Run score</small><b>0</b></div></div>'+
-  (r.ptsNew?'<div class="pers" id="pers">First-time cards <b>+'+r.ptsNew+'</b><small>yours to keep, not in the run score</small></div>':'')+
   (perfect?'<div class="perf">Perfect!</div>':'')+
   unlLine+
   '</div><hr><div class="e2">'+
@@ -1421,7 +1444,7 @@ function showPlacedBoard(){const pool=playableDeck().slice();if(!pool.length)ret
  const k=Math.max(1,Math.min(PLACED,pool.length)),sh=shuffle(pool),on=sh.slice(0,k).sort((a,b)=>a.n-b.n),rest=shuffle(sh.slice(k));
  s0Active=false;learned=true;$('#s0').hidden=true;$('#zoom').style.display='none';$('#fc').hidden=true;
  $('#end').style.display='none';hideUnlock();hideYc();clearConquerFx();
- tl=on.map(c=>({c,up:true}));deck=rest;total=Math.max(0,pool.length-1);nRight=Math.max(0,k-1);nWrong=0;runBest=nRight;streak=nRight;ptsC=nRight*10;ptsRoll=Math.max(0,nRight-4)*5;ptsNew=0;ptsSpeed=0;ptsRun=0;runMs=0;cardMs=[];placeLog=[];resetDecide();startRunClock();
+ tl=on.map(c=>({c,up:true}));deck=rest;total=Math.max(0,pool.length-1);nRight=Math.max(0,k-1);nWrong=0;runBest=nRight;streak=nRight;ptsC=nRight*10;ptsRoll=rollTotal(nRight);ptsNew=0;ptsConq=0;ptsSpeed=0;ptsRun=0;runMs=0;cardMs=[];placeLog=[];resetDecide();startRunClock();
  nbShown=false;best=getBest();bestStart=best;turn=Math.max(0,k-1);
  window.__ev&&window.__ev.push('placed:'+k+'/'+pool.length);
  preloadAhead();
@@ -1429,9 +1452,9 @@ function showPlacedBoard(){const pool=playableDeck().slice();if(!pool.length)ret
  draw()}
 const UNLOCKTEST=TEST&&/[?&]unlock=1\b/.test(location.search);
 newRun();
-if(UNLOCKTEST){nRight=total;nWrong=0;ptsC=total*10;ptsRoll=Math.max(0,total-4)*5;ptsSpeed=0;runMs=0;later(over,40)}
+if(UNLOCKTEST){nRight=total;nWrong=0;ptsC=total*10;ptsRoll=rollTotal(total);ptsSpeed=0;runMs=0;later(over,40)}
 if(PLACED){try{const u=new URL(location.href);u.searchParams.delete('placed');history.replaceState(null,'',u.pathname+u.search+u.hash)}catch(e){}}
-if(TEST)window.__ckScore={fmt:fmtTime,speedPts,preview(extra){lastRun=Object.assign({nRight:40,nWrong:11,runBest:12,total:51,ptsC:400,ptsRoll:40,ptsSpeed:40,ptsRun:2,ptsNew:40,finish:50,runMs:17*60*1000,score:532,maxRun:false,perfect:false,newHS:false,prevHS:480,unlockCard:null,stillLocked:0,owned:52,cardMs:[]},extra||{});phase='over';const s0=$('#s0');if(s0)s0.hidden=true;s0Active=false;const fc=$('#fc');if(fc)fc.hidden=true;const z=$('#zoom');if(z)z.style.display='none';applyFrame&&applyFrame();renderEnd()}};
+if(TEST)window.__ckScore={fmt:fmtTime,speedPts,rollPts,rollTotal,dropStreak,streakLevel,neuAmount,lockedBase,gamesPlayed,hasPlayedBefore,struggleKind,preview(extra){lastRun=Object.assign({nRight:40,nWrong:11,runBest:12,total:51,ptsC:400,ptsRoll:40,ptsSpeed:40,ptsRun:2,ptsNew:0,ptsConq:0,finish:50,runMs:17*60*1000,score:492,maxRun:false,perfect:false,newHS:false,prevHS:480,unlockCard:null,stillLocked:0,owned:52,cardMs:[]},extra||{});phase='over';const s0=$('#s0');if(s0)s0.hidden=true;s0Active=false;const fc=$('#fc');if(fc)fc.hidden=true;const z=$('#zoom');if(z)z.style.display='none';applyFrame&&applyFrame();renderEnd()}};
 if(TEST)window.__ckUnlock={show:showUnlock,hide:hideUnlock,pick:pickUnlock,owned:()=>ownedDeck().map(c=>c.id),locked:()=>lockedPlayable().map(c=>c.id),grant:grantUnlock,total:()=>total,layout:()=>Object.assign({},L),
  fillAll(){const pool=ownedDeck().slice().sort((a,b)=>a.n-b.n);if(!pool.length)return;tl=pool.map(c=>({c,up:true}));hand=null;deck=[];total=Math.max(0,pool.length-1);nRight=total;nWrong=0;runBest=total;phase='review';
   $('#end').style.display='none';hideUnlock();hideYc();applyFrame();const s=$('#stage');clearNextClick(s);s.innerHTML='';s.className='pan v';sizeStage('verdict');timeline();$('#tl').scrollTop=0;window.__ev.push('fillAll:'+pool.length)},
