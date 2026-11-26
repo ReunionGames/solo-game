@@ -22,6 +22,7 @@ header{flex:none;display:flex;justify-content:space-between;align-items:center;g
 .brand{min-width:0;flex:1 1 auto}.brand b{font-size:17px;font-variant:small-caps;color:var(--burg);line-height:1.2;display:block;white-space:nowrap}
 #stats{white-space:nowrap}
 /* stage: the drawn card and instructions, or the verdict */
+#stage.hbhide{visibility:hidden;pointer-events:none}
 #stage{flex:none;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:4px 10px;text-align:center}
 #stage.ch{flex-direction:column;align-items:stretch;justify-content:center;gap:2px}
 #stage.pan{flex-direction:column}
@@ -809,7 +810,7 @@ function draw(){if(!deck.length)return over();applyFrame();
  big=!learned;loud=(turn===1);pulseOn=false;step3=false;pulseUntil=0;                /* loud markers until the first correct card; one pulse when the step 3 prompt appears */
  $('#tlh').style.display='none';
  s0Active=(turn===1&&!s0Seen());
- stats();renderStage();if(s0Active)$('#stage').style.display='none';timeline();$('#tl').scrollTop=0;if(s0Active)showS0();else zoomHand();applyHandBar()}   /* every new card opens large: read it, tap off to place it. Your card bar waits until that zoom is dismissed (Luke t292u). */
+ stats();renderStage();if(s0Active)$('#stage').classList.add('hbhide');timeline();$('#tl').scrollTop=0;if(s0Active)showS0();else zoomHand();applyHandBar()}   /* every new card opens large: read it, tap off to place it. Your card bar waits until that zoom is dismissed (Luke t292u). */
 function getHS(){return getBestPts()}   /* header High score = best points total (scoreboard v1, Luke t329u); the old correct + best streak key is no longer read */
 function stats(){const st=$('#stats');let k=st.querySelector('.stk');
  if(!k||!st.querySelector('.hs')||!st.querySelector('.hl')){st.innerHTML='<div class="scw"><span class="sl">Streak</span><span class="stk"></span><div class="bl">Best streak <b class="bv"></b></div></div><div class="hs"><span class="hl">High score</span><b class="hv"></b></div>';k=st.querySelector('.stk')}
@@ -923,12 +924,12 @@ function positionS0(){const s=$('#s0');if(s.hidden)return;
  ar.style.cssText='left:'+cx+'px;top:'+y0+'px;height:'+Math.max(len,0)+'px;--hw:'+hw+'px;--hh:'+Math.min(hh,Math.max(len,0))+'px;'+(len<8?'display:none':'');
  ar.classList.toggle('bob',!RM.matches)}
 function dismissS0(){const s=$('#s0');if(s.hidden)return;s.hidden=true;s0Active=false;s0Mark();swallowUntil=performance.now()+(TEST?100:350);
- renderStage();$('#stage').style.display='none';zoomHand();applyHandBar()}
+ renderStage();$('#stage').classList.add('hbhide');zoomHand();applyHandBar()}
 $('#s0').onclick=ev=>{ev.stopPropagation();ev.preventDefault();if(performance.now()-(+$("#s0").dataset.at||0)<250)return;tapAt={x:ev.clientX,y:ev.clientY};if(!$('#s0').hidden)ui('tap');dismissS0()};
 addEventListener('keydown',ev=>{if((ev.key==='Escape'||ev.key==='Enter')&&!$('#s0').hidden){ev.preventDefault();ui('tap');dismissS0()}});
 function applyHandBar(){const s=$('#stage');if(!s||phase!=='choose')return;
- const want=!!hand&&!s0Active&&$('#zoom').style.display!=='flex',hide=s.style.display==='none';
- if(want===!hide)return;s.style.display=want?'':'none';sizeStage('choose');timeline();if(s0Active)positionS0()}   /* Your card bar only once the first-card zoom is dismissed (Luke t292u) */
+ const want=!!hand&&!s0Active&&$('#zoom').style.display!=='flex',hide=s.classList.contains('hbhide');
+ if(want===!hide)return;s.classList.toggle('hbhide',!want);if(s.style.display==='none')s.style.display='';sizeStage('choose');timeline();if(s0Active)positionS0()}   /* 26 Nov (Luke t335u): the bar is hidden with visibility, not display:none, so it keeps its space and the starting card stays where it was, below the step-0 bubble */   /* Your card bar only once the first-card zoom is dismissed (Luke t292u) */
 function updatePill(){const p=$('#pill'),zo=$('#zoom').style.display==='flex';
  const show=loud&&phase==='choose'&&!zo&&!s0Active&&(sel!=null||step3);
  if(!show){p.hidden=true;return}
