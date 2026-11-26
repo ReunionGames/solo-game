@@ -280,7 +280,7 @@ header{position:relative;z-index:7}
 @media (max-width:420px){.brand b{white-space:normal;font-size:16px;line-height:1.15}#stats{gap:10px}header{gap:6px;padding:5px 8px}#stats .scw,#stats .hs{min-width:4em}}
 /* new best: gold sparkle out of the streak area + a tag; never blocks a tap */
 #fx{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:8}
-#fx .sp,#nhs .sp,#cfx .csp{position:absolute;width:13px;height:13px;margin:-6.5px 0 0 -6.5px;background:#F2B81C;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);filter:drop-shadow(0 0 1px #7a4a00) drop-shadow(0 0 4px rgba(255,200,60,.9));opacity:0;animation:spk var(--d,1.2s) ease-out var(--dl,0s) forwards;pointer-events:none}
+#fx .sp,#nhs .sp,#cfx .csp,.slot .csp{position:absolute;width:13px;height:13px;margin:-6.5px 0 0 -6.5px;background:#F2B81C;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);filter:drop-shadow(0 0 1px #7a4a00) drop-shadow(0 0 4px rgba(255,200,60,.9));opacity:0;animation:spk var(--d,1.2s) ease-out var(--dl,0s) forwards;pointer-events:none}
 @keyframes spk{0%{opacity:0;transform:translate(0,0) scale(.4) rotate(0)}15%{opacity:1}70%{opacity:1}100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(1.1) rotate(90deg)}}
 #fx .tag{position:absolute;z-index:2;white-space:nowrap;background:#E9D29E;color:#551309;border:2px solid #551309;border-radius:999px;padding:1px 12px 3px;font-weight:700;font-size:17px;line-height:1.2;box-shadow:0 2px 8px rgba(0,0,0,.35),0 0 12px 3px rgba(233,210,158,.9);animation:tagin 1.5s ease-out forwards}
 @keyframes tagin{0%{opacity:0;transform:translateY(-6px) scale(.8)}15%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0}}
@@ -332,23 +332,16 @@ header{position:relative;z-index:7}
 /* Luke t284u: the card being placed (preview, slide, flip) sits above the rays; once it lands it goes back under */
 #tl .slot.pv,#tl .slot.lifting{z-index:9}
 #chip{position:relative;z-index:9}
+/* Luke t339u: a short one-off gold flash when a hard card is first placed (opacity on a pseudo-element, no animated box-shadow or filter), then a static gold border for the rest of the run. The old #cfx overlay kept an infinite glowpulse plus spinning rays and stacked drop-shadows on cloned images, which lagged on iPhone. */
 .slot.conquered{z-index:3}
-#cfx{position:fixed;top:0;left:0;width:0;height:0;z-index:8;pointer-events:none;overflow:hidden} /* clipped to #tlw so rays/glow stay under the header when the board is scrolled (Luke t300u); pop-ups stay at z-index 40 */
-#cfx .cfx-item{position:absolute;overflow:visible;transform:translateZ(0)}
-#cfx .cfx-rays{position:absolute;left:50%;top:50%;width:175%;height:155%;transform:translate(-50%,-50%);z-index:0;pointer-events:none;opacity:.32;will-change:transform,opacity}
-#cfx .cfx-item:not(.settled) .cfx-rays{animation:rayburst .7s ease-out both,rayssettle 1.2s ease-out .7s forwards}
-#cfx .cfx-rays i{display:block;width:100%;height:100%;background:repeating-conic-gradient(from 0deg,rgba(242,184,28,0) 0 14deg,rgba(255,214,90,.95) 16deg 20deg,rgba(242,184,28,0) 22deg 45deg);-webkit-mask-image:radial-gradient(circle,rgba(0,0,0,.95) 8%,rgba(0,0,0,.55) 38%,transparent 70%);mask-image:radial-gradient(circle,rgba(0,0,0,.95) 8%,rgba(0,0,0,.55) 38%,transparent 70%);animation:rayspin 18s linear infinite;will-change:transform}
-#cfx .cfx-item:not(.settled) .cfx-rays i{animation:rayspin 8s linear .7s infinite}
-#cfx .cfx-glow{position:absolute;inset:0;z-index:1;pointer-events:none;animation:glowpulse 3.6s ease-in-out infinite;will-change:opacity}
-#cfx .cfx-glow img{display:block;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 0 4px #8a4b00) drop-shadow(0 0 14px #F2B81C) drop-shadow(0 0 28px rgba(255,214,90,1)) drop-shadow(0 0 44px rgba(242,184,28,.95))}
-#cfx .cfx-card{position:absolute;inset:0;z-index:2;width:100%;height:100%;margin:0}
-#cfx .cfx-card img{filter:drop-shadow(0 0 3px #8a4b00) drop-shadow(0 0 10px #F2B81C)}
-#cfx .csp{z-index:3}
-@keyframes rayburst{0%{opacity:0;transform:translate(-50%,-50%) scale(.35)}100%{opacity:.95;transform:translate(-50%,-50%) scale(1)}}
-@keyframes rayssettle{0%{opacity:.95;transform:translate(-50%,-50%) scale(1)}100%{opacity:.32;transform:translate(-50%,-50%) scale(1)}}
-@keyframes rayspin{to{transform:rotate(360deg)}}
-@keyframes glowpulse{0%,100%{opacity:.5}50%{opacity:1}}
-@media (prefers-reduced-motion:reduce){#cfx .cfx-glow,#cfx .cfx-rays,#cfx .cfx-rays i{animation:none}#cfx .cfx-glow{opacity:.7}#cfx .cfx-rays{opacity:.32}#cfx .csp{animation:none!important;opacity:0}}
+.slot.conquered .card:before{content:"";position:absolute;inset:0;border:3px solid #F2B81C;border-radius:var(--card-rx)/var(--card-ry);box-sizing:border-box;pointer-events:none;z-index:5}
+.slot.conquered .card:after{content:"";position:absolute;inset:-5px;border-radius:calc(var(--card-rx) + 5px)/calc(var(--card-ry) + 5px);pointer-events:none;z-index:4;background:radial-gradient(circle,rgba(255,214,90,.55) 0%,rgba(242,184,28,.35) 58%,transparent 78%);opacity:0}
+.slot.conquered.fresh .card:after{animation:hardflash 1.3s ease-out forwards}
+@keyframes hardflash{0%{opacity:0}18%{opacity:1}100%{opacity:0}}
+.slot.conquered .card img{filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
+.slot .csp{z-index:6}
+@media (prefers-reduced-motion:reduce){.slot.conquered.fresh .card:after{animation:none}}
+#cfx{position:fixed;top:0;left:0;width:0;height:0;z-index:8;pointer-events:none;overflow:hidden}
 /* Luke t279u: word pop-ups live on a top fixed layer, in front of cards, zoom, rays, header and panels */
 #sbk{position:fixed;left:0;right:0;top:var(--vt,0px);height:var(--vh,100%);z-index:40;display:flex;align-items:flex-start;box-sizing:border-box;justify-content:center;pointer-events:none;overflow:visible;transition:opacity .3s}
 #sbk.out{opacity:0}
@@ -1011,7 +1004,7 @@ function timeline(){const sc=$('#tl'),keep=sc.scrollTop,choose=phase==='choose',
     fb.onclick=ev=>{ev.stopPropagation();place()};sl.appendChild(fb);cs.appendChild(sl);return}
    sl.dataset.i=i;if(e.moved)sl.classList.add('moved');if(e.fixd)sl.classList.add('fixd');if(e.pending&&phase==='flipping')sl.classList.add('lifting');
    const el=build(e.c,{up:e.up});if(e.ok===false)el.classList.add('bad');e.el=el;sl.appendChild(el);
-    if(e.conquered){sl.classList.add('good','conquered');ensureConquerOverlay(e,false)}
+    if(e.conquered){sl.classList.add('good','conquered')}
    sl.onclick=()=>{if(e.up&&phase!=='flipping'&&phase!=='judging'){cardSnd();zoom(e,tl.indexOf(e))}};cs.appendChild(sl)});
   const tb=document.createElement('div');tb.className='tabs';
   const add=(d,x,edge)=>{const p=gapPos(d);if(p<0||!choose)return;
@@ -1132,9 +1125,10 @@ function clearConquerFx(){const b=$('#cfx');if(b)b.innerHTML=''}
 function placeCfx(){const box=$('#cfx'),host=$('#tlw');if(!box||!host)return;const r=host.getBoundingClientRect();box.style.top=r.top+'px';box.style.left=r.left+'px';box.style.width=r.width+'px';box.style.height=r.height+'px'}
 function syncConquerFx(){const b=$('#cfx');if(!b)return;placeCfx();const fr=b.getBoundingClientRect();
  b.querySelectorAll('.cfx-item').forEach(item=>{const e=tl.find(x=>x.conquered&&x.c&&x.c.id===item.dataset.id),card=e&&e.el;if(!card||!card.isConnected){item.style.visibility='hidden';return}const r=card.getBoundingClientRect();item.style.visibility='visible';item.style.left=(r.left-fr.left)+'px';item.style.top=(r.top-fr.top)+'px';item.style.width=r.width+'px';item.style.height=r.height+'px'})}
-function ensureConquerOverlay(e,animate){const box=$('#cfx');if(!box||!e||!e.c||!e.el)return;let item=box.querySelector('.cfx-item[data-id="'+e.c.id+'"]');
- if(!item){item=document.createElement('div');item.className='cfx-item'+(animate?'':' settled');item.dataset.id=e.c.id;item.innerHTML='<div class="cfx-rays"><i></i></div><div class="cfx-glow" aria-hidden="true"></div>';const face=e.el.querySelector('.front img')||e.el.querySelector('img');if(face)item.querySelector('.cfx-glow').appendChild(face.cloneNode(true));const clone=e.el.cloneNode(true);clone.classList.remove('pop');clone.classList.add('cfx-card');item.appendChild(clone);box.appendChild(item)}syncConquerFx()}
-function conquerFx(e){const sl=e.el&&e.el.parentElement;if(!sl)return;sl.classList.add('good','conquered');ensureConquerOverlay(e,true);const item=$('#cfx .cfx-item[data-id="'+e.c.id+'"]');if(item&&!RM.matches){sparkleAt(item,item.offsetWidth/2,item.offsetHeight/2,10);setTimeout(()=>{item.querySelectorAll('.csp').forEach(n=>n.remove());item.classList.add('settled')},1800)}else if(item)item.classList.add('settled');window.__ev&&window.__ev.push('conquer:'+e.c.id)}   /* Luke t260u/t270u: unclipped overlay; glow stays and gently shines for the rest of the run */
+function ensureConquerOverlay(e,animate){const sl=e&&e.el&&e.el.parentElement;if(!sl)return;sl.classList.add('good','conquered');if(!animate)sl.classList.remove('fresh')}   /* Luke t339u: no overlay; the card itself gets the flash then a static gold border */
+function conquerFx(e){const sl=e.el&&e.el.parentElement;if(!sl)return;sl.classList.add('good','conquered','fresh');   /* Luke t339u/t340u: 1.3s opacity flash on the card, then a static gold border. No #cfx overlay, no infinite animation, no drop-shadow glow. */
+ if(!RM.matches)later(()=>{sl.classList.remove('fresh');sl.querySelectorAll('.csp').forEach(n=>n.remove())},1400);else sl.classList.remove('fresh');
+ window.__ev&&window.__ev.push('conquer:'+e.c.id)}
 function correct(e){clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const zf=document.querySelector('.zfly');if(zf)zf.remove();
  const prevBest=best;streak++;nRight++;runBest=Math.max(runBest,streak);
  ptsC+=10;if(streak>=5)ptsRoll+=5;if(!placedSession&&!seenSet().has(e.c.id))ptsNew+=5;markSeen(e.c.id);   /* Luke t329u: +10 per card, +5 on a roll from a streak of 5, +5 the first time this device ever gets the card right on its first deal */const isNewHigh=streak>prevBest;const conquered=isStruggling(e.c);
@@ -1351,8 +1345,8 @@ if(TEST)window.__ckUnlock={show:showUnlock,hide:hideUnlock,pick:pickUnlock,owned
   tl=on.map(c=>({c,up:true}));hand=rest[0]||null;deck=rest.slice(1);total=Math.max(0,k-1);sel=null;lit=new Set();loud=false;pulseOn=false;step3=false;s0Active=false;
   $('#s0').hidden=true;$('#zoom').style.display='none';$('#fc').hidden=true;$('#end').style.display='none';hideUnlock();hideYc();applyFrame();
   if(hand){phase='choose';renderStage();applyHandBar()}else{phase='review';const s=$('#stage');clearNextClick(s);s.innerHTML='';s.className='pan v';sizeStage('verdict')}timeline();window.__ev.push('board:'+k);return Object.assign({},L)},
- conquerScroll(){if(!tl.length)return null;const e=tl[0];e.conquered=true;if(!e.el){const card=$('#tl .slot .card');if(card)e.el=card}ensureConquerOverlay(e,false);const item=$('#cfx .cfx-item');if(item)item.classList.add('settled');
-  const sc=$('#tl'),host=$('#tlw').getBoundingClientRect(),cr=e.el.getBoundingClientRect();sc.scrollTop=sc.scrollTop+(cr.bottom-host.top)+16;syncConquerFx();return true},
+ conquerScroll(){if(!tl.length)return null;const e=tl[0];e.conquered=true;if(!e.el){const card=$('#tl .slot .card');if(card)e.el=card}ensureConquerOverlay(e,false);
+  const sc=$('#tl'),host=$('#tlw').getBoundingClientRect(),cr=e.el.getBoundingClientRect();sc.scrollTop=sc.scrollTop+(cr.bottom-host.top)+16;return true},
  endAll(){nRight=total;nWrong=0;over()}};
 })();
 </script></body></html>
