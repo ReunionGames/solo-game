@@ -505,6 +505,7 @@ header{position:relative;z-index:7}
 .ptpop.s3{color:#D946EF;-webkit-text-stroke-color:#4A0E5C;text-shadow:0 0 10px rgba(217,70,239,.8),0 .06em .06em rgba(40,20,14,.5)}
 .ptpop.s4{color:#E879F9;-webkit-text-stroke-color:#4A0E5C;font-size:33px;text-shadow:0 0 12px rgba(232,121,249,.9),0 .06em .06em rgba(40,20,14,.5)}
 .ptpop.s5{color:#F5D0FE;-webkit-text-stroke-color:#6B21A8;font-size:35px;text-shadow:0 0 16px rgba(245,208,254,1),0 0 8px rgba(192,132,252,.9),0 .06em .06em rgba(40,20,14,.5)}
+.ptpop.light{color:#E8FFFF;-webkit-text-stroke-color:#0A3D4A;text-shadow:0 0 10px rgba(46,224,230,.9),0 .06em .06em rgba(40,20,14,.5)}
 .ptpop.quick{color:#2EE0E6;-webkit-text-stroke-color:#0F4A4E}
 .ptpop.steady{color:#5B8F99;-webkit-text-stroke-color:#1A3A44}
 .ptpop.neu,.ptpop.conq{color:#F2B81C;font-size:36px;-webkit-text-stroke-color:#551309}   /* gold slightly larger than the 31px stack */
@@ -673,15 +674,22 @@ const later=(f,ms)=>{const t=setTimeout(f,ms);timers.push(t);return t};
 const clearT=()=>{timers.forEach(clearTimeout);timers=[]};
 function fmtTime(ms){const s=Math.max(0,Math.round((ms||0)/1000)),m=Math.floor(s/60),r=s%60;return m+':'+(r<10?'0':'')+r}
 /* One place for speed tiers, the whole-run time tiebreaker (Luke t355u/t367u) and the streak ladder (Luke t369u/t370u, Solomon r3).
-   card tiers stay at 12s/+2 and 22s/+1 until retuned from Luke's logs.
+   Card speed bonuses (Luke t416u, Solomon): three tiers by input, not screen size, on correct cards only.
+   Touch (pointer:coarse, or a touch/pen pointerdown): Lightning +3 ≤1.5s, Quick +2 ≤3s, Steady +1 ≤8s.
+   Mouse/trackpad: Lightning +3 ≤1.9s, Quick +2 ≤4s, Steady +1 ≤9s. A full 51-card all-Lightning run is +153.
    The run bonus is only for a finished 51-placement run, and is a tiny tiebreaker (Luke t367u):
    at most 5 points, always less than one card's +10. Under 12:00 scores 5, then 1 fewer points
    for every 2 minutes, down to 0 at 20:00 or slower. The 12:00 / 2:00 / 20:00 scale is provisional
    until we have Luke's full-run times; change TIME_SCORE.run to retune.
    Streak bonus per correct card (Solomon r3, Luke t370u): 0-4 +0 (no pop-up), 5-9 +2, 10-19 +4, 20-29 +6, 30-39 +8, 40+ +10.
    A miss drops one level: the streak count is set to the bottom of the previous level (23→10, 12→5, 7→0). The header shows that new count; best streak is unchanged. */
-const TIME_SCORE={card:{fastMs:12000,fastPts:2,steadyMs:22000,steadyPts:1},run:{enabled:true,cap:5,minPlacements:51,slowMs:20*60*1000,stepMs:2*60*1000},streak:{levels:[{min:0,pts:0,cls:null},{min:5,pts:2,cls:'s1'},{min:10,pts:4,cls:'s2'},{min:20,pts:6,cls:'s3'},{min:30,pts:8,cls:'s4'},{min:40,pts:10,cls:'s5'}]},neu:{mode:'perLocked',per:5,flat:25,floor:25}};   /* neu.mode: perLocked (Luke t372u/t375u: 5 x locked of the 52 base cards), perUnlocked, or flat. floor is for Conquered! 3-miss cards so a fully unlocked player still gets at least 25 (Luke t381u-t383u). Unlock-hard cards use 5 x locked with no floor. Off on the first game (t378u). */
-function speedPts(ms){ms=+ms||0;if(ms<=TIME_SCORE.card.fastMs)return TIME_SCORE.card.fastPts;if(ms<=TIME_SCORE.card.steadyMs)return TIME_SCORE.card.steadyPts;return 0}
+const TIME_SCORE={card:{touch:{fastMs:1500,midMs:3000,slowMs:8000},mouse:{fastMs:1900,midMs:4000,slowMs:9000}},run:{enabled:true,cap:5,minPlacements:51,slowMs:20*60*1000,stepMs:2*60*1000},streak:{levels:[{min:0,pts:0,cls:null},{min:5,pts:2,cls:'s1'},{min:10,pts:4,cls:'s2'},{min:20,pts:6,cls:'s3'},{min:30,pts:8,cls:'s4'},{min:40,pts:10,cls:'s5'}]},neu:{mode:'perLocked',per:5,flat:25,floor:25}};   /* neu.mode: perLocked (Luke t372u/t375u: 5 x locked of the 52 base cards), perUnlocked, or flat. floor is for Conquered! 3-miss cards so a fully unlocked player still gets at least 25 (Luke t381u-t383u). Unlock-hard cards use 5 x locked with no floor. Off on the first game (t378u). */
+let playInput='mouse';
+function detectPlayInput(ev){if(ev&&ev.pointerType){if(ev.pointerType==='touch'||ev.pointerType==='pen')playInput='touch';else if(ev.pointerType==='mouse')playInput='mouse';return playInput}try{playInput=matchMedia('(pointer:coarse)').matches?'touch':'mouse'}catch(e){playInput='mouse'}return playInput}
+detectPlayInput();
+document.addEventListener('pointerdown',ev=>{if(ev&&ev.pointerType)detectPlayInput(ev)},{passive:true});
+function cardTiers(){const c=TIME_SCORE.card;return (playInput==='touch'?c.touch:c.mouse)||c.mouse}
+function speedPts(ms){ms=+ms||0;const t=cardTiers();if(ms<=t.fastMs)return 3;if(ms<=t.midMs)return 2;if(ms<=t.slowMs)return 1;return 0}
 function runTimeBonus(ms,right,tot){const r=TIME_SCORE.run;if(!r.enabled||!(tot>=r.minPlacements)||!(r.stepMs>0))return 0;return Math.max(0,Math.min(r.cap,Math.ceil((r.slowMs-ms)/r.stepMs)))}
 function streakLevel(n){const lv=TIME_SCORE.streak.levels;let i=0;for(let k=0;k<lv.length;k++)if((+n||0)>=lv[k].min)i=k;return i}
 function rollPts(n){return TIME_SCORE.streak.levels[streakLevel(n)].pts}
@@ -709,7 +717,7 @@ function loadTiming(){try{const r=JSON.parse(localStorage.getItem(TIMINGKEY)||'n
 function saveTiming(run){if(placedSession||!run)return;try{const log=loadTiming();log.who='Luke';log.runs.push(run);if(log.runs.length>TIMING_KEEP)log.runs=log.runs.slice(-TIMING_KEEP);localStorage.setItem(TIMINGKEY,JSON.stringify(log))}catch(e){}}
 function timingStats(ms){const a=(ms||[]).slice().sort((x,y)=>x-y),n=a.length;if(!n)return null;const q=p=>{const i=(n-1)*p,lo=Math.floor(i),hi=Math.ceil(i);return lo===hi?a[lo]:a[lo]+(a[hi]-a[lo])*(i-lo)};return {n,median:Math.round(q(.5)),p25:Math.round(q(.25)),p75:Math.round(q(.75)),fastest:a[0],slowest:a[n-1]}}
 function fmtSecs(ms){return (Math.max(0,+ms||0)/1000).toFixed(2)+'s'}
-function timingSummary(){const log=loadTiming();if(!log.runs.length)return 'No runs logged yet.';return log.runs.map((r,i)=>{const st=timingStats((r.cards||[]).map(c=>c.dealtMs));return 'Run '+(i+1)+' · '+fmtTime(r.totalMs)+' elapsed · '+(r.nRight||0)+' right, '+(r.nWrong||0)+' wrong, '+(st?st.n:0)+' cards'+(r.longFlips?' · long flips':' · short flips')+(st?'\n  median '+fmtSecs(st.median)+'  p25 '+fmtSecs(st.p25)+'  p75 '+fmtSecs(st.p75)+'  fastest '+fmtSecs(st.fastest)+'  slowest '+fmtSecs(st.slowest):'')}).join('\n\n')}
+function timingSummary(){const log=loadTiming();if(!log.runs.length)return 'No runs logged yet.';return log.runs.map((r,i)=>{const st=timingStats((r.cards||[]).map(c=>c.dealtMs));return 'Run '+(i+1)+' · '+fmtTime(r.totalMs)+' elapsed · '+(r.nRight||0)+' right, '+(r.nWrong||0)+' wrong, '+(st?st.n:0)+' cards'+(r.device?' · '+r.device:'')+(r.longFlips?' · long flips':' · short flips')+(st?'\n  median '+fmtSecs(st.median)+'  p25 '+fmtSecs(st.p25)+'  p75 '+fmtSecs(st.p75)+'  fastest '+fmtSecs(st.fastest)+'  slowest '+fmtSecs(st.slowest):'')}).join('\n\n')}
 function showTimingPanel(){const p=$('#tpanel');if(!p)return;p.hidden=false;p.innerHTML='<h3>Timing data (last '+(loadTiming().runs.length)+' of '+TIMING_KEEP+' runs)</h3><pre></pre><div class="tacts"><button type="button" id="tcopy">Copy</button><button type="button" id="tclose">Close</button></div>';p.querySelector('pre').textContent=timingSummary();const copy=$('#tcopy');if(copy)copy.onclick=ev=>{ev.stopPropagation();const json=JSON.stringify(loadTiming(),null,2);(navigator.clipboard&&navigator.clipboard.writeText(json)?navigator.clipboard.writeText(json):Promise.reject()).then(()=>{copy.textContent='Copied';setTimeout(()=>copy.textContent='Copy',1200)}).catch(()=>{const ta=document.createElement('textarea');ta.value=json;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');copy.textContent='Copied'}catch(e){copy.textContent='Copy failed'}ta.remove();setTimeout(()=>copy.textContent='Copy',1200)})};const cl=$('#tclose');if(cl)cl.onclick=ev=>{ev.stopPropagation();p.hidden=true}}
 function pointsPop(el,items){if(!pointPops||!items||!items.length)return;let host=$('#ptsfx');if(!host){host=document.createElement('div');host.id='ptsfx';document.body.appendChild(host)}
  const stack=document.createElement('div');stack.className='ptstack'+(RM.matches?' rm':'');
@@ -1259,7 +1267,7 @@ function correct(e){clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const zf=doc
  else bigFlash('stf','<i>Streak</i><i class="n">'+streak+'</i>','streak:'+streak);
  best=Math.max(best,streak);setBest(best);stkCold=false;stkRed=false;stats();streakPop();phase='result';learned=true;
  noteCard(e.c,true);
- const pops=[{text:'+10',cls:'base'}];if(sp===2)pops.push({text:'Quick +2',cls:'quick'});else if(sp===1)pops.push({text:'Steady +1',cls:'steady'});if(rp){const lv=TIME_SCORE.streak.levels[streakLevel(streak)];pops.push({text:'Streak +'+rp,cls:'streak '+(lv.cls||'')})}if(neu)pops.push({text:'New! +'+neu,cls:'neu'});if(conq)pops.push({text:'Conquered! +'+conq,cls:'conq'});if(!deck.length&&total>=51)pops.push({text:'Complete +50',cls:'fin'});pointsPop(e.el,pops);
+ const pops=[{text:'+10',cls:'base'}];if(sp===3)pops.push({text:'Lightning +3',cls:'light'});else if(sp===2)pops.push({text:'Quick +2',cls:'quick'});else if(sp===1)pops.push({text:'Steady +1',cls:'steady'});if(rp){const lv=TIME_SCORE.streak.levels[streakLevel(streak)];pops.push({text:'Streak +'+rp,cls:'streak '+(lv.cls||'')})}if(neu)pops.push({text:'New! +'+neu,cls:'neu'});if(conq)pops.push({text:'Conquered! +'+conq,cls:'conq'});if(!deck.length&&total>=51)pops.push({text:'Complete +50',cls:'fin'});pointsPop(e.el,pops);
  const chimes=['chimeCard'];if(sp)chimes.push('chimeSpeed');if(rp)chimes.push('chimeStreak');playBonusChimes(chimes);   /* Luke t394u: card, then speed, then streak; only the ones earned; no chime for New!/Conquered!; plays even if Points pop-ups are off (Sounds toggle/volume). The everyday streakpop would have doubled the card chime, so it is not played on a correct placement. */
  const chimeWait=Math.round((Math.max(0,chimes.length-1)*CHIME_GAP+0.35)*1000);
  if(conquered){e.conquered=true;later(()=>sfx('conquer'),chimeWait);conquerFx(e);if(e.newBest)newBestBurst()}   /* own sound for the struggled-card moment, started after the bonus chimes so they don't clash (Luke t253u / t254u / t394u) */
@@ -1356,14 +1364,14 @@ function over(){bankCard();flushPlay();clearPointPops();hintRestart(false);music
  phase='over';applyFrame();$('#pill').hidden=true;$('#s0').hidden=true;s0Active=false;$('#fc').hidden=true;$('#zoom').style.display='none';hideUnlock();resolved=null;sel=null;hideYc();best=Math.max(best,streak);setBest(best);stats();
  const perfect=nWrong===0&&nRight===total&&total>0,full=total>=51,finish=full?50:0,ptsRun=runTimeBonus(runMs,nRight,total),score=ptsC+ptsRoll+ptsSpeed+ptsRun+finish+ptsNew+ptsConq;
  if(!placedSession)bumpGames();
- const maxBase=51*10+rollTotal(51)+50,maxRun=full&&ptsC+ptsRoll+finish===maxBase;   /* prize later: 870 without speed, the 0-5 tiebreaker, New or Conquered. A fully unlocked perfect all-quick run under 12:00 can score 977 (New is 0 when nothing is locked). New and Conquered are in the run score (Luke t377u). */
+ const maxBase=51*10+rollTotal(51)+50,maxRun=full&&ptsC+ptsRoll+finish===maxBase;   /* prize later: 870 without speed, the 0-5 tiebreaker, New or Conquered. A fully unlocked perfect all-Lightning run under 12:00 can score 1028 (51×3 speed + the 0-5 tiebreaker; New is 0 when nothing is locked). New and Conquered are in the run score (Luke t377u). */
  const unlockCard=perfect?pickUnlock():null;if(unlockCard)grantUnlock(unlockCard);
  const prevHS=getBestSkill(),newHS=score>prevHS&&score>0;if(!placedSession)saveBestSkill(score,runMs);
  /* old-style score (correct + best streak) and its old high-score key, kept only for the test toggle */
  const oldScore=nRight+runBest;let oldPrevHS=0;try{oldPrevHS=Math.max(0,+localStorage.getItem(HSKEY)||0)}catch(e){}
  const oldNewHS=oldScore>oldPrevHS&&oldScore>0;if(oldNewHS&&!placedSession){try{localStorage.setItem(HSKEY,String(oldScore))}catch(e){}}
- lastRun={nRight,nWrong,runBest,total,score,ptsC,ptsRoll,ptsNew,ptsConq,ptsSpeed,ptsRun,runMs,finish,maxRun,perfect,newHS,prevHS,unlockCard,oldScore,oldPrevHS,oldNewHS,stillLocked:lockedPlayable().length,owned:ownedDeck().length,cardMs:cardMs.slice(),placeLog:placeLog.slice(),longFlips:!!longFlips};
- if(!placedSession)saveTiming({at:new Date().toISOString(),who:'Luke',totalMs:runMs,longFlips:!!longFlips,nRight,nWrong,total,score,ptsSpeed,ptsRun,ptsNew,ptsConq,cards:placeLog.slice()});
+ lastRun={nRight,nWrong,runBest,total,score,ptsC,ptsRoll,ptsNew,ptsConq,ptsSpeed,ptsRun,runMs,finish,maxRun,perfect,newHS,prevHS,unlockCard,oldScore,oldPrevHS,oldNewHS,stillLocked:lockedPlayable().length,owned:ownedDeck().length,cardMs:cardMs.slice(),placeLog:placeLog.slice(),longFlips:!!longFlips,device:playInput};
+ if(!placedSession)saveTiming({at:new Date().toISOString(),who:'Luke',totalMs:runMs,longFlips:!!longFlips,device:playInput,nRight,nWrong,total,score,ptsSpeed,ptsRun,ptsNew,ptsConq,cards:placeLog.slice()});
  window.__ev.push('over:'+nRight+'/'+nWrong+'/'+runBest+':pts'+score+(unlockCard?':unlock:'+unlockCard.id:''));
  renderEnd()}
 /* TEST ONLY (Luke t331u): 'Scoreboard: old / new' toggle outside the panel. Choice kept in sessionStorage only. Strip renderEnd's
@@ -1492,7 +1500,7 @@ const UNLOCKTEST=TEST&&/[?&]unlock=1\b/.test(location.search);
 newRun();
 if(UNLOCKTEST){nRight=total;nWrong=0;ptsC=total*10;ptsRoll=rollTotal(total);ptsSpeed=0;runMs=0;later(over,40)}
 if(PLACED){try{const u=new URL(location.href);u.searchParams.delete('placed');history.replaceState(null,'',u.pathname+u.search+u.hash)}catch(e){}}
-if(TEST)window.__ckScore={fmt:fmtTime,speedPts,rollPts,rollTotal,dropStreak,streakLevel,neuAmount,lockedBase,gamesPlayed,hasPlayedBefore,struggleKind,pointsPop,setPointPops,setStreakPops,preview(extra){lastRun=Object.assign({nRight:40,nWrong:11,runBest:12,total:51,ptsC:400,ptsRoll:40,ptsSpeed:40,ptsRun:2,ptsNew:0,ptsConq:0,finish:50,runMs:17*60*1000,score:492,maxRun:false,perfect:false,newHS:false,prevHS:480,unlockCard:null,stillLocked:0,owned:52,cardMs:[]},extra||{});phase='over';const s0=$('#s0');if(s0)s0.hidden=true;s0Active=false;const fc=$('#fc');if(fc)fc.hidden=true;const z=$('#zoom');if(z)z.style.display='none';applyFrame&&applyFrame();renderEnd()}};
+if(TEST)window.__ckScore={fmt:fmtTime,speedPts,rollPts,rollTotal,dropStreak,streakLevel,neuAmount,lockedBase,gamesPlayed,hasPlayedBefore,struggleKind,pointsPop,setPointPops,setStreakPops,cardTiers,detectPlayInput,get playInput(){return playInput},set playInput(v){playInput=(v==='touch'?'touch':'mouse')},preview(extra){lastRun=Object.assign({nRight:40,nWrong:11,runBest:12,total:51,ptsC:400,ptsRoll:40,ptsSpeed:40,ptsRun:2,ptsNew:0,ptsConq:0,finish:50,runMs:17*60*1000,score:492,maxRun:false,perfect:false,newHS:false,prevHS:480,unlockCard:null,stillLocked:0,owned:52,cardMs:[]},extra||{});phase='over';const s0=$('#s0');if(s0)s0.hidden=true;s0Active=false;const fc=$('#fc');if(fc)fc.hidden=true;const z=$('#zoom');if(z)z.style.display='none';applyFrame&&applyFrame();renderEnd()}};
 if(TEST)window.__ckUnlock={show:showUnlock,hide:hideUnlock,pick:pickUnlock,owned:()=>ownedDeck().map(c=>c.id),locked:()=>lockedPlayable().map(c=>c.id),grant:grantUnlock,total:()=>total,layout:()=>Object.assign({},L),
  fillAll(){const pool=ownedDeck().slice().sort((a,b)=>a.n-b.n);if(!pool.length)return;tl=pool.map(c=>({c,up:true}));hand=null;deck=[];total=Math.max(0,pool.length-1);nRight=total;nWrong=0;runBest=total;phase='review';
   $('#end').style.display='none';hideUnlock();hideYc();applyFrame();const s=$('#stage');clearNextClick(s);s.innerHTML='';s.className='pan v';sizeStage('verdict');timeline();$('#tl').scrollTop=0;window.__ev.push('fillAll:'+pool.length)},
