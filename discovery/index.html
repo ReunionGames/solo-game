@@ -23,7 +23,7 @@ header{flex:none;display:flex;justify-content:space-between;align-items:center;g
 #stats{white-space:nowrap}
 /* stage: the drawn card and instructions, or the verdict */
 #stage.hbhide{visibility:hidden;pointer-events:none}
-#stage{flex:none;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:4px 10px;text-align:center}
+#stage{flex:none;position:relative;overflow:hidden;isolation:isolate;display:flex;align-items:center;justify-content:center;padding:4px 10px;text-align:center}
 #stage.ch{flex-direction:column;align-items:stretch;justify-content:center;gap:2px}
 #stage.pan{flex-direction:column}
 /* Luke t257u: on desktop, the whole verdict panel advances to the next card (not on links or buttons) */
@@ -899,7 +899,7 @@ function fitBig(o){const f=o.querySelector('.ff'),w=$('#tlw').getBoundingClientR
   let n=0;while(n++<30&&(f.scrollWidth>W||f.scrollHeight>H)&&fs>30){fs-=3;f.style.fontSize=Math.floor(fs)+'px'}}
 function placeYes(o){const el=o&&o._el;if(!o||!el||!el.isConnected)return;const r=el.getBoundingClientRect(),vw=innerWidth,vh=innerHeight;let x=r.left+r.width/2,y=r.top+r.height/2;const fw=o.offsetWidth||0,fh=o.offsetHeight||0;x=Math.max(fw/2+4,Math.min(vw-fw/2-4,x));y=Math.max(fh/2+4,Math.min(vh-fh/2-4,y));o.style.left=Math.round(x)+'px';o.style.top=Math.round(y)+'px'}
 function yesFlash(e){clearWordFlashes();const o=document.createElement('div');o.id='yesbk';o.setAttribute('aria-live','assertive');o.innerHTML='<span class="ff"><i>YES!</i></span>';o._el=e&&e.el;document.body.appendChild(o);const r=o._el&&o._el.getBoundingClientRect(),fs=r?Math.max(28,Math.min(72,r.width*.48)):48;o.querySelector('.ff').style.fontSize=Math.round(fs)+'px';placeYes(o);window.__ev&&window.__ev.push('yes:'+(e&&e.c&&e.c.id||''));clearTimeout(yesFlash.t);clearTimeout(yesFlash.u);const hold=TEST?600:1100,fall=TEST?400:400;yesFlash.t=setTimeout(()=>{if(o.isConnected)o.classList.add('out')},hold);yesFlash.u=setTimeout(()=>{o.remove()},hold+fall)}
-function hintRestart(on){const b=$('#rst');if(b)b.classList.toggle('hint',!!on)}   /* Luke t338u: gold glow after a streak breaks, until they restart or play on */
+function hintRestart(on){const b=$('#rst');if(b)b.classList.toggle('hint',!!on)}   /* Luke t338u/t354u: glow after a wrong card (not only a broken streak), until they restart, play the next card, or the run ends */
 function streakBroken(){hintRestart(true);if(!streakPops){sfx('smash');stkRed=true;stats();return}bigFlash('brk','<i>Streak</i><i>broken!</i>','streakBroken')}
 function zeroFly(){clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const old=document.querySelector('.zfly');if(old)old.remove();
  const k=$('#stats .stk');if(!k)return;window.__ev.push('zeroFly');
@@ -981,7 +981,7 @@ function stageChoose(){const s=$('#stage');clearNextClick(s);s.innerHTML='';s.cl
 h.innerHTML='<span><b>'+n+'</b> · '+(sel==null?'Tap <b>+</b> where it goes, then <b>Flip!</b>':'Tap <b>Flip!</b> to check, or another <b>+</b>')+'</span>';
  s.appendChild(h);
  const ct2=chip.querySelector('.ct');let fs=parseFloat(getComputedStyle(ct2).fontSize);while(fs>12&&ct2.scrollHeight>ct2.clientHeight+1){fs-=1;ct2.style.fontSize=fs+'px'}}
-function verdict(head,body,btn,nb){const s=$('#stage');clearNextClick(s);s.innerHTML='';s.className='pan v';sizeStage('verdict');
+function verdict(head,body,btn,nb){const s=$('#stage');clearNextClick(s);clearFlipWords();s.innerHTML='';s.className='pan v';sizeStage('verdict');
  const p=document.createElement('div');p.className='panel vp';const hr=document.createElement('div');hr.className='vh';
  hr.innerHTML='<span class="big">'+head+'</span>'+(nb||'');
  if(btn){const b=document.createElement('button');b.className='btn';b.textContent=btn[0];b.onclick=ev=>{ui('tap');btn[1](ev)};hr.appendChild(b)}
@@ -1132,12 +1132,17 @@ function runFlip(e){const sl=e.el.parentElement,full=e.full,flipAt=(full?800:300
  later(()=>{let done=false;const go=()=>{if(done)return;done=true;
    e.el.style.setProperty('--fd',dur+'ms');e.el.classList.add('flip');e.up=true;if(!e.snd){e.snd=1;sfx('flip')}later(()=>resolve(e),dur+(full?50:150))};
   if(!img||img.complete)go();else{img.addEventListener('load',go);img.addEventListener('error',go);later(go,3500)}},flipAt)}
-function skipFlip(){if(phase!=='flipping'||!skipOK||!cur||resolved===cur)return;const e=cur;clearT();if(!e.snd){e.snd=1;sfx('flip')}e.up=true;e.el.classList.remove('flip');e.el.classList.add('up');
+function skipFlip(){if(phase!=='flipping'||!skipOK||!cur||resolved===cur)return;const e=cur;clearT();if(!e.snd){e.snd=1;sfx('flip')}e.up=true;finishCardFlip(e);
  const img=e.el.querySelector('.front img');if(img&&!img.complete){const r=()=>resolve(e);img.addEventListener('load',r);img.addEventListener('error',r);later(r,1500)}else resolve(e)}
 let resolved=null;
+function finishCardFlip(e){const c=e&&e.el;if(!c)return;   /* Luke t353u: cancel the 3D flip so an edge-on sliver cannot remain once the card has landed */
+ const inn=c.querySelector('.inner');if(inn){if(inn.getAnimations)inn.getAnimations().forEach(a=>a.cancel());inn.style.animation='none'}
+ c.classList.remove('flip');c.classList.add('up');c.style.removeProperty('--fd');
+ const sl=c.parentElement;if(sl)sl.classList.remove('lifting','settle')}
+function clearFlipWords(){const s=$('#stage');if(!s)return;   /* Luke t353u: hide Flip! letters and force a paint before the verdict, so the dark stroke cannot linger in the stage */
+ s.querySelectorAll('.ff, .ff i').forEach(n=>{n.style.animation='none';n.style.transition='none';n.style.opacity='0';n.style.visibility='hidden';n.style.transform='none'});void s.offsetHeight}
 function resolve(e){if(resolved===e)return;resolved=e;clearT();phase='judging';   /* v5.9.1: no longer 'flipping', so a later click can't skipFlip()/clearT() the miss timer */
- e.pending=false;const sl=e.el&&e.el.parentElement;if(sl)sl.classList.remove('lifting');   /* Luke t284u: once the card has landed it sits under the rays again */
- e.el.classList.remove('flip');e.el.classList.add('up');
+ e.pending=false;finishCardFlip(e);clearFlipWords();
  showEl(e.el,false);if(e.ok)correct(e);else wrong(e)}
 /* Luke t252u: a card missed in 3 games in a row is flagged in this browser; the next time it is placed right, celebrate and clear the flag. Games that do not include the card leave the count alone. */
 function struggleMap(){try{const m=JSON.parse(localStorage.getItem(STRUGKEY)||'{}');return m&&typeof m==='object'?m:{}}catch(e){return {}}}
@@ -1172,7 +1177,7 @@ function correct(e){clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const zf=doc
  }
 function when(e){const k=tl.indexOf(e),pv=tl[k-1]&&tl[k-1].c,nx=tl[k+1]&&tl[k+1].c,b=t=>'<b>'+t+'</b>';
  return b(e.c.title)+' happens '+(pv&&nx?'after '+b(pv.title)+' and before '+b(nx.title):pv?'after '+b(pv.title):'before '+b(nx.title))+'.'}
-function wrong(e){e.el.classList.add('bad');noteCard(e.c,false);markSeen(e.c.id);cardOk=false;sfx('thud');nWrong++;const lost=streak;streak=0;nbShown=false;stkCold=true;stats();if(lost>0)streakBroken();   /* Luke t258u: a break re-arms the new-best jingle */verdict('Not quite…');ycCheck(e);later(()=>miss(e),1300*TS);
+function wrong(e){e.el.classList.add('bad');noteCard(e.c,false);markSeen(e.c.id);cardOk=false;sfx('thud');nWrong++;const lost=streak;streak=0;nbShown=false;stkCold=true;stats();hintRestart(true);if(lost>0)streakBroken();   /* Luke t354u: Restart glows after any wrong card; t258u: a break re-arms the new-best jingle */verdict('Not quite…');ycCheck(e);later(()=>miss(e),1300*TS);
  setTimeout(()=>{if(phase==='judging'&&cur===e&&!e.moved){window.__ev.push('failsafe:miss');miss(e)}},1000*TS+1200)}   /* v5.9.1 failsafe: never stuck on 'Not quite…' */
 function miss(e){const old=e.el.getBoundingClientRect();
  tl.splice(tl.indexOf(e),1);const k=tl.filter(x=>key(x.c)<key(e.c)).length;
