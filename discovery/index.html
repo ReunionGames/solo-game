@@ -462,7 +462,9 @@ header{position:relative;z-index:7}
 .ulq .qm{font-family:'EB Garamond',Georgia,serif;font-weight:700;font-size:min(34vw,170px);line-height:1}
 .ulq .qt{font-size:17px;font-weight:700;letter-spacing:.02em;color:var(--gold)}
 #ulock.pre .ulreal{opacity:0}
-#ulock.pre #ulgo,#ulock.spin:not(.shown) #ulgo{visibility:hidden}
+/* Luke t336u: before the tap-to-reveal, hide Continue and the empty title with display:none so they don't leave a blank block under the message. The step-0 'Got it' bubble is unchanged. */
+#ulock.pre #ulgo,#ulock.spin:not(.shown) #ulgo,#ulock.pre .ultitle,#ulock.spin:not(.shown) .ultitle{display:none}
+#ulock.pre .ulbox>p:first-child,#ulock.spin:not(.shown) .ulbox>p:first-child{margin:0}
 #ulock.spin .ulcard{animation:ulspin .7s ease-in-out}
 #ulock.spin .ulq{animation:ulqout .7s linear forwards}
 #ulock.spin .ulreal{animation:ulrin .7s linear forwards}
