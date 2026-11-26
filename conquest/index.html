@@ -947,7 +947,7 @@ function stats(){const st=$('#stats');let k=st.querySelector('.stk');
  k.textContent=streak;st.querySelector('.bv').textContent=Math.max(best,streak);const hs=getHS(),ht=getBestSkillTime();st.querySelector('.hv').textContent=hs;const hte=st.querySelector('.ht');if(hte)hte.textContent=(hs>0&&ht>0)?fmtTime(ht):'';st.setAttribute('aria-label','Streak '+streak+', best streak '+Math.max(best,streak)+', high score '+hs+(hs>0&&ht>0?' in '+fmtTime(ht):''));streakLook()}
 let stkLevel=-1,stkCold=false,stkRed=false;
 function streakLook(){const k=$('#stats .stk'),st=$('#stats');if(!k||!st)return;
- const onbest=!stkCold&&streak>0&&streak>=best,broken=!!stkRed&&streak===0;
+ const onbest=!stkCold&&streak>0&&streak>=best,broken=!!stkRed&&streak===0;   /* Luke t440u: stkCold stays set after a drop-a-level miss, so onbest cannot come back just because the lowered streak is still at or above an older best */
  st.classList.toggle('onbest',onbest);st.classList.toggle('broken',broken);
  let i=0;STREAK_STEPS.forEach((s,j)=>{if(streak>=s.at)i=j});if(stkCold||onbest)i=0;   /* gold/red states own the colours; step tints only apply on a mid-run streak that is not the best */
  const s=STREAK_STEPS[i];k.style.setProperty('--sf',s.fg);k.style.setProperty('--sr',s.ring);k.style.setProperty('--sg',onbest?'0 0 10px 3px rgba(242,184,28,.7)':s.glow);k.dataset.lv=s.at;stkLevel=i}
@@ -1271,7 +1271,7 @@ function correct(e){clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const zf=doc
  if(conquered)yesFlash(e);   /* Luke t272u/t273u/t279u: YES! replaces Streak / New best streak for this placement, and cancels any leftover or queued streak pop-up */
  else if(isNewHigh)bigFlash('stf gold','<i>New best</i><i>streak</i><i class="n">'+streak+'</i>','newBestStreak:'+streak);
  else bigFlash('stf','<i>Streak</i><i class="n">'+streak+'</i>','streak:'+streak);
- best=Math.max(best,streak);setBest(best);stkCold=false;stkRed=false;stats();streakPop();phase='result';learned=true;
+ best=Math.max(best,streak);setBest(best);if(isNewHigh)stkCold=false;stkRed=false;stats();   /* Luke t440u: after Streak damaged, keep the gold best-streak glow off until the streak goes above the previous best again */streakPop();phase='result';learned=true;
  noteCard(e.c,true);
  const pops=[{text:'+10',cls:'base'}];if(sp===3)pops.push({text:'Lightning +3',cls:'light'});else if(sp===2)pops.push({text:'Quick +2',cls:'quick'});else if(sp===1)pops.push({text:'Steady +1',cls:'steady'});if(rp){const lv=TIME_SCORE.streak.levels[streakLevel(streak)];pops.push({text:'Streak +'+rp,cls:'streak '+(lv.cls||'')})}if(!deck.length&&total>=51&&nWrong===0)pops.push({text:'Perfect +50',cls:'fin'});pointsPop(e.el,pops);
  const chimes=['chimeCard'];if(sp)chimes.push('chimeSpeed');if(rp)chimes.push('chimeStreak');playBonusChimes(chimes);   /* Luke t394u: card, then speed, then streak; only the ones earned; no chime for New!/Conquered!; plays even if Points pop-ups are off (Sounds toggle/volume). The everyday streakpop would have doubled the card chime, so it is not played on a correct placement. */
