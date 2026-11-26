@@ -472,14 +472,21 @@ header{position:relative;z-index:7}
 /* Luke t336u: before the tap-to-reveal, hide Continue and the empty title with display:none so they don't leave a blank block under the message. The step-0 'Got it' bubble is unchanged. */
 #ulock.pre #ulgo,#ulock.spin:not(.shown) #ulgo,#ulock.pre .ultitle,#ulock.spin:not(.shown) .ultitle{display:none}
 #ulock.pre .ulbox>p:first-child,#ulock.spin:not(.shown) .ulbox>p:first-child{margin:0}
-#ulock.spin .ulcard{animation:ulspin .7s ease-in-out}
-#ulock.spin .ulq{animation:ulqout .7s linear forwards}
-#ulock.spin .ulreal{animation:ulrin .7s linear forwards}
+#ulock.spin .ulcard{animation:ulspin .45s ease-in-out}   /* Luke t396u: about 35% quicker than the old .7s flip */
+#ulock.spin .ulq{animation:ulqout .45s linear forwards}
+#ulock.spin .ulreal{animation:ulrin .45s linear forwards}
 #ulock.shown .ulq{display:none}#ulock.shown .ulreal{opacity:1}
+#ulock .ulrays{position:absolute;left:50%;top:54%;width:200vw;height:200vw;transform:translate(-50%,-50%);z-index:0;pointer-events:none;opacity:0;will-change:transform,opacity}   /* Luke t396u: same repeating-conic rays as the old hard-card effect, sized to the viewport (the reveal has the screen to itself). Anchored on #ulock, not .ulspot, so height cannot collapse. Transform/opacity only. */
+#ulock .ulspot,.ulcard{z-index:1}
+#ulock.spin .ulrays,#ulock.shown .ulrays{animation:ulrayburst .4s ease-out .18s both,ulrayfade 1s ease-out .58s forwards}
+#ulock .ulrays i{display:block;width:100%;height:100%;background:repeating-conic-gradient(from 0deg,rgba(242,184,28,0) 0 14deg,rgba(255,214,90,.95) 16deg 20deg,rgba(242,184,28,0) 22deg 45deg);-webkit-mask-image:radial-gradient(circle,rgba(0,0,0,.95) 8%,rgba(0,0,0,.55) 38%,transparent 70%);mask-image:radial-gradient(circle,rgba(0,0,0,.95) 8%,rgba(0,0,0,.55) 38%,transparent 70%);animation:rayspin 8s linear infinite;will-change:transform}
 @keyframes ulspin{0%{transform:scaleX(1)}50%{transform:scaleX(0)}100%{transform:scaleX(1)}}
 @keyframes ulqout{0%,49%{opacity:1}50%,100%{opacity:0}}
 @keyframes ulrin{0%,49%{opacity:0}50%,100%{opacity:1}}
-@media (prefers-reduced-motion:reduce){#ulock.spin .ulcard,#ulock.spin .ulq,#ulock.spin .ulreal{animation:none}}
+@keyframes ulrayburst{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}100%{opacity:.9;transform:translate(-50%,-50%) scale(1)}}
+@keyframes ulrayfade{0%{opacity:.9;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.06)}}
+@keyframes rayspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){#ulock.spin .ulcard,#ulock.spin .ulq,#ulock.spin .ulreal,#ulock .ulrays,#ulock .ulrays i{animation:none}#ulock.spin .ulrays,#ulock .ulrays{opacity:0}}
 /* TEST ONLY (Luke t331u/t355u): scoreboard style toggle + timing log, outside the end panel; strip before Wix */
 
 /* Points pop-ups (Luke t355u): Flip-style lettering, much smaller, shot from the card. Colour by type (Solomon r2). */
@@ -731,6 +738,7 @@ const desk=()=>innerWidth>=700;
    Discovery (25 Nov, Luke t254u): conquer = Kenney Music Jingles jingles_HIT15, placeholder for the struggled-card celebration (Luke picked 'you pick one first'). Loudness-matched to the current jingle. VOL 0.55.
    Discovery (25 Nov, Luke t269u): conquer replaced with a file supplied by Luke (conquer-luke.mp3, about 1.41s), loudness-matched to the previous HIT15 conquer. VOL left at 0.55.
    Trimmed with ffmpeg (each under 0.4s except the jingle and conquer, about 1s), mono 22kHz mp3, inlined so the game stays one file.
+   Discovery (26 Nov, Luke t394u / Spielberg): bonus chimes chime-card-Ds, chime-speed-Fs and chime-streak-B (D#5, F#5, B5 in the +22-cent harp/ding tuning), loaded from audio/ on the Web Audio path like the end-of-run harp and ding.
    Web Audio starts on the player's first tap (autoplay rule). The mute choice is remembered on this device. */
 const SND={clack:'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',
 flip:'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',
@@ -908,13 +916,13 @@ function watchImg(img,face,src,pri){let n=0;face.classList.remove('fail');
  img.onerror=()=>{if(n>=3){IMGBAD.add(src);face.classList.add('ld','fail');return}n++;window.__imgTries++;const u=n<3?src+(src.includes('?')?'&':'?')+'r='+n:src+'/v1/fit/w_760,h_1062,q_85/card.webp';
   setTimeout(()=>{img.src=u},TEST?20:400*n)};
  img.src=src;if(img.complete&&img.naturalWidth>0){ready();return}face.classList.add('ld');warmImg(src,pri||'high')}
-function newRun(){hintRestart(false);musicBegin();clearT();clearEnd();hideSbt();lastRun=null;$('#end').style.display='none';hideUnlock();const nh=$('#nhs');if(nh)nh.remove();hideYc();closeRsq();clearConquerFx();conquerTestArmed=CONQUERTEST;
+function newRun(){hintRestart(false);musicBegin();clearT();cutChimes();clearEnd();hideSbt();lastRun=null;$('#end').style.display='none';hideUnlock();const nh=$('#nhs');if(nh)nh.remove();hideYc();closeRsq();clearConquerFx();conquerTestArmed=CONQUERTEST;
  if(placedPending){placedPending=false;placedSession=true;preloadOwned();showPlacedBoard();return}
  placedSession=false;preloadOwned();
  const pool=ownedDeck(),mid=pool.filter(c=>MID.includes(c.period)),start=shuffle((mid.length?mid:pool).slice())[0];
  deck=shuffle(pool.filter(c=>c!==start));if(TEST&&TK)deck=deck.slice(0,TK);total=deck.length;
  tl=[{c:start,up:true}];streak=0;turn=0;nRight=0;nWrong=0;runBest=0;ptsC=0;ptsRoll=0;ptsNew=0;ptsConq=0;ptsSpeed=0;ptsRun=0;runMs=0;cardMs=[];placeLog=[];resetDecide();startRunClock();nbShown=false;best=getBest();bestStart=best;stkLevel=-1;stkCold=false;stkRed=false;clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const zf=document.querySelector('.zfly');if(zf)zf.remove();preloadAhead();draw()}
-function draw(){hintRestart(false);clearPointPops();bankCard();if(!deck.length)return over();applyFrame();
+function draw(){hintRestart(false);clearPointPops();clearWordFlashes();bankCard();if(!deck.length)return over();applyFrame();
  hand=deck.pop();turn++;sel=null;lit=new Set();phase='choose';hideYc();preloadAhead();
  big=!learned;loud=(turn===1);pulseOn=false;step3=false;pulseUntil=0;                /* loud markers until the first correct card; one pulse when the step 3 prompt appears */
  $('#tlh').style.display='none';
@@ -977,7 +985,7 @@ function fitBig(o){const f=o.querySelector('.ff'),w=$('#tlw').getBoundingClientR
   let n=0;while(n++<30&&(f.scrollWidth>W||f.scrollHeight>H)&&fs>30){fs-=3;f.style.fontSize=Math.floor(fs)+'px'}}
 function placeYes(o){const el=o&&o._el;if(!o||!el||!el.isConnected)return;const r=el.getBoundingClientRect(),vw=innerWidth,vh=innerHeight;let x=r.left+r.width/2,y=r.top+r.height/2;const fw=o.offsetWidth||0,fh=o.offsetHeight||0;x=Math.max(fw/2+4,Math.min(vw-fw/2-4,x));y=Math.max(fh/2+4,Math.min(vh-fh/2-4,y));o.style.left=Math.round(x)+'px';o.style.top=Math.round(y)+'px'}
 function yesFlash(e){clearWordFlashes();const o=document.createElement('div');o.id='yesbk';o.setAttribute('aria-live','assertive');o.innerHTML='<span class="ff"><i>YES!</i></span>';o._el=e&&e.el;document.body.appendChild(o);const r=o._el&&o._el.getBoundingClientRect(),fs=r?Math.max(28,Math.min(72,r.width*.48)):48;o.querySelector('.ff').style.fontSize=Math.round(fs)+'px';placeYes(o);window.__ev&&window.__ev.push('yes:'+(e&&e.c&&e.c.id||''));clearTimeout(yesFlash.t);clearTimeout(yesFlash.u);const hold=TEST?600:1100,fall=TEST?400:400;yesFlash.t=setTimeout(()=>{if(o.isConnected)o.classList.add('out')},hold);yesFlash.u=setTimeout(()=>{o.remove()},hold+fall)}
-function hintRestart(on){const b=$('#rst');if(b)b.classList.toggle('hint',!!on)}   /* Luke t338u/t354u: glow after a wrong card (not only a broken streak), until they restart, play the next card, or the run ends */
+function hintRestart(on){const b=$('#rst');if(!b)return;if(on){if(nWrong===1)b.classList.add('hint')}else b.classList.remove('hint')}   /* Emily 26 Nov, Luke t397u: glow only on the first wrong card of a run, then stop. Still clears when they restart, take the next card, or the run ends. */
 function streakBroken(){hintRestart(true);if(!streakPops){sfx('smash');stkRed=true;stats();return}bigFlash('brk','<i>Streak</i><i>broken!</i>','streakBroken')}
 function zeroFly(){clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const old=document.querySelector('.zfly');if(old)old.remove();
  const k=$('#stats .stk');if(!k)return;window.__ev.push('zeroFly');
@@ -1046,10 +1054,7 @@ addEventListener('keydown',ev=>{if((ev.key==='Escape'||ev.key==='Enter')&&!$('#s
 function applyHandBar(){const s=$('#stage');if(!s||phase!=='choose')return;
  const want=!!hand&&!s0Active&&$('#zoom').style.display!=='flex',hide=s.classList.contains('hbhide');
  if(want===!hide)return;s.classList.toggle('hbhide',!want);if(s.style.display==='none')s.style.display='';sizeStage('choose');timeline();if(s0Active)positionS0()}   /* 26 Nov (Luke t335u): the bar is hidden with visibility, not display:none, so it keeps its space and the starting card stays where it was, below the step-0 bubble */   /* Your card bar only once the first-card zoom is dismissed (Luke t292u) */
-function updatePill(){const p=$('#pill'),zo=$('#zoom').style.display==='flex';
- const show=loud&&phase==='choose'&&!zo&&!s0Active&&(sel!=null||step3);
- if(!show){p.hidden=true;return}
- p.innerHTML=sel==null?'Tap a gold marker where it goes<small>Earliest on the left</small>':'Tap <b>Flip!</b> to check<small>or tap another gold marker</small>';p.hidden=false}
+function updatePill(){const p=$('#pill');if(p)p.hidden=true}   /* Emily 26 Nov, Luke t397u: the Flip/+ hint already lives under the Your card bar; the bottom toast was a duplicate */
 function pulseMarkers(){if(RM.matches)return;pulseUntil=performance.now()+1500;const sc=$('#tl');sc.classList.remove('pulse1');void sc.offsetWidth;sc.classList.add('pulse1');later(()=>sc.classList.remove('pulse1'),1500)}
 function stageChoose(){const s=$('#stage');clearNextClick(s);s.innerHTML='';s.className='ch slim';sizeStage('choose');
  const n='Card '+turn+' of '+total,row=document.createElement('div');row.className='crow';
@@ -1254,8 +1259,10 @@ function correct(e){clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const zf=doc
  best=Math.max(best,streak);setBest(best);stkCold=false;stkRed=false;stats();streakPop();phase='result';learned=true;
  noteCard(e.c,true);
  const pops=[{text:'+10',cls:'base'}];if(sp===2)pops.push({text:'Quick +2',cls:'quick'});else if(sp===1)pops.push({text:'Steady +1',cls:'steady'});if(rp){const lv=TIME_SCORE.streak.levels[streakLevel(streak)];pops.push({text:'Streak +'+rp,cls:'streak '+(lv.cls||'')})}if(neu)pops.push({text:'New! +'+neu,cls:'neu'});if(conq)pops.push({text:'Conquered! +'+conq,cls:'conq'});if(!deck.length&&total>=51)pops.push({text:'Complete +50',cls:'fin'});pointsPop(e.el,pops);
- if(conquered){e.conquered=true;sfx('conquer');conquerFx(e);if(e.newBest)newBestBurst()}   /* own sound for the struggled-card moment; skip streakpop/jingle so they don't clash (Luke t253u / t254u) */
- else if(e.newBest){sfx('jingle');newBestBurst()}else sfx('streakpop');   /* jingle + header burst on the first new best after a break (or the start of the run); later new bests in the same streak get the gold pop-up and streakpop (Luke t238u / t244u / t258u) */
+ const chimes=['chimeCard'];if(sp)chimes.push('chimeSpeed');if(rp)chimes.push('chimeStreak');playBonusChimes(chimes);   /* Luke t394u: card, then speed, then streak; only the ones earned; no chime for New!/Conquered!; plays even if Points pop-ups are off (Sounds toggle/volume). The everyday streakpop would have doubled the card chime, so it is not played on a correct placement. */
+ const chimeWait=Math.round((Math.max(0,chimes.length-1)*CHIME_GAP+0.35)*1000);
+ if(conquered){e.conquered=true;later(()=>sfx('conquer'),chimeWait);conquerFx(e);if(e.newBest)newBestBurst()}   /* own sound for the struggled-card moment, started after the bonus chimes so they don't clash (Luke t253u / t254u / t394u) */
+ else if(e.newBest){later(()=>sfx('jingle'),chimeWait);newBestBurst()}   /* jingle + header burst on the first new best after a break (or the start of the run); later new bests in the same streak get the gold pop-up (Luke t238u / t244u / t258u). Delayed so the chime arpeggio is heard first. */
  const last=!deck.length;if(e.newBest)nbShown=true;
  e.el.parentElement.classList.add('good');if(e.conquered)e.el.parentElement.classList.add('conquered');if(!RM.matches)e.el.classList.add('pop');
  const nb='';   /* v5.6: the header 'New best!' tag is the only new-best label */
@@ -1278,7 +1285,7 @@ function miss(e){const old=e.el.getBoundingClientRect();
   if(dx||dy){sl.style.transition='none';sl.style.transform='translate('+dx+'px,'+dy+'px)';sl.style.zIndex=4;sl.getBoundingClientRect();
    sl.style.transition='transform .6s ease-in-out';sl.style.transform='';later(()=>{sl.style.transition='';sl.style.zIndex=''},700)}}}
 /* ---- end screen ---- */
-function hideUnlock(){const s=$('#ulock');if(!s||s.hidden)return;s.hidden=true;s.classList.remove('pre','spin','shown');const hold=s.querySelector('.ulcard');if(hold)hold.innerHTML=''}
+function hideUnlock(){const s=$('#ulock');if(!s||s.hidden)return;s.hidden=true;s.classList.remove('pre','spin','shown');const rays=s.querySelector('.ulrays');if(rays)rays.remove();const hold=s.querySelector('.ulcard');if(hold)hold.innerHTML=''}
 function positionUnlock(){const s=$('#ulock');if(!s||s.hidden)return;
  const sr=s.getBoundingClientRect(),card=s.querySelector('.ulspot .card')||s.querySelector('.ulspot');if(!card)return;
  const c=card.getBoundingClientRect(),hole=s.querySelector('.ulhole');
@@ -1292,14 +1299,16 @@ function showUnlock(){const c=window.__disc&&window.__disc.unlockCard;if(!c||pha
  if(f){f.innerHTML='';const i=new Image();i.alt=c.title||'';watchImg(i,f,revealArt(c));f.appendChild(i)}
  el.classList.add('ulreal');const q=document.createElement('div');q.className='ulq';q.setAttribute('aria-hidden','true');q.innerHTML='<span class="qm">?</span><span class="qt">Tap to reveal</span>';
  hold.appendChild(el);hold.appendChild(q);
- s.classList.remove('spin','shown');s.classList.add('pre');
+ s.classList.remove('spin','shown');const prev=s.querySelector('.ulrays');if(prev)prev.remove();s.classList.add('pre');
  const msg=s.querySelector('.ulbox p');if(msg)msg.textContent=UL_PRE;
  const tit=s.querySelector('.ultitle');if(tit)tit.textContent='';
  s.hidden=false;s.dataset.at=performance.now();positionUnlock();requestAnimationFrame(positionUnlock);window.__ev.push('unlock:'+c.id);s.focus&&s.focus({preventScroll:true})}
 function revealUnlock(){const s=$('#ulock'),c=window.__disc&&window.__disc.unlockCard;if(!s||!s.classList.contains('pre'))return;s.classList.remove('pre');ui('tap');
  const fin=()=>{if(s.hidden)return;s.classList.add('shown');const msg=s.querySelector('.ulbox p');if(msg)msg.textContent=UL_DONE;const tit=s.querySelector('.ultitle');if(tit)tit.textContent=(c&&c.title)||'';
   s.dataset.at=performance.now();positionUnlock();sfx('conquer');window.__ev.push('unlockReveal');const go=$('#ulgo');if(go)go.focus({preventScroll:true})};
- if(RM.matches){fin();return}s.classList.add('spin');endLater(fin,TEST?60:720)}
+ if(RM.matches){fin();return}
+ const old=s.querySelector('.ulrays');if(old)old.remove();const rays=document.createElement('div');rays.className='ulrays';rays.setAttribute('aria-hidden','true');rays.innerHTML='<i></i>';const spot=s.querySelector('.ulspot');s.insertBefore(rays,spot||null);endLater(()=>{if(rays.parentNode)rays.remove()},1600)   /* Luke t396u: one GPU spinning conic-ray layer behind the card, removed after the reveal; skipped for reduced-motion */
+ s.classList.add('spin');endLater(fin,TEST?60:450)}
 function scheduleUnlock(){if(!(window.__disc&&window.__disc.unlockCard))return;
  const wait=window.__disc.newHS?(TEST?1200:2000):(TEST?250:700);endLater(showUnlock,wait)}
 $('#ulock').onclick=ev=>{ev.stopPropagation();ev.preventDefault();const s=$('#ulock');if(s.hidden||performance.now()-(+s.dataset.at||0)<250)return;
@@ -1311,10 +1320,18 @@ $('#ulgo').onclick=ev=>{ev.stopPropagation();ev.preventDefault();const s=$('#ulo
    higher; end-note when the total lands. New best plays NEWBEST_SND (Spielberg's new-best-ding, draft until Luke has heard it) instead of end-note (never both).
    Score sounds play outside the one-sound queue (they are the only sound at the end), only after the music has faded, and obey quiet(). */
 const SCORE_SND={cutick:'audio/countup-tick',endnote:'audio/end-note',ding:'audio/new-best-ding'},SCORE_VOL={cutick:.5,endnote:.6,ding:.6};
-let NEWBEST_SND='ding',scoreLoading=false,scoreSrcs=[];
+const CHIME_SND={chimeCard:'audio/chime-card-Ds',chimeSpeed:'audio/chime-speed-Fs',chimeStreak:'audio/chime-streak-B'},CHIME_VOL={chimeCard:.6,chimeSpeed:.6,chimeStreak:.6},CHIME_GAP=.15;   /* Luke t394u: Spielberg D# / F# / B chimes, 150ms apart to match the points-stack lines. Web Audio (same path as the harp/ding) so they play on iPhone with the silent switch on. */
+let NEWBEST_SND='ding',scoreLoading=false,scoreSrcs=[],chimeSrcs=[],pendChimes=null;
 const SCORE_MUSIC_FADE=.5,CU_DELAY=600,CU_STEP=75,CU_RATE=1.06;
 function loadScoreSnds(){if(scoreLoading||!actx)return;scoreLoading=true;const a=document.createElement('audio'),ogg=!!(a.canPlayType&&a.canPlayType('audio/ogg; codecs=vorbis'));
- Object.keys(SCORE_SND).forEach(k=>{const exts=ogg?['.ogg','.mp3']:['.mp3'];const next=list=>{if(!list.length)return;fetch(SCORE_SND[k]+list[0]).then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()}).then(buf=>new Promise((res,rej)=>actx.decodeAudioData(buf,res,rej))).then(b=>{bufs[k]=b}).catch(()=>next(list.slice(1)))};next(exts)})}
+ const fileSnds=Object.assign({},SCORE_SND,CHIME_SND);
+ Object.keys(fileSnds).forEach(k=>{const exts=ogg?['.ogg','.mp3']:['.mp3'];const next=list=>{if(!list.length)return;fetch(fileSnds[k]+list[0]).then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()}).then(buf=>new Promise((res,rej)=>actx.decodeAudioData(buf,res,rej))).then(b=>{bufs[k]=b;flushPendChimes()}).catch(()=>next(list.slice(1)))};next(exts)})}
+function flushPendChimes(){if(!pendChimes)return;if(!pendChimes.kinds.every(k=>bufs[k]))return;const p=pendChimes;pendChimes=null;if(performance.now()-p.t<800&&!quiet())playBonusChimes(p.kinds)}
+function cutChimes(){chimeSrcs.forEach(s=>{try{s.stop(0)}catch(e){}});chimeSrcs=[];pendChimes=null}
+function playBonusChimes(kinds){window.__ev&&window.__ev.push((quiet()?'muted:':'snd:')+'chimes:'+(kinds||[]).join('+'));if(quiet()||!actx||!kinds||!kinds.length)return;
+ if(kinds.some(k=>!bufs[k])){pendChimes={kinds:kinds.slice(),t:performance.now()};return}
+ try{if(actx.state!=='running')actx.resume().catch(()=>{});const t0=actx.currentTime,vol=masterVol/100;
+  kinds.forEach((k,i)=>{const s=actx.createBufferSource(),g=actx.createGain();s.buffer=bufs[k];g.gain.value=(CHIME_VOL[k]||.6)*vol;s.connect(g);g.connect(actx.destination);s.onended=()=>{chimeSrcs=chimeSrcs.filter(x=>x!==s)};s.start(t0+i*CHIME_GAP);chimeSrcs.push(s)})}catch(e){}}   /* scheduled on the audio clock so the three notes can overlap as a B major chord; not via sfx(), which would cut the previous note */
 function playScore(k,rate){window.__ev&&window.__ev.push((quiet()?'muted:':'snd:')+k);if(quiet()||!actx||!bufs[k])return;
  try{if(actx.state!=='running')actx.resume().catch(()=>{});stopSfx();const s=actx.createBufferSource(),g=actx.createGain();s.buffer=bufs[k];if(rate)s.playbackRate.value=rate;g.gain.value=(SCORE_VOL[k]||VOL[k]||.6)*(masterVol/100);s.connect(g);g.connect(actx.destination);s.onended=()=>{scoreSrcs=scoreSrcs.filter(x=>x!==s)};s.start(0);scoreSrcs.push(s)}catch(e){}}
 function cutScore(){scoreSrcs.forEach(s=>{try{s.stop(0)}catch(e){}});scoreSrcs=[]}
@@ -1420,7 +1437,7 @@ function endOld(r){const {nRight,nWrong,runBest,perfect,unlockCard,stillLocked}=
   '<a class="btn green" id="buy" href="'+BUY_D+'" target="_blank" rel="noopener">Get the full game</a>'+
   '<div class="sell"><img class="box" src="'+BOX+'" alt="The Chronicles of the Kingdom game box"><p>This web game uses '+r.owned+' of the 52 cards.<br><b>52</b> Bible Event Cards &middot; <b>1+</b> players &middot; <b>Age 9+</b></p></div>'+
   '<p class="lead">Leading a group? Try the <a href="'+LEADER_URL+'" target="_blank" rel="noopener">free Leader\'s Guide preview</a>.</p>'+
-  '</div><div class="acts"><div class="a2"><button class="btn" id="again">Try again</button><button class="btn gold" id="viewtl">View the timeline</button></div></div></div>';
+  '</div><div class="acts"><div class="a2"><button class="btn" id="again">Play again</button><button class="btn gold" id="viewtl">View the timeline</button></div></div></div>';
  end.style.display='flex';$('#again').onclick=()=>{ui('tap');newRun()};$('#viewtl').onclick=()=>{ui('tap');viewTimeline()};$('#buy').addEventListener('click',()=>ui('tap'));
  $('#again').focus({preventScroll:true});countUpOld()}
 function countUpOld(){const tok=endTok,els=[...document.querySelectorAll('#end .sc>div'),$('#end .tot')],D=TEST?20:420,GAP=TEST?10:200;let t=TEST?0:350;
@@ -1439,11 +1456,11 @@ function highScore(){clearWordFlashes();let o=$('#nhs');if(o)o.remove();o=docume
  highScore.t=setTimeout(()=>o.classList.add('out'),hold);highScore.u=setTimeout(()=>{if(o.parentNode)o.remove()},hold+fade)}
 function fitNHS(o){const f=o.querySelector('.ff'),W=o.clientWidth-24,H=o.clientHeight-24;let fs=Math.min(130,W*.28,H/2.6);f.style.fontSize=Math.max(42,Math.floor(fs))+'px';
  let n=0;while(n++<30&&(f.scrollWidth>W||f.scrollHeight>H)&&fs>42){fs-=3;f.style.fontSize=Math.floor(fs)+'px'}}
-/* 'View the timeline' on the score: close it and show the finished timeline with a Try again button (v5.9: same words as the score) */
+/* 'View the timeline' on the score: close it and show the finished timeline with a Play again button (Emily 26 Nov, Luke t397u: same words as the scoreboard) */
 function viewTimeline(){$('#end').style.display='none';clearEnd();hideSbt();phase='review';hideYc();applyFrame();
  const s=$('#stage');clearNextClick(s);s.innerHTML='';s.className='pan v';sizeStage('verdict');
  const p=document.createElement('div');p.className='panel vp';const hr=document.createElement('div');hr.className='vh';
- hr.innerHTML='<span class="big">Your timeline</span>';const b=document.createElement('button');b.className='btn';b.id='restart';b.textContent='Try again';b.onclick=()=>{ui('tap');newRun()};hr.appendChild(b);p.appendChild(hr);
+ hr.innerHTML='<span class="big">Your timeline</span>';const b=document.createElement('button');b.className='btn';b.id='restart';b.textContent='Play again';b.onclick=()=>{ui('tap');newRun()};hr.appendChild(b);p.appendChild(hr);
  const v=document.createElement('div');v.className='vb';v.innerHTML='<b>'+nRight+' of '+total+'</b> correct · Best streak <b>'+runBest+'</b>';p.appendChild(v);s.appendChild(p);
  timeline();$('#tl').scrollTop=0;b.focus({preventScroll:true})}
 function relayout(){applyFrame();if(!phase||!hand&&phase==='choose')return;if(phase==='review'){sizeStage('verdict');timeline();syncConquerFx();return}if(phase==='choose')renderStage();else sizeStage('verdict');if(phase==='choose')applyHandBar();if(phase==='flipping')fitFF();timeline();positionS0();positionUnlock();fitZoom();if(ycFor)ycCheck(ycFor);syncConquerFx()}
