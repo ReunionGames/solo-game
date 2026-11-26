@@ -476,17 +476,16 @@ header{position:relative;z-index:7}
 #ulock.spin .ulq{animation:ulqout .45s linear forwards}
 #ulock.spin .ulreal{animation:ulrin .45s linear forwards}
 #ulock.shown .ulq{display:none}#ulock.shown .ulreal{opacity:1}
-#ulock .ulrays{position:absolute;left:50%;top:54%;width:200vw;height:200vw;transform:translate(-50%,-50%);z-index:0;pointer-events:none;opacity:0;will-change:transform,opacity}   /* Luke t396u: same repeating-conic rays as the old hard-card effect, sized to the viewport (the reveal has the screen to itself). Anchored on #ulock, not .ulspot, so height cannot collapse. Transform/opacity only. */
+#ulock .ulfx{position:absolute;inset:0;z-index:0;pointer-events:none}
 #ulock .ulspot,.ulcard{z-index:1}
-#ulock.spin .ulrays,#ulock.shown .ulrays{animation:ulrayburst .4s ease-out .18s both,ulrayfade 1s ease-out .58s forwards}
-#ulock .ulrays i{display:block;width:100%;height:100%;background:repeating-conic-gradient(from 0deg,rgba(242,184,28,0) 0 14deg,rgba(255,214,90,.95) 16deg 20deg,rgba(242,184,28,0) 22deg 45deg);-webkit-mask-image:radial-gradient(circle,rgba(0,0,0,.95) 8%,rgba(0,0,0,.55) 38%,transparent 70%);mask-image:radial-gradient(circle,rgba(0,0,0,.95) 8%,rgba(0,0,0,.55) 38%,transparent 70%);animation:rayspin 8s linear infinite;will-change:transform}
+#ulock .ulglow{position:absolute;left:50%;top:54%;width:120vw;height:120vw;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(255,214,90,.55) 0%,rgba(242,184,28,.35) 58%,transparent 78%);opacity:0;will-change:opacity;pointer-events:none}   /* Luke t403u: the in-play hard-card glow (same radial wash as .slot.conquered .card:after), scaled up for the full-screen reveal. Opacity only, no animated box-shadow or filter. */
+#ulock.spin .ulglow,#ulock.shown .ulglow{animation:hardflash 1.4s ease-out .18s both}
+#ulock.spin .ulspot .card:before,#ulock.shown .ulspot .card:before{content:"";position:absolute;inset:0;border:3px solid #F2B81C;border-radius:var(--card-rx)/var(--card-ry);box-sizing:border-box;pointer-events:none;z-index:5}
+#ulock .ulsp{position:absolute;width:15px;height:15px;margin:-7.5px 0 0 -7.5px;background:#F2B81C;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);opacity:0;animation:spk var(--d,1.2s) ease-out var(--dl,0s) forwards;pointer-events:none;will-change:transform,opacity}   /* a handful of light sparkles; transform/opacity only */
 @keyframes ulspin{0%{transform:scaleX(1)}50%{transform:scaleX(0)}100%{transform:scaleX(1)}}
 @keyframes ulqout{0%,49%{opacity:1}50%,100%{opacity:0}}
 @keyframes ulrin{0%,49%{opacity:0}50%,100%{opacity:1}}
-@keyframes ulrayburst{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}100%{opacity:.9;transform:translate(-50%,-50%) scale(1)}}
-@keyframes ulrayfade{0%{opacity:.9;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.06)}}
-@keyframes rayspin{to{transform:rotate(360deg)}}
-@media (prefers-reduced-motion:reduce){#ulock.spin .ulcard,#ulock.spin .ulq,#ulock.spin .ulreal,#ulock .ulrays,#ulock .ulrays i{animation:none}#ulock.spin .ulrays,#ulock .ulrays{opacity:0}}
+@media (prefers-reduced-motion:reduce){#ulock.spin .ulcard,#ulock.spin .ulq,#ulock.spin .ulreal,#ulock .ulglow,#ulock .ulsp{animation:none}#ulock .ulglow,#ulock .ulsp{opacity:0}}
 /* TEST ONLY (Luke t331u/t355u): scoreboard style toggle + timing log, outside the end panel; strip before Wix */
 
 /* Points pop-ups (Luke t355u): Flip-style lettering, much smaller, shot from the card. Colour by type (Solomon r2). */
@@ -716,11 +715,12 @@ function pointsPop(el,items){if(!pointPops||!items||!items.length)return;let hos
  items.forEach((it,i)=>{const n=document.createElement('div');n.className='ptpop '+(it.cls||'base');n.innerHTML='<span class="ff"><i>'+it.text+'</i></span>';n.style.setProperty('--dl',(i*150)+'ms');stack.appendChild(n)});
  stack.style.visibility='hidden';host.appendChild(stack);
  const pad=8,hd=document.querySelector('header'),top=Math.max(0,hd?Math.round(hd.getBoundingClientRect().bottom):0);
- const sw=stack.offsetWidth,sh=stack.offsetHeight,cx=innerWidth/2,cy=top+(innerHeight-top)/2,halfW=sw/2,halfH=sh/2;
+ const r=(el&&el.isConnected&&el.getBoundingClientRect())||{left:innerWidth/2,top:(top+innerHeight)/2,width:0,height:0};
+ const sw=stack.offsetWidth,sh=stack.offsetHeight,cx=r.left+r.width/2,cy=r.top+r.height/2,halfW=sw/2,halfH=sh/2;
  const minX=pad+halfW,maxX=innerWidth-pad-halfW,x=(minX<=maxX)?Math.max(minX,Math.min(maxX,cx)):(innerWidth/2);
  const minY=top+pad+halfH,maxY=innerHeight-pad-halfH,y=(minY<=maxY)?Math.max(minY,Math.min(maxY,cy)):((top+innerHeight)/2);
  stack.style.left=x+'px';stack.style.top=y+'px';stack.style.visibility='';
- setTimeout(()=>{if(stack.parentNode)stack.remove()},1550)}   /* Luke t384u-t391u: one vertical stack in the centre of the play area, lines 150ms apart, gone in 1.5s, clamped 8px inside the viewport */
+ setTimeout(()=>{if(stack.parentNode)stack.remove()},1550)}   /* Luke t398u: stack sits on the placed card (centred on its rect), clamped 8px inside the viewport so edge columns cannot clip. Lines 150ms apart, gone in 1.5s. */
 function clearPointPops(){const h=$('#ptsfx');if(h)h.innerHTML=''}
 
 const desk=()=>innerWidth>=700;
@@ -1285,7 +1285,7 @@ function miss(e){const old=e.el.getBoundingClientRect();
   if(dx||dy){sl.style.transition='none';sl.style.transform='translate('+dx+'px,'+dy+'px)';sl.style.zIndex=4;sl.getBoundingClientRect();
    sl.style.transition='transform .6s ease-in-out';sl.style.transform='';later(()=>{sl.style.transition='';sl.style.zIndex=''},700)}}}
 /* ---- end screen ---- */
-function hideUnlock(){const s=$('#ulock');if(!s||s.hidden)return;s.hidden=true;s.classList.remove('pre','spin','shown');const rays=s.querySelector('.ulrays');if(rays)rays.remove();const hold=s.querySelector('.ulcard');if(hold)hold.innerHTML=''}
+function hideUnlock(){const s=$('#ulock');if(!s||s.hidden)return;s.hidden=true;s.classList.remove('pre','spin','shown');const fx=s.querySelector('.ulfx');if(fx)fx.remove();const hold=s.querySelector('.ulcard');if(hold)hold.innerHTML=''}
 function positionUnlock(){const s=$('#ulock');if(!s||s.hidden)return;
  const sr=s.getBoundingClientRect(),card=s.querySelector('.ulspot .card')||s.querySelector('.ulspot');if(!card)return;
  const c=card.getBoundingClientRect(),hole=s.querySelector('.ulhole');
@@ -1299,7 +1299,7 @@ function showUnlock(){const c=window.__disc&&window.__disc.unlockCard;if(!c||pha
  if(f){f.innerHTML='';const i=new Image();i.alt=c.title||'';watchImg(i,f,revealArt(c));f.appendChild(i)}
  el.classList.add('ulreal');const q=document.createElement('div');q.className='ulq';q.setAttribute('aria-hidden','true');q.innerHTML='<span class="qm">?</span><span class="qt">Tap to reveal</span>';
  hold.appendChild(el);hold.appendChild(q);
- s.classList.remove('spin','shown');const prev=s.querySelector('.ulrays');if(prev)prev.remove();s.classList.add('pre');
+ s.classList.remove('spin','shown');const prev=s.querySelector('.ulfx');if(prev)prev.remove();s.classList.add('pre');
  const msg=s.querySelector('.ulbox p');if(msg)msg.textContent=UL_PRE;
  const tit=s.querySelector('.ultitle');if(tit)tit.textContent='';
  s.hidden=false;s.dataset.at=performance.now();positionUnlock();requestAnimationFrame(positionUnlock);window.__ev.push('unlock:'+c.id);s.focus&&s.focus({preventScroll:true})}
@@ -1307,7 +1307,12 @@ function revealUnlock(){const s=$('#ulock'),c=window.__disc&&window.__disc.unloc
  const fin=()=>{if(s.hidden)return;s.classList.add('shown');const msg=s.querySelector('.ulbox p');if(msg)msg.textContent=UL_DONE;const tit=s.querySelector('.ultitle');if(tit)tit.textContent=(c&&c.title)||'';
   s.dataset.at=performance.now();positionUnlock();sfx('conquer');window.__ev.push('unlockReveal');const go=$('#ulgo');if(go)go.focus({preventScroll:true})};
  if(RM.matches){fin();return}
- const old=s.querySelector('.ulrays');if(old)old.remove();const rays=document.createElement('div');rays.className='ulrays';rays.setAttribute('aria-hidden','true');rays.innerHTML='<i></i>';const spot=s.querySelector('.ulspot');s.insertBefore(rays,spot||null);endLater(()=>{if(rays.parentNode)rays.remove()},1600)   /* Luke t396u: one GPU spinning conic-ray layer behind the card, removed after the reveal; skipped for reduced-motion */
+ const old=s.querySelector('.ulfx');if(old)old.remove();
+ const fx=document.createElement('div');fx.className='ulfx';fx.setAttribute('aria-hidden','true');fx.innerHTML='<div class="ulglow"></div>';
+ const spot=s.querySelector('.ulspot');s.insertBefore(fx,spot||null);
+ const sr=s.getBoundingClientRect(),cr=(spot&&spot.getBoundingClientRect())||sr,cx=cr.left+cr.width/2-sr.left,cy=cr.top+cr.height/2-sr.top;
+ for(let i=0;i<7;i++){const sp=document.createElement('i');sp.className='ulsp';const a=(i/7)*Math.PI*2,d=58+(i%3)*18;sp.style.cssText='left:'+cx+'px;top:'+cy+'px;--tx:'+Math.round(Math.cos(a)*d)+'px;--ty:'+Math.round(Math.sin(a)*d)+'px;--d:1.2s;--dl:'+(0.18+i*0.06).toFixed(2)+'s';fx.appendChild(sp)}
+ endLater(()=>{if(fx.parentNode)fx.remove()},1800)   /* Luke t403u: hard-card glow, scaled up, plus a few sparkles; removed after the reveal; skipped for reduced-motion */
  s.classList.add('spin');endLater(fin,TEST?60:450)}
 function scheduleUnlock(){if(!(window.__disc&&window.__disc.unlockCard))return;
  const wait=window.__disc.newHS?(TEST?1200:2000):(TEST?250:700);endLater(showUnlock,wait)}
@@ -1320,7 +1325,7 @@ $('#ulgo').onclick=ev=>{ev.stopPropagation();ev.preventDefault();const s=$('#ulo
    higher; end-note when the total lands. New best plays NEWBEST_SND (Spielberg's new-best-ding, draft until Luke has heard it) instead of end-note (never both).
    Score sounds play outside the one-sound queue (they are the only sound at the end), only after the music has faded, and obey quiet(). */
 const SCORE_SND={cutick:'audio/countup-tick',endnote:'audio/end-note',ding:'audio/new-best-ding'},SCORE_VOL={cutick:.5,endnote:.6,ding:.6};
-const CHIME_SND={chimeCard:'audio/chime-card-Ds',chimeSpeed:'audio/chime-speed-Fs',chimeStreak:'audio/chime-streak-B'},CHIME_VOL={chimeCard:.6,chimeSpeed:.6,chimeStreak:.6},CHIME_GAP=.15;   /* Luke t394u: Spielberg D# / F# / B chimes, 150ms apart to match the points-stack lines. Web Audio (same path as the harp/ding) so they play on iPhone with the silent switch on. */
+const CHIME_SND={chimeCard:'audio/chime-card-Ds',chimeSpeed:'audio/chime-speed-Fs',chimeStreak:'audio/chime-streak-B'},CHIME_VOL={chimeCard:.21,chimeSpeed:.21,chimeStreak:.21},CHIME_GAP=.15;   /* Luke t394u/t402u: Spielberg brighter bell dings (D#6 / F#6 / B6), 150ms apart. Gain is 0.35 of the previous 0.6 chime level (0.21), still scaled by Sounds volume, because full volume was too loud. Web Audio path so they play on iPhone with the silent switch on. */
 let NEWBEST_SND='ding',scoreLoading=false,scoreSrcs=[],chimeSrcs=[],pendChimes=null;
 const SCORE_MUSIC_FADE=.5,CU_DELAY=600,CU_STEP=75,CU_RATE=1.06;
 function loadScoreSnds(){if(scoreLoading||!actx)return;scoreLoading=true;const a=document.createElement('audio'),ogg=!!(a.canPlayType&&a.canPlayType('audio/ogg; codecs=vorbis'));
