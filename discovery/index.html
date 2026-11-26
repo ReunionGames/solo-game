@@ -228,6 +228,8 @@ header{position:relative;z-index:7}
 #stats .scw,#stats .hs{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;line-height:1;min-width:4.5em}
 #stats .sl,#stats .hl{font-variant:small-caps;letter-spacing:.04em;font-size:11px;font-weight:700;color:var(--soft);line-height:1;transition:color .4s ease}
 #stats .hv{display:flex;align-items:center;justify-content:center;min-height:30px;font-family:'EB Garamond',Georgia,serif;font-weight:700;font-size:22px;font-variant-numeric:tabular-nums;color:var(--ink);line-height:1}
+#stats .ht{display:block;font-size:11px;font-weight:700;color:var(--soft);font-variant-numeric:tabular-nums;line-height:1;margin-top:1px}
+#stats .ht:empty{display:none}
 #stats .bl{font-size:11px;font-weight:600;color:var(--soft);line-height:1.15;white-space:nowrap}
 #stats .bl b{color:var(--ink);font-weight:700}
 /* Luke t238u: red after a break, gold + shine while this is the best streak so far */
@@ -416,7 +418,9 @@ header{position:relative;z-index:7}
 .sb .pts{position:relative;padding:8px 0 4px;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .sb .bigw{position:relative;display:inline-block;overflow:hidden;border-radius:8px;padding:0 10px}
 .sb .big{display:block;font-family:'EB Garamond',Georgia,serif;font-size:64px;line-height:1;font-weight:700;color:var(--burg);font-variant-numeric:tabular-nums}
-.sb .ptl{display:block;font-size:15px;font-weight:600;color:var(--soft);margin-top:-2px}
+.sb .ptmeta{display:flex;align-items:baseline;justify-content:center;gap:8px;margin-top:-2px}
+.sb .ptl{display:block;font-size:15px;font-weight:600;color:var(--soft);margin-top:0}
+.sb .elapsed{font-family:'EB Garamond',Georgia,serif;font-weight:700;font-size:20px;color:var(--burg);font-variant-numeric:tabular-nums}
 .sb .yb{font-size:15px;color:var(--soft);margin-top:4px}.sb .yb span{font-weight:700;color:var(--burg)}
 .sb .nbt{height:0;overflow:hidden;font-weight:700;color:var(--burg);font-size:18px;transition:height .2s}
 .sb .newbest .nbt{height:24px;margin-top:2px}
@@ -673,14 +677,13 @@ let learned=false,big=true,loud=false,pulseOn=false,ycFor=null,zoomAt=0,L={N:3,c
 const later=(f,ms)=>{const t=setTimeout(f,ms);timers.push(t);return t};
 const clearT=()=>{timers.forEach(clearTimeout);timers=[]};
 function fmtTime(ms){const s=Math.max(0,Math.round((ms||0)/1000)),m=Math.floor(s/60),r=s%60;return m+':'+(r<10?'0':'')+r}
-/* One place for speed tiers, the whole-run time tiebreaker (Luke t355u/t367u) and the streak ladder (Luke t369u/t370u, Solomon r3).
+function fmtScoreTime(score,ms){if(!(score>0))return '–';return (ms>0)?(score+' · '+fmtTime(ms)):String(score)}
+/* One place for speed tiers, elapsed-time ranking (Luke t423u/t424u) and the streak ladder (Luke t369u/t370u, Solomon r3).
    Card speed bonuses (Luke t416u, Solomon): three tiers by input, not screen size, on correct cards only.
    Touch (pointer:coarse, or a touch/pen pointerdown): Lightning +3 ≤1.5s, Quick +2 ≤3s, Steady +1 ≤8s.
    Mouse/trackpad: Lightning +3 ≤1.9s, Quick +2 ≤4s, Steady +1 ≤9s. A full 51-card all-Lightning run is +153.
-   The run bonus is only for a finished 51-placement run, and is a tiny tiebreaker (Luke t367u):
-   at most 5 points, always less than one card's +10. Under 12:00 scores 5, then 1 fewer points
-   for every 2 minutes, down to 0 at 20:00 or slower. The 12:00 / 2:00 / 20:00 scale is provisional
-   until we have Luke's full-run times; change TIME_SCORE.run to retune.
+   Perfect +50 is awarded only on a finished 51-placement run with no misses (Luke t424u). Elapsed time is not points:
+   it is a secondary ranking (higher score wins, then the faster time). A fully unlocked perfect all-Lightning run scores 1023.
    Streak bonus per correct card (Solomon r3, Luke t370u): 0-4 +0 (no pop-up), 5-9 +2, 10-19 +4, 20-29 +6, 30-39 +8, 40+ +10.
    A miss drops one level: the streak count is set to the bottom of the previous level (23→10, 12→5, 7→0). The header shows that new count; best streak is unchanged. */
 const TIME_SCORE={card:{touch:{fastMs:1500,midMs:3000,slowMs:8000},mouse:{fastMs:1900,midMs:4000,slowMs:9000}},run:{enabled:true,cap:5,minPlacements:51,slowMs:20*60*1000,stepMs:2*60*1000},streak:{levels:[{min:0,pts:0,cls:null},{min:5,pts:2,cls:'s1'},{min:10,pts:4,cls:'s2'},{min:20,pts:6,cls:'s3'},{min:30,pts:8,cls:'s4'},{min:40,pts:10,cls:'s5'}]},neu:{mode:'perLocked',per:5,flat:25,floor:25}};   /* neu.mode: perLocked (Luke t372u/t375u: 5 x locked of the 52 base cards), perUnlocked, or flat. floor is for Conquered! 3-miss cards so a fully unlocked player still gets at least 25 (Luke t381u-t383u). Unlock-hard cards use 5 x locked with no floor. Off on the first game (t378u). */
@@ -939,8 +942,8 @@ function draw(){hintRestart(false);clearPointPops();clearWordFlashes();bankCard(
  stats();renderStage();if(s0Active)$('#stage').classList.add('hbhide');timeline();$('#tl').scrollTop=0;if(s0Active)showS0();else zoomHand();applyHandBar()}   /* every new card opens large: read it, tap off to place it. Your card bar waits until that zoom is dismissed (Luke t292u). */
 function getHS(){return getBestSkill()}   /* header High score = best Run score, first-time bonus excluded (Luke t341u) */
 function stats(){const st=$('#stats');let k=st.querySelector('.stk');
- if(!k||!st.querySelector('.hs')||!st.querySelector('.hl')){st.innerHTML='<div class="scw"><span class="sl">Streak</span><span class="stk"></span><div class="bl">Best streak <b class="bv"></b></div></div><div class="hs"><span class="hl">High score</span><b class="hv"></b></div>';k=st.querySelector('.stk')}
- k.textContent=streak;st.querySelector('.bv').textContent=Math.max(best,streak);st.querySelector('.hv').textContent=getHS();st.setAttribute('aria-label','Streak '+streak+', best streak '+Math.max(best,streak)+', high score '+getHS());streakLook()}
+ if(!k||!st.querySelector('.hs')||!st.querySelector('.hl')||!st.querySelector('.ht')){st.innerHTML='<div class="scw"><span class="sl">Streak</span><span class="stk"></span><div class="bl">Best streak <b class="bv"></b></div></div><div class="hs"><span class="hl">High score</span><b class="hv"></b><span class="ht"></span></div>';k=st.querySelector('.stk')}
+ k.textContent=streak;st.querySelector('.bv').textContent=Math.max(best,streak);const hs=getHS(),ht=getBestSkillTime();st.querySelector('.hv').textContent=hs;const hte=st.querySelector('.ht');if(hte)hte.textContent=(hs>0&&ht>0)?fmtTime(ht):'';st.setAttribute('aria-label','Streak '+streak+', best streak '+Math.max(best,streak)+', high score '+hs+(hs>0&&ht>0?' in '+fmtTime(ht):''));streakLook()}
 let stkLevel=-1,stkCold=false,stkRed=false;
 function streakLook(){const k=$('#stats .stk'),st=$('#stats');if(!k||!st)return;
  const onbest=!stkCold&&streak>0&&streak>=best,broken=!!stkRed&&streak===0;
@@ -1267,7 +1270,7 @@ function correct(e){clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const zf=doc
  else bigFlash('stf','<i>Streak</i><i class="n">'+streak+'</i>','streak:'+streak);
  best=Math.max(best,streak);setBest(best);stkCold=false;stkRed=false;stats();streakPop();phase='result';learned=true;
  noteCard(e.c,true);
- const pops=[{text:'+10',cls:'base'}];if(sp===3)pops.push({text:'Lightning +3',cls:'light'});else if(sp===2)pops.push({text:'Quick +2',cls:'quick'});else if(sp===1)pops.push({text:'Steady +1',cls:'steady'});if(rp){const lv=TIME_SCORE.streak.levels[streakLevel(streak)];pops.push({text:'Streak +'+rp,cls:'streak '+(lv.cls||'')})}if(neu)pops.push({text:'New! +'+neu,cls:'neu'});if(conq)pops.push({text:'Conquered! +'+conq,cls:'conq'});if(!deck.length&&total>=51)pops.push({text:'Complete +50',cls:'fin'});pointsPop(e.el,pops);
+ const pops=[{text:'+10',cls:'base'}];if(sp===3)pops.push({text:'Lightning +3',cls:'light'});else if(sp===2)pops.push({text:'Quick +2',cls:'quick'});else if(sp===1)pops.push({text:'Steady +1',cls:'steady'});if(rp){const lv=TIME_SCORE.streak.levels[streakLevel(streak)];pops.push({text:'Streak +'+rp,cls:'streak '+(lv.cls||'')})}if(neu)pops.push({text:'New! +'+neu,cls:'neu'});if(conq)pops.push({text:'Conquered! +'+conq,cls:'conq'});if(!deck.length&&total>=51&&nWrong===0)pops.push({text:'Perfect +50',cls:'fin'});pointsPop(e.el,pops);
  const chimes=['chimeCard'];if(sp)chimes.push('chimeSpeed');if(rp)chimes.push('chimeStreak');playBonusChimes(chimes);   /* Luke t394u: card, then speed, then streak; only the ones earned; no chime for New!/Conquered!; plays even if Points pop-ups are off (Sounds toggle/volume). The everyday streakpop would have doubled the card chime, so it is not played on a correct placement. */
  const chimeWait=Math.round((Math.max(0,chimes.length-1)*CHIME_GAP+0.35)*1000);
  if(conquered){e.conquered=true;later(()=>sfx('conquer'),chimeWait);conquerFx(e);if(e.newBest)newBestBurst()}   /* own sound for the struggled-card moment, started after the bonus chimes so they don't clash (Luke t253u / t254u / t394u) */
@@ -1362,15 +1365,15 @@ function endLater(f,ms){const t=setTimeout(f,ms);endTimers.push(t);return t}
 function clearEnd(){endTok++;endTimers.forEach(clearTimeout);endTimers=[];cutScore();hideUnlock();const nh=$('#nhs');if(nh)nh.remove();clearTimeout(highScore.t);clearTimeout(highScore.u)}
 function over(){bankCard();flushPlay();clearPointPops();hintRestart(false);musicOver=true;musicPendingIn=false;if(musicGain)fadeMusic(0,SCORE_MUSIC_FADE);window.__ev&&window.__ev.push('musicOut');loadScoreSnds();   /* music fades out before the count-up starts */
  phase='over';applyFrame();$('#pill').hidden=true;$('#s0').hidden=true;s0Active=false;$('#fc').hidden=true;$('#zoom').style.display='none';hideUnlock();resolved=null;sel=null;hideYc();best=Math.max(best,streak);setBest(best);stats();
- const perfect=nWrong===0&&nRight===total&&total>0,full=total>=51,finish=full?50:0,ptsRun=runTimeBonus(runMs,nRight,total),score=ptsC+ptsRoll+ptsSpeed+ptsRun+finish+ptsNew+ptsConq;
+ const perfect=nWrong===0&&nRight===total&&total>0,full=total>=51,finish=(full&&perfect)?50:0,ptsRun=0,score=ptsC+ptsRoll+ptsSpeed+finish+ptsNew+ptsConq;
  if(!placedSession)bumpGames();
- const maxBase=51*10+rollTotal(51)+50,maxRun=full&&ptsC+ptsRoll+finish===maxBase;   /* prize later: 870 without speed, the 0-5 tiebreaker, New or Conquered. A fully unlocked perfect all-Lightning run under 12:00 can score 1028 (51×3 speed + the 0-5 tiebreaker; New is 0 when nothing is locked). New and Conquered are in the run score (Luke t377u). */
+ const maxBase=51*10+rollTotal(51)+50,maxRun=full&&perfect&&ptsC+ptsRoll+finish===maxBase;   /* prize later: 870 without speed, New or Conquered. A fully unlocked perfect all-Lightning run scores 1023 (510 + 310 streak + 153 speed + 50 Perfect). Elapsed time ranks ties, it is not points (Luke t424u). New and Conquered are in the run score (Luke t377u). */
  const unlockCard=perfect?pickUnlock():null;if(unlockCard)grantUnlock(unlockCard);
- const prevHS=getBestSkill(),newHS=score>prevHS&&score>0;if(!placedSession)saveBestSkill(score,runMs);
+ const prevHS=getBestSkill(),prevHSTime=getBestSkillTime(),newHS=score>0&&(score>prevHS||(score===prevHS&&prevHSTime>0&&runMs<prevHSTime));if(!placedSession)saveBestSkill(score,runMs);
  /* old-style score (correct + best streak) and its old high-score key, kept only for the test toggle */
  const oldScore=nRight+runBest;let oldPrevHS=0;try{oldPrevHS=Math.max(0,+localStorage.getItem(HSKEY)||0)}catch(e){}
  const oldNewHS=oldScore>oldPrevHS&&oldScore>0;if(oldNewHS&&!placedSession){try{localStorage.setItem(HSKEY,String(oldScore))}catch(e){}}
- lastRun={nRight,nWrong,runBest,total,score,ptsC,ptsRoll,ptsNew,ptsConq,ptsSpeed,ptsRun,runMs,finish,maxRun,perfect,newHS,prevHS,unlockCard,oldScore,oldPrevHS,oldNewHS,stillLocked:lockedPlayable().length,owned:ownedDeck().length,cardMs:cardMs.slice(),placeLog:placeLog.slice(),longFlips:!!longFlips,device:playInput};
+ lastRun={nRight,nWrong,runBest,total,score,ptsC,ptsRoll,ptsNew,ptsConq,ptsSpeed,ptsRun,runMs,finish,maxRun,perfect,newHS,prevHS,unlockCard,oldScore,oldPrevHS,oldNewHS,stillLocked:lockedPlayable().length,owned:ownedDeck().length,cardMs:cardMs.slice(),placeLog:placeLog.slice(),longFlips:!!longFlips,device:playInput,prevHSTime};
  if(!placedSession)saveTiming({at:new Date().toISOString(),who:'Luke',totalMs:runMs,longFlips:!!longFlips,device:playInput,nRight,nWrong,total,score,ptsSpeed,ptsRun,ptsNew,ptsConq,cards:placeLog.slice()});
  window.__ev.push('over:'+nRight+'/'+nWrong+'/'+runBest+':pts'+score+(unlockCard?':unlock:'+unlockCard.id:''));
  renderEnd()}
@@ -1395,10 +1398,11 @@ function endNew(r){window.__disc=Object.assign({},r,{style:'new'});
  end.innerHTML='<div class="ep dsc sb" role="dialog" aria-label="Your result">'+
   '<div class="e1"><div class="pts" id="pts" title="Tap to skip">'+
    '<div class="stars" aria-hidden="true">'+STAR+STAR+STAR+'</div>'+
-   '<div class="bigw"><b class="big" data-v="'+r.score+'">0</b></div><small class="ptl">points</small>'+
+   '<div class="bigw"><b class="big" data-v="'+r.score+'">0</b></div>'+
+   '<div class="ptmeta"><small class="ptl">points</small>'+(r.runMs?'<span class="elapsed">'+fmtTime(r.runMs)+'</span>':'')+'</div>'+
    '<div class="nbt" aria-live="polite"></div>'+
-   '<div class="yb">Your best: <span>'+(r.prevHS||'–')+'</span></div></div>'+
-   '<div class="rows">'+row('r1','Correct ('+r.nRight+' &times; 10)',r.ptsC)+row('r2','On a roll',r.ptsRoll)+row('r3','Time ('+fmtTime(r.runMs)+')',r.ptsSpeed)+((r.finish||r.ptsRun)?row('r5','Time bonus',r.ptsRun||0):'')+(r.ptsNew?row('r6','New cards',r.ptsNew):'')+(r.ptsConq?row('r7','Conquered',r.ptsConq):'')+(r.finish?row('r4','Finished all 51',r.finish):'')+'</div></div>'+
+   '<div class="yb">Your best: <span>'+fmtScoreTime(r.prevHS,r.prevHSTime)+'</span></div></div>'+
+   '<div class="rows">'+row('r1','Correct ('+r.nRight+' &times; 10)',r.ptsC)+row('r2','On a roll',r.ptsRoll)+row('r3','Speed',r.ptsSpeed)+(r.ptsNew?row('r6','New cards',r.ptsNew):'')+(r.ptsConq?row('r7','Conquered',r.ptsConq):'')+(r.finish?row('r4','Perfect +50',r.finish):'')+'</div></div>'+
   '<div class="acts"><div class="a2"><button class="btn" id="again">Play again</button><button class="btn gold" id="viewtl">View the timeline</button></div></div>'+
   '<div class="e2">'+
    '<button class="cta web" id="webu" type="button">'+ICON_SCREEN+'<span class="ct">Unlock all 52 cards online, &pound;4.99</span></button>'+
@@ -1430,7 +1434,7 @@ function countUp(){const tok=endTok,d=window.__disc||{},big=$('#end .big'),pts=$
  endLater(()=>{if(ok()){pts.classList.add('on');rows.forEach(r=>r.classList.add('sum'))}},t);
  for(let i=0;i<n;i++)endLater(()=>{if(!ok())return;big.textContent=Math.round(v*(i+1)/n);playScore('cutick',Math.pow(CU_RATE,i))},t+80+i*stp);
  endLater(land,t+80+n*stp+(n?40:0))}
-function celebrate(){const pts=$('#pts');if(!pts)return;pts.classList.add('newbest');const t=pts.querySelector('.nbt');if(t)t.textContent='New best!';const yb=pts.querySelector('.yb span');if(yb&&window.__disc)yb.textContent=window.__disc.score;window.__ev.push('newBestPts')}
+function celebrate(){const pts=$('#pts');if(!pts)return;pts.classList.add('newbest');const t=pts.querySelector('.nbt');if(t)t.textContent='New best!';const yb=pts.querySelector('.yb span');if(yb&&window.__disc)yb.textContent=fmtScoreTime(window.__disc.score,window.__disc.runMs);window.__ev.push('newBestPts')}
 /* TEST ONLY (toggle 'old'): the end panel exactly as it was before 79924a3 (rows Incorrect / Correct / Best streak, Total = correct +
    best streak, its own high-score key and the full-screen New high score! pop-up). */
 function endOld(r){const {nRight,nWrong,runBest,perfect,unlockCard,stillLocked}=r,score=r.score,total=r.total;
@@ -1444,12 +1448,11 @@ function endOld(r){const {nRight,nWrong,runBest,perfect,unlockCard,stillLocked}=
   '<div class="inc" data-v="'+nWrong+'"><small>Incorrect</small><b>0</b></div>'+
   '<div class="okn" data-v="'+r.ptsC+'"><small>Correct ('+nRight+' &times; 10)</small><b>0</b></div>'+
   '<div class="roll" data-v="'+r.ptsRoll+'"><small>On a roll</small><b>0</b></div>'+
-  '<div class="tim" data-v="'+r.ptsSpeed+'"><small>Time ('+fmtTime(r.runMs)+')</small><b>0</b></div>'+
-  ((r.finish||r.ptsRun)?'<div class="trun" data-v="'+(r.ptsRun||0)+'"><small>Time bonus</small><b>0</b></div>':'')+
+  '<div class="tim" data-v="'+r.ptsSpeed+'"><small>Speed</small><b>0</b></div>'+
   (r.ptsNew?'<div class="nnew" data-v="'+r.ptsNew+'"><small>New cards</small><b>0</b></div>':'')+
   (r.ptsConq?'<div class="nconq" data-v="'+r.ptsConq+'"><small>Conquered</small><b>0</b></div>':'')+
-  (r.finish?'<div class="fin" data-v="'+r.finish+'"><small>Finished all 51</small><b>0</b></div>':'')+'</div>'+
-  '<div class="tot" data-v="'+score+'"><small>Run score</small><b>0</b></div></div>'+
+  (r.finish?'<div class="fin" data-v="'+r.finish+'"><small>Perfect +50</small><b>0</b></div>':'')+'</div>'+
+  '<div class="tot" data-v="'+score+'"><small>Run score'+(r.runMs?' · '+fmtTime(r.runMs):'')+'</small><b>0</b></div></div>'+
   (perfect?'<div class="perf">Perfect!</div>':'')+
   unlLine+
   '</div><hr><div class="e2">'+
