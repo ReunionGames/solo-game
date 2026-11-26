@@ -65,7 +65,7 @@ header{flex:none;display:flex;justify-content:space-between;align-items:center;g
 .panel:has(.ff){align-self:stretch;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0;flex:1 1 auto;min-height:0}
 /* timeline */
 #tlw{position:relative;flex:1 1 auto;min-height:0}
-#tl{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:4px 18px 4px;--band:20px;--g:4px;--rg:4px;--tw:26px;--th:20px;--tf:19px}
+#tl{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:66px 18px 4px;--band:20px;--g:4px;--rg:4px;--tw:26px;--th:20px;--tf:19px}   /* Luke t360u: 4px plus a fixed 62px so the start card stays below the step-0 bubble; this used to be a turn-1-only cue for the hint pill, which now sits under the timeline */
 .rw{margin:0 auto;position:relative}
 .rw+.rw{margin-top:var(--rg)}
 .cards{display:flex;gap:var(--g)}
@@ -144,7 +144,7 @@ header{flex:none;display:flex;justify-content:space-between;align-items:center;g
  #tlh{padding:5px 24px 0}.lab{font-size:17px}
  .crow{max-width:760px;margin:0 auto;width:100%}.chip .ct{font-size:20px}.chip{min-height:52px}.chip .mc{width:30px}#hint{font-size:21px}#stage.loud #hint{font-size:21px}
  .vb{font-size:21px;text-align:center}.vh{justify-content:center;gap:24px}.nbst .lg{display:inline}
- #tl{padding:6px 32px;--band:24px;--g:6px;--rg:6px;--tw:32px;--th:24px;--tf:22px}   /* Luke t259u: extra side padding so the end + markers are not clipped. t300u: tighter gaps and a slimmer band so typical decks fit without scrolling. */
+ #tl{padding:52px 32px 6px;--band:24px;--g:6px;--rg:6px;--tw:32px;--th:24px;--tf:22px}   /* Luke t259u/t300u: side padding and tighter packing. t360u: 6px plus a fixed 46px so the start card stays below the step-0 bubble, same as the old desktop cue */
  .cue span{font-size:18px}
  .panel{font-size:21px}.panel .big{font-size:30px}
 }
