@@ -253,12 +253,13 @@ header{position:relative;z-index:7}
 #mute:before,#set:before{content:"";position:absolute;left:8px;top:8px;width:28px;height:28px;border-radius:50%;border:1.5px solid #cdb98a;box-sizing:border-box}
 #mute svg,#set svg{position:absolute;left:13px;top:13px;width:18px;height:18px}
 /* Luke t338u: Restart is a proper burgundy/gold pill with a label, so it's easy to find. After a streak breaks it glows gold until the player restarts or plays on. */
-#rst{display:inline-flex;align-items:center;justify-content:center;gap:5px;flex:none;min-height:44px;min-width:44px;margin:0 2px 0 6px;padding:0 10px 0 8px;border:2px solid var(--gold);border-radius:999px;background:var(--burg);color:var(--parch);font:inherit;font-weight:700;font-size:14px;line-height:1;letter-spacing:.01em;box-shadow:0 1px 4px rgba(0,0,0,.25);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+#rst{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:5px;flex:none;min-height:44px;min-width:44px;margin:0 2px 0 6px;padding:0 10px 0 8px;border:2px solid var(--gold);border-radius:999px;background:var(--burg);color:var(--parch);font:inherit;font-weight:700;font-size:14px;line-height:1;letter-spacing:.01em;box-shadow:0 1px 4px rgba(0,0,0,.25);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 #rst svg{width:15px;height:15px;flex:none}
 #rst .rsl{padding-bottom:1px}
-#rst.hint{box-shadow:0 0 0 2px #FFE08A,0 0 12px 4px rgba(242,184,28,.85);animation:rstglow 1.4s ease-in-out infinite}
-@keyframes rstglow{0%,100%{box-shadow:0 0 0 1px #E9D29E,0 0 8px 3px rgba(242,184,28,.55)}50%{box-shadow:0 0 0 2px #FFE08A,0 0 16px 6px rgba(255,214,90,.95)}}
-@media (prefers-reduced-motion:reduce){#rst.hint{animation:none;box-shadow:0 0 0 2px #E9D29E,0 0 12px 4px rgba(242,184,28,.8)}}
+/* Luke t346u: gold glow disappeared on the parchment header. A white ring plus a burgundy outer ring, pulsed with opacity and scale on a pseudo-element (no animated box-shadow). */
+#rst.hint:after{content:"";position:absolute;inset:-6px;border-radius:inherit;pointer-events:none;box-shadow:0 0 0 2px #fff,0 0 0 5px #551309;opacity:.4;transform:scale(.96);animation:rstglow 1.2s ease-in-out infinite}
+@keyframes rstglow{0%,100%{opacity:.4;transform:scale(.96)}50%{opacity:1;transform:scale(1.06)}}
+@media (prefers-reduced-motion:reduce){#rst.hint:after{animation:none;opacity:1;transform:none}}
 @media (max-width:420px){#rst{min-height:40px;padding:0 8px 0 6px;font-size:13px;margin:0 1px 0 4px}}
 /* Luke t261u: Restart confirm, a small popover under the header button */
 #rsq{position:fixed;z-index:45;right:auto;top:auto;background:var(--parch);border:2px solid var(--gold);border-radius:12px;padding:10px 12px;box-shadow:0 4px 16px rgba(0,0,0,.4);min-width:180px;max-width:min(240px,calc(100vw - 16px))}
