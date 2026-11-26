@@ -656,12 +656,15 @@ let learned=false,big=true,loud=false,pulseOn=false,ycFor=null,zoomAt=0,L={N:3,c
 const later=(f,ms)=>{const t=setTimeout(f,ms);timers.push(t);return t};
 const clearT=()=>{timers.forEach(clearTimeout);timers=[]};
 function fmtTime(ms){const s=Math.max(0,Math.round((ms||0)/1000)),m=Math.floor(s/60),r=s%60;return m+':'+(r<10?'0':'')+r}
-/* One place for speed tiers and a future whole-run time bonus (Luke t355u, Solomon r2).
+/* One place for speed tiers and the whole-run time tiebreaker (Luke t355u/t367u).
    card tiers stay at 12s/+2 and 22s/+1 until retuned from Luke's logs.
-   run.targetMs is left null on purpose: Solomon's additive, accuracy-scaled cap (~150, 15-20% of 795, only on a finished 51-placement run, combined with per-card speed under combinedCap) is coded but not awarded until we have a target time from his games. */
-const TIME_SCORE={card:{fastMs:12000,fastPts:2,steadyMs:22000,steadyPts:1},run:{enabled:false,targetMs:null,zeroAt:3,cap:150,minPlacements:51,combinedCap:150}};
+   The run bonus is only for a finished 51-placement run, and is a tiny tiebreaker (Luke t367u):
+   at most 5 points, always less than one card's +10. Under 12:00 scores 5, then 1 fewer points
+   for every 2 minutes, down to 0 at 20:00 or slower. The 12:00 / 2:00 / 20:00 scale is provisional
+   until we have Luke's full-run times; change TIME_SCORE.run to retune. */
+const TIME_SCORE={card:{fastMs:12000,fastPts:2,steadyMs:22000,steadyPts:1},run:{enabled:true,cap:5,minPlacements:51,slowMs:20*60*1000,stepMs:2*60*1000}};
 function speedPts(ms){ms=+ms||0;if(ms<=TIME_SCORE.card.fastMs)return TIME_SCORE.card.fastPts;if(ms<=TIME_SCORE.card.steadyMs)return TIME_SCORE.card.steadyPts;return 0}
-function runTimeBonus(ms,right,tot){const r=TIME_SCORE.run;if(!r.enabled||!r.targetMs||!(tot>=r.minPlacements))return 0;let b=r.cap;if(ms>r.targetMs){const span=r.targetMs*(r.zeroAt-1);b=span>0?r.cap*Math.max(0,1-(ms-r.targetMs)/span):0}return Math.round(b*(right/tot))}
+function runTimeBonus(ms,right,tot){const r=TIME_SCORE.run;if(!r.enabled||!(tot>=r.minPlacements)||!(r.stepMs>0))return 0;return Math.max(0,Math.min(r.cap,Math.ceil((r.slowMs-ms)/r.stepMs)))}
 function resetDecide(){decideStart=0;decideHold=0;decideOn=false;dealStart=0}
 function decideBlocked(){if(phase==='over'||phase==='review')return true;const v=$('#vol');if(v&&!v.hidden)return true;const h=$('#help');if(h&&h.style.display==='flex')return true;return false}   /* Luke t355u: pause only for rules/help and settings. Clock starts in newRun before phase is 'choose', so first-card reading counts. */
 function pauseDecide(){if(!decideOn||!decideStart){decideOn=false;return}decideHold+=Math.max(0,performance.now()-decideStart);decideStart=0;decideOn=false}
@@ -1292,8 +1295,8 @@ function endLater(f,ms){const t=setTimeout(f,ms);endTimers.push(t);return t}
 function clearEnd(){endTok++;endTimers.forEach(clearTimeout);endTimers=[];cutScore();hideUnlock();const nh=$('#nhs');if(nh)nh.remove();clearTimeout(highScore.t);clearTimeout(highScore.u)}
 function over(){bankCard();flushPlay();clearPointPops();hintRestart(false);musicOver=true;musicPendingIn=false;if(musicGain)fadeMusic(0,SCORE_MUSIC_FADE);window.__ev&&window.__ev.push('musicOut');loadScoreSnds();   /* music fades out before the count-up starts */
  phase='over';applyFrame();$('#pill').hidden=true;$('#s0').hidden=true;s0Active=false;$('#fc').hidden=true;$('#zoom').style.display='none';hideUnlock();resolved=null;sel=null;hideYc();best=Math.max(best,streak);setBest(best);stats();
- const perfect=nWrong===0&&nRight===total&&total>0,full=total>=51,finish=full?50:0,ptsRun=runTimeBonus(runMs,nRight,total),rawSpeed=ptsSpeed+ptsRun,cap=TIME_SCORE.run.combinedCap,score=ptsC+ptsRoll+(TIME_SCORE.run.enabled&&rawSpeed>cap?cap:rawSpeed)+finish;
- const maxRun=full&&ptsC+ptsRoll+finish===795;   /* max-score prize later: full 51-placement runs judged on 795, without speed or first-time bonus */
+ const perfect=nWrong===0&&nRight===total&&total>0,full=total>=51,finish=full?50:0,ptsRun=runTimeBonus(runMs,nRight,total),score=ptsC+ptsRoll+ptsSpeed+ptsRun+finish;
+ const maxRun=full&&ptsC+ptsRoll+finish===795;   /* max-score prize later: full 51-placement runs judged on 795, without per-card speed, the 0–5 time tiebreaker, or first-time bonus. A perfect, all-quick run under 12:00 can score 902. */
  const unlockCard=perfect?pickUnlock():null;if(unlockCard)grantUnlock(unlockCard);
  const prevHS=getBestSkill(),newHS=score>prevHS&&score>0;if(!placedSession)saveBestSkill(score,runMs);
  /* old-style score (correct + best streak) and its old high-score key, kept only for the test toggle */
@@ -1327,7 +1330,7 @@ function endNew(r){window.__disc=Object.assign({},r,{style:'new'});
    '<div class="bigw"><b class="big" data-v="'+r.score+'">0</b></div><small class="ptl">points</small>'+
    '<div class="nbt" aria-live="polite"></div>'+
    '<div class="yb">Your best: <span>'+(r.prevHS||'–')+'</span></div></div>'+
-   '<div class="rows">'+row('r1','Correct ('+r.nRight+' &times; 10)',r.ptsC)+row('r2','On a roll (streak of 5+)',r.ptsRoll)+row('r3','Time ('+fmtTime(r.runMs)+')',r.ptsSpeed)+(r.ptsRun?row('r5','Time bonus',r.ptsRun):'')+(r.finish?row('r4','Finished all 51',r.finish):'')+'</div>'+(r.ptsNew?'<div class="pers" id="pers">First-time cards <b>+'+r.ptsNew+'</b><small>yours to keep, not in the run score</small></div>':'')+'</div>'+
+   '<div class="rows">'+row('r1','Correct ('+r.nRight+' &times; 10)',r.ptsC)+row('r2','On a roll (streak of 5+)',r.ptsRoll)+row('r3','Time ('+fmtTime(r.runMs)+')',r.ptsSpeed)+((r.finish||r.ptsRun)?row('r5','Time bonus',r.ptsRun||0):'')+(r.finish?row('r4','Finished all 51',r.finish):'')+'</div>'+(r.ptsNew?'<div class="pers" id="pers">First-time cards <b>+'+r.ptsNew+'</b><small>yours to keep, not in the run score</small></div>':'')+'</div>'+
   '<div class="acts"><div class="a2"><button class="btn" id="again">Play again</button><button class="btn gold" id="viewtl">View the timeline</button></div></div>'+
   '<div class="e2">'+
    '<button class="cta web" id="webu" type="button">'+ICON_SCREEN+'<span class="ct">Unlock all 52 cards online, &pound;4.99</span></button>'+
@@ -1374,7 +1377,7 @@ function endOld(r){const {nRight,nWrong,runBest,perfect,unlockCard,stillLocked}=
   '<div class="okn" data-v="'+r.ptsC+'"><small>Correct ('+nRight+' &times; 10)</small><b>0</b></div>'+
   '<div class="roll" data-v="'+r.ptsRoll+'"><small>On a roll (streak of 5+)</small><b>0</b></div>'+
   '<div class="tim" data-v="'+r.ptsSpeed+'"><small>Time ('+fmtTime(r.runMs)+')</small><b>0</b></div>'+
-  (r.ptsRun?'<div class="trun" data-v="'+r.ptsRun+'"><small>Time bonus</small><b>0</b></div>':'')+
+  ((r.finish||r.ptsRun)?'<div class="trun" data-v="'+(r.ptsRun||0)+'"><small>Time bonus</small><b>0</b></div>':'')+
   (r.finish?'<div class="fin" data-v="'+r.finish+'"><small>Finished all 51</small><b>0</b></div>':'')+'</div>'+
   '<div class="tot" data-v="'+score+'"><small>Run score</small><b>0</b></div></div>'+
   (r.ptsNew?'<div class="pers" id="pers">First-time cards <b>+'+r.ptsNew+'</b><small>yours to keep, not in the run score</small></div>':'')+
@@ -1428,7 +1431,7 @@ const UNLOCKTEST=TEST&&/[?&]unlock=1\b/.test(location.search);
 newRun();
 if(UNLOCKTEST){nRight=total;nWrong=0;ptsC=total*10;ptsRoll=Math.max(0,total-4)*5;ptsSpeed=0;runMs=0;later(over,40)}
 if(PLACED){try{const u=new URL(location.href);u.searchParams.delete('placed');history.replaceState(null,'',u.pathname+u.search+u.hash)}catch(e){}}
-if(TEST)window.__ckScore={fmt:fmtTime,speedPts,preview(extra){lastRun=Object.assign({nRight:40,nWrong:11,runBest:12,total:51,ptsC:400,ptsRoll:40,ptsSpeed:40,ptsRun:0,ptsNew:40,finish:50,runMs:17*60*1000,score:530,maxRun:false,perfect:false,newHS:false,prevHS:480,unlockCard:null,stillLocked:0,owned:52,cardMs:[]},extra||{});phase='over';const s0=$('#s0');if(s0)s0.hidden=true;s0Active=false;const fc=$('#fc');if(fc)fc.hidden=true;const z=$('#zoom');if(z)z.style.display='none';applyFrame&&applyFrame();renderEnd()}};
+if(TEST)window.__ckScore={fmt:fmtTime,speedPts,preview(extra){lastRun=Object.assign({nRight:40,nWrong:11,runBest:12,total:51,ptsC:400,ptsRoll:40,ptsSpeed:40,ptsRun:2,ptsNew:40,finish:50,runMs:17*60*1000,score:532,maxRun:false,perfect:false,newHS:false,prevHS:480,unlockCard:null,stillLocked:0,owned:52,cardMs:[]},extra||{});phase='over';const s0=$('#s0');if(s0)s0.hidden=true;s0Active=false;const fc=$('#fc');if(fc)fc.hidden=true;const z=$('#zoom');if(z)z.style.display='none';applyFrame&&applyFrame();renderEnd()}};
 if(TEST)window.__ckUnlock={show:showUnlock,hide:hideUnlock,pick:pickUnlock,owned:()=>ownedDeck().map(c=>c.id),locked:()=>lockedPlayable().map(c=>c.id),grant:grantUnlock,total:()=>total,layout:()=>Object.assign({},L),
  fillAll(){const pool=ownedDeck().slice().sort((a,b)=>a.n-b.n);if(!pool.length)return;tl=pool.map(c=>({c,up:true}));hand=null;deck=[];total=Math.max(0,pool.length-1);nRight=total;nWrong=0;runBest=total;phase='review';
   $('#end').style.display='none';hideUnlock();hideYc();applyFrame();const s=$('#stage');clearNextClick(s);s.innerHTML='';s.className='pan v';sizeStage('verdict');timeline();$('#tl').scrollTop=0;window.__ev.push('fillAll:'+pool.length)},
