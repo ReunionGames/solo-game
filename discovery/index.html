@@ -483,6 +483,10 @@ header{position:relative;z-index:7}
 #ulock.spin .ulq{animation:ulqout .45s linear forwards}
 #ulock.spin .ulreal{animation:ulrin .45s linear forwards}
 #ulock.shown .ulq{display:none}#ulock.shown .ulreal{opacity:1}
+#ulock.spin:not(.shown){background:rgba(35,17,9,.6)}
+#ulock.spin:not(.shown) .ulhole{opacity:0}
+#ulock.spin:not(.shown) .ulglow{visibility:hidden;animation:none}
+#ulock .ulreal .back{visibility:hidden}   /* Luke t441u/t442u: during the unlock flip, hide the slot outline and the glow clone that sat still behind the card, and hide the card-back face inside the reveal card. No silhouette or placeholder in the slot; the gold border and glow return once the flip has finished. */
 #ulock .ulfx{position:absolute;inset:0;z-index:0;pointer-events:none}
 #ulock .ulspot,.ulcard{z-index:1}
 #ulock .ulglow{position:absolute;z-index:0;pointer-events:none;animation:glowpulse 3.6s ease-in-out infinite;will-change:opacity}   /* Luke t405u: the actual hard-card glow from 2eafa02 (t284u/t285u), last in play at e0350c4, before 5acfff0 replaced it with a flash and gold border. Same card-shaped layer and static drop-shadows, radii scaled ~1.6 for the larger reveal card; only opacity is animated. */
