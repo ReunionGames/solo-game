@@ -308,7 +308,10 @@ header{position:relative;z-index:7}
 @keyframes zturn{0%{transform:scaleX(1)}50%{transform:scaleX(0)}100%{transform:scaleX(1)}}
 /* card image still loading or failed (Luke t311u): a parchment outline with the card's corner radius, not the old garish red box. The title only appears if the image finally fails. */
 .face .ft{display:none}
+/* Luke t311u / t337u: parchment outline while a picture side loads; burgundy (the card-back colour) while the red side loads. */
 .face.ld{background:var(--parch);border-radius:var(--card-rx)/var(--card-ry);box-shadow:inset 0 0 0 1.5px rgba(85,19,9,.28)}
+.face.back.ld{background:var(--burg);box-shadow:inset 0 0 0 1.5px rgba(233,210,158,.55)}
+.face.back.ld.fail .ft{color:var(--parch)}
 .face.ld.fail .ft{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:8%;text-align:center;color:var(--soft);font-weight:600;font-size:clamp(9px,9cqw,30px);line-height:1.15}
 .face.ld{container-type:size}
 .face.ld img{opacity:0}
