@@ -269,15 +269,16 @@ header{position:relative;z-index:7}
 #rsq .btn{min-height:36px;font-size:15px;padding:0 12px}
 #mute .x{display:none}#mute .w{display:inline}#mute[data-level="0"] .x,#mute[aria-pressed="true"] .x{display:inline}#mute[data-level="0"] .w,#mute[aria-pressed="true"] .w{display:none}#mute[data-level="1"] .w2{display:none}
 /* Luke t245u/t275u/t327u: the gear opens a Settings panel (sounds, music, streak pop-ups) on desktop and mobile */
-#vol{position:fixed;z-index:45;right:auto;top:auto;background:var(--parch);border:2px solid var(--gold);border-radius:12px;padding:10px 12px;box-shadow:0 4px 16px rgba(0,0,0,.4);display:flex;flex-direction:column;gap:8px;min-width:222px;max-width:min(280px,calc(100vw - 16px));box-sizing:border-box}
+#vol{position:fixed;z-index:45;right:auto;top:auto;background:var(--parch);border:2px solid var(--gold);border-radius:12px;padding:10px 12px;box-shadow:0 4px 16px rgba(0,0,0,.4);display:flex;flex-direction:column;gap:8px;min-width:222px;max-width:min(340px,calc(100vw - 16px));box-sizing:border-box}
 #vol[hidden]{display:none!important}
-#vol .vol-row{display:flex;align-items:center;gap:8px;min-height:44px}
-#vol .vol-lab{flex:none;min-width:3.7em;width:auto;font-weight:700;color:var(--burg);font-size:15px;line-height:1.1}
-#vol .vol-tog{flex:none;width:48px;height:28px;padding:0;border:1.5px solid #cdb98a;border-radius:999px;background:#efe3c4;cursor:pointer;position:relative;touch-action:manipulation}
+/* Luke t364u: every row is label | optional slider | toggle, so the switches share one right-hand column. A new row (e.g. Points pop-ups) only needs the same classes. */
+#vol .vol-row{display:grid;grid-template-columns:auto 1fr auto;grid-auto-flow:dense;align-items:center;column-gap:8px;min-height:44px}
+#vol .vol-lab{grid-column:1;grid-row:1;font-weight:700;color:var(--burg);font-size:15px;line-height:1.1}
+#vol .vol-tog{grid-column:3;grid-row:1;justify-self:end;width:48px;height:28px;padding:0;border:1.5px solid #cdb98a;border-radius:999px;background:#efe3c4;cursor:pointer;position:relative;touch-action:manipulation}
 #vol .vol-tog:after{content:"";position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:#551309;transition:left .15s ease}
 #vol .vol-tog[aria-checked="true"]{background:#551309;border-color:#551309}
 #vol .vol-tog[aria-checked="true"]:after{left:22px;background:#F4E8CB}
-#vol input[type=range]{flex:1 1 auto;width:0;min-width:80px;height:44px;margin:0;accent-color:#551309;cursor:pointer}
+#vol input[type=range]{grid-column:2;grid-row:1;width:100%;min-width:0;height:44px;margin:0;accent-color:#551309;cursor:pointer}
 @media (max-width:420px){.brand b{white-space:normal;font-size:16px;line-height:1.15}#stats{gap:10px}header{gap:6px;padding:5px 8px}#stats .scw,#stats .hs{min-width:4em}}
 /* new best: gold sparkle out of the streak area + a tag; never blocks a tap */
 #fx{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:8}
