@@ -247,11 +247,19 @@ header{position:relative;z-index:7}
 @keyframes stkpop{0%{transform:scale(1)}50%{transform:scale(1.25)}100%{transform:scale(1)}}
 @media (min-width:700px){.stk{min-width:34px;height:34px;font-size:24px}#stats{gap:24px}#stats .sl,#stats .hl{font-size:12px}#stats .hv{font-size:24px;min-height:34px}#stats .bl{font-size:12px}#stats .scw,#stats .hs{min-width:5em}}
 /* mute is a one-tap master mute; settings (gear) opens the options panel (Luke t327u). 44px tap target, 30px ring */
-#mute,#rst,#set{position:relative;width:44px;height:44px;flex:none;border:0;background:none;padding:0;cursor:pointer;color:var(--burg);touch-action:manipulation}
+#mute,#set{position:relative;width:44px;height:44px;flex:none;border:0;background:none;padding:0;cursor:pointer;color:var(--burg);touch-action:manipulation}
 #mute{margin:-5px -8px -5px 0}
-#rst,#set{margin:-5px -2px -5px 0}
-#mute:before,#rst:before,#set:before{content:"";position:absolute;left:8px;top:8px;width:28px;height:28px;border-radius:50%;border:1.5px solid #cdb98a;box-sizing:border-box}
-#mute svg,#rst svg,#set svg{position:absolute;left:13px;top:13px;width:18px;height:18px}
+#set{margin:-5px -2px -5px 0}
+#mute:before,#set:before{content:"";position:absolute;left:8px;top:8px;width:28px;height:28px;border-radius:50%;border:1.5px solid #cdb98a;box-sizing:border-box}
+#mute svg,#set svg{position:absolute;left:13px;top:13px;width:18px;height:18px}
+/* Luke t338u: Restart is a proper burgundy/gold pill with a label, so it's easy to find. After a streak breaks it glows gold until the player restarts or plays on. */
+#rst{display:inline-flex;align-items:center;justify-content:center;gap:5px;flex:none;min-height:44px;min-width:44px;margin:0 2px 0 6px;padding:0 10px 0 8px;border:2px solid var(--gold);border-radius:999px;background:var(--burg);color:var(--parch);font:inherit;font-weight:700;font-size:14px;line-height:1;letter-spacing:.01em;box-shadow:0 1px 4px rgba(0,0,0,.25);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+#rst svg{width:15px;height:15px;flex:none}
+#rst .rsl{padding-bottom:1px}
+#rst.hint{box-shadow:0 0 0 2px #FFE08A,0 0 12px 4px rgba(242,184,28,.85);animation:rstglow 1.4s ease-in-out infinite}
+@keyframes rstglow{0%,100%{box-shadow:0 0 0 1px #E9D29E,0 0 8px 3px rgba(242,184,28,.55)}50%{box-shadow:0 0 0 2px #FFE08A,0 0 16px 6px rgba(255,214,90,.95)}}
+@media (prefers-reduced-motion:reduce){#rst.hint{animation:none;box-shadow:0 0 0 2px #E9D29E,0 0 12px 4px rgba(242,184,28,.8)}}
+@media (max-width:420px){#rst{min-height:40px;padding:0 8px 0 6px;font-size:13px;margin:0 1px 0 4px}}
 /* Luke t261u: Restart confirm, a small popover under the header button */
 #rsq{position:fixed;z-index:45;right:auto;top:auto;background:var(--parch);border:2px solid var(--gold);border-radius:12px;padding:10px 12px;box-shadow:0 4px 16px rgba(0,0,0,.4);min-width:180px;max-width:min(240px,calc(100vw - 16px))}
 #rsq[hidden]{display:none!important}
@@ -482,7 +490,7 @@ header{position:relative;z-index:7}
 </style></head><body>
 <div id="vs"></div>
 <div id="app">
-<header><div class="brand"><b>Game Mode: Discovery</b></div><div id="hr"><div id="stats" aria-live="polite"></div><button id="rst" type="button" title="Restart" aria-label="Restart" aria-haspopup="dialog" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M20 4v6h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button id="set" type="button" title="Settings" aria-label="Settings" aria-haspopup="dialog" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.04 7.04 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.77 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94L2.89 14.58a.5.5 0 0 0-.12.64l1.92 3.32c.13.23.4.32.64.22l2.39-.96c.5.38 1.04.7 1.63.94l.36 2.54c.05.24.26.42.5.42h3.84c.24 0 .45-.18.5-.42l.36-2.54c.59-.24 1.13-.56 1.63-.94l2.39.96c.24.1.51 0 .64-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/></svg></button><button id="mute" type="button" aria-pressed="false" aria-label="Sound on. Tap to mute"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3z" fill="currentColor"/><path class="w w1" d="M15.5 8.5a5 5 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="w w2" d="M18.5 5.5a9 9 0 0 1 0 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="x" d="M15.5 9.5l5 5M20.5 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button></div><div id="fx"></div></header>
+<header><div class="brand"><b>Game Mode: Discovery</b></div><div id="hr"><div id="stats" aria-live="polite"></div><button id="rst" type="button" title="Restart this run" aria-label="Restart" aria-haspopup="dialog" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M20 4v6h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="rsl">Restart</span></button><button id="set" type="button" title="Settings" aria-label="Settings" aria-haspopup="dialog" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.04 7.04 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.77 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94L2.89 14.58a.5.5 0 0 0-.12.64l1.92 3.32c.13.23.4.32.64.22l2.39-.96c.5.38 1.04.7 1.63.94l.36 2.54c.05.24.26.42.5.42h3.84c.24 0 .45-.18.5-.42l.36-2.54c.59-.24 1.13-.56 1.63-.94l2.39.96c.24.1.51 0 .64-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/></svg></button><button id="mute" type="button" aria-pressed="false" aria-label="Sound on. Tap to mute"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3z" fill="currentColor"/><path class="w w1" d="M15.5 8.5a5 5 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="w w2" d="M18.5 5.5a9 9 0 0 1 0 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="x" d="M15.5 9.5l5 5M20.5 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button></div><div id="fx"></div></header>
 <div id="stage"></div>
 <div id="tlh"><div class="lab"><span>Timeline: earliest to latest</span><span class="rule"></span></div></div>
 <div id="tlw"><div id="tl"></div><div id="pill" class="pill" hidden></div><button id="yc" hidden>Your card ↓</button></div>
@@ -804,13 +812,13 @@ function watchImg(img,face,src,pri){let n=0;face.classList.remove('fail');
  img.onerror=()=>{if(n>=3){IMGBAD.add(src);face.classList.add('ld','fail');return}n++;window.__imgTries++;const u=n<3?src+(src.includes('?')?'&':'?')+'r='+n:src+'/v1/fit/w_760,h_1062,q_85/card.webp';
   setTimeout(()=>{img.src=u},TEST?20:400*n)};
  img.src=src;if(img.complete&&img.naturalWidth>0){ready();return}face.classList.add('ld');warmImg(src,pri||'high')}
-function newRun(){musicBegin();clearT();clearEnd();hideSbt();lastRun=null;$('#end').style.display='none';hideUnlock();const nh=$('#nhs');if(nh)nh.remove();hideYc();closeRsq();clearConquerFx();conquerTestArmed=CONQUERTEST;
+function newRun(){hintRestart(false);musicBegin();clearT();clearEnd();hideSbt();lastRun=null;$('#end').style.display='none';hideUnlock();const nh=$('#nhs');if(nh)nh.remove();hideYc();closeRsq();clearConquerFx();conquerTestArmed=CONQUERTEST;
  if(placedPending){placedPending=false;placedSession=true;preloadOwned();showPlacedBoard();return}
  placedSession=false;preloadOwned();
  const pool=ownedDeck(),mid=pool.filter(c=>MID.includes(c.period)),start=shuffle((mid.length?mid:pool).slice())[0];
  deck=shuffle(pool.filter(c=>c!==start));if(TEST&&TK)deck=deck.slice(0,TK);total=deck.length;
  tl=[{c:start,up:true}];streak=0;turn=0;nRight=0;nWrong=0;runBest=0;ptsC=0;ptsRoll=0;ptsNew=0;nbShown=false;best=getBest();bestStart=best;stkLevel=-1;stkCold=false;stkRed=false;clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const zf=document.querySelector('.zfly');if(zf)zf.remove();preloadAhead();draw()}
-function draw(){if(!deck.length)return over();applyFrame();
+function draw(){hintRestart(false);if(!deck.length)return over();applyFrame();
  hand=deck.pop();turn++;sel=null;lit=new Set();phase='choose';hideYc();preloadAhead();
  big=!learned;loud=(turn===1);pulseOn=false;step3=false;pulseUntil=0;                /* loud markers until the first correct card; one pulse when the step 3 prompt appears */
  $('#tlh').style.display='none';
@@ -873,7 +881,8 @@ function fitBig(o){const f=o.querySelector('.ff'),w=$('#tlw').getBoundingClientR
   let n=0;while(n++<30&&(f.scrollWidth>W||f.scrollHeight>H)&&fs>30){fs-=3;f.style.fontSize=Math.floor(fs)+'px'}}
 function placeYes(o){const el=o&&o._el;if(!o||!el||!el.isConnected)return;const r=el.getBoundingClientRect(),vw=innerWidth,vh=innerHeight;let x=r.left+r.width/2,y=r.top+r.height/2;const fw=o.offsetWidth||0,fh=o.offsetHeight||0;x=Math.max(fw/2+4,Math.min(vw-fw/2-4,x));y=Math.max(fh/2+4,Math.min(vh-fh/2-4,y));o.style.left=Math.round(x)+'px';o.style.top=Math.round(y)+'px'}
 function yesFlash(e){clearWordFlashes();const o=document.createElement('div');o.id='yesbk';o.setAttribute('aria-live','assertive');o.innerHTML='<span class="ff"><i>YES!</i></span>';o._el=e&&e.el;document.body.appendChild(o);const r=o._el&&o._el.getBoundingClientRect(),fs=r?Math.max(28,Math.min(72,r.width*.48)):48;o.querySelector('.ff').style.fontSize=Math.round(fs)+'px';placeYes(o);window.__ev&&window.__ev.push('yes:'+(e&&e.c&&e.c.id||''));clearTimeout(yesFlash.t);clearTimeout(yesFlash.u);const hold=TEST?600:1100,fall=TEST?400:400;yesFlash.t=setTimeout(()=>{if(o.isConnected)o.classList.add('out')},hold);yesFlash.u=setTimeout(()=>{o.remove()},hold+fall)}
-function streakBroken(){if(!streakPops){sfx('smash');stkRed=true;stats();return}bigFlash('brk','<i>Streak</i><i>broken!</i>','streakBroken')}
+function hintRestart(on){const b=$('#rst');if(b)b.classList.toggle('hint',!!on)}   /* Luke t338u: gold glow after a streak breaks, until they restart or play on */
+function streakBroken(){hintRestart(true);if(!streakPops){sfx('smash');stkRed=true;stats();return}bigFlash('brk','<i>Streak</i><i>broken!</i>','streakBroken')}
 function zeroFly(){clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const old=document.querySelector('.zfly');if(old)old.remove();
  const k=$('#stats .stk');if(!k)return;window.__ev.push('zeroFly');
  if(RM.matches){stkRed=true;stats();return}   /* reduced motion: no fly, just the red 0 on the counter */
@@ -1204,7 +1213,7 @@ const ICON_SCREEN='<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect 
 let endTimers=[],endTok=0,lastRun=null;
 function endLater(f,ms){const t=setTimeout(f,ms);endTimers.push(t);return t}
 function clearEnd(){endTok++;endTimers.forEach(clearTimeout);endTimers=[];cutScore();hideUnlock();const nh=$('#nhs');if(nh)nh.remove();clearTimeout(highScore.t);clearTimeout(highScore.u)}
-function over(){musicOver=true;musicPendingIn=false;if(musicGain)fadeMusic(0,SCORE_MUSIC_FADE);window.__ev&&window.__ev.push('musicOut');loadScoreSnds();   /* music fades out before the count-up starts */
+function over(){hintRestart(false);musicOver=true;musicPendingIn=false;if(musicGain)fadeMusic(0,SCORE_MUSIC_FADE);window.__ev&&window.__ev.push('musicOut');loadScoreSnds();   /* music fades out before the count-up starts */
  phase='over';applyFrame();$('#pill').hidden=true;$('#s0').hidden=true;s0Active=false;$('#fc').hidden=true;$('#zoom').style.display='none';hideUnlock();resolved=null;sel=null;hideYc();best=Math.max(best,streak);setBest(best);stats();
  const perfect=nWrong===0&&nRight===total&&total>0,full=total>=51,finish=full?50:0,score=ptsC+ptsRoll+ptsNew+finish;
  const maxRun=full&&ptsC+ptsRoll+finish===795;   /* max-score prize logic later: only full 51-placement runs count, judged without the first-time bonus */
