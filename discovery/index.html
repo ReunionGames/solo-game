@@ -478,14 +478,15 @@ header{position:relative;z-index:7}
 #ulock.shown .ulq{display:none}#ulock.shown .ulreal{opacity:1}
 #ulock .ulfx{position:absolute;inset:0;z-index:0;pointer-events:none}
 #ulock .ulspot,.ulcard{z-index:1}
-#ulock .ulglow{position:absolute;left:50%;top:54%;width:120vw;height:120vw;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(255,214,90,.55) 0%,rgba(242,184,28,.35) 58%,transparent 78%);opacity:0;will-change:opacity;pointer-events:none}   /* Luke t403u: the in-play hard-card glow (same radial wash as .slot.conquered .card:after), scaled up for the full-screen reveal. Opacity only, no animated box-shadow or filter. */
-#ulock.spin .ulglow,#ulock.shown .ulglow{animation:hardflash 1.4s ease-out .18s both}
-#ulock.spin .ulspot .card:before,#ulock.shown .ulspot .card:before{content:"";position:absolute;inset:0;border:3px solid #F2B81C;border-radius:var(--card-rx)/var(--card-ry);box-sizing:border-box;pointer-events:none;z-index:5}
+#ulock .ulglow{position:absolute;z-index:0;pointer-events:none;animation:glowpulse 3.6s ease-in-out infinite;will-change:opacity}   /* Luke t405u: the actual hard-card glow from 2eafa02 (t284u/t285u), last in play at e0350c4, before 5acfff0 replaced it with a flash and gold border. Same card-shaped layer and static drop-shadows, radii scaled ~1.6 for the larger reveal card; only opacity is animated. */
+#ulock .ulglow img{display:block;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 0 6px #8a4b00) drop-shadow(0 0 22px #F2B81C) drop-shadow(0 0 45px rgba(255,214,90,1)) drop-shadow(0 0 70px rgba(242,184,28,.95))}
+#ulock.spin .ulspot .card img,#ulock.shown .ulspot .card img{filter:drop-shadow(0 0 5px #8a4b00) drop-shadow(0 0 16px #F2B81C)}
 #ulock .ulsp{position:absolute;width:15px;height:15px;margin:-7.5px 0 0 -7.5px;background:#F2B81C;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);opacity:0;animation:spk var(--d,1.2s) ease-out var(--dl,0s) forwards;pointer-events:none;will-change:transform,opacity}   /* a handful of light sparkles; transform/opacity only */
+@keyframes glowpulse{0%,100%{opacity:.5}50%{opacity:1}}
 @keyframes ulspin{0%{transform:scaleX(1)}50%{transform:scaleX(0)}100%{transform:scaleX(1)}}
 @keyframes ulqout{0%,49%{opacity:1}50%,100%{opacity:0}}
 @keyframes ulrin{0%,49%{opacity:0}50%,100%{opacity:1}}
-@media (prefers-reduced-motion:reduce){#ulock.spin .ulcard,#ulock.spin .ulq,#ulock.spin .ulreal,#ulock .ulglow,#ulock .ulsp{animation:none}#ulock .ulglow,#ulock .ulsp{opacity:0}}
+@media (prefers-reduced-motion:reduce){#ulock.spin .ulcard,#ulock.spin .ulq,#ulock.spin .ulreal,#ulock .ulglow,#ulock .ulsp{animation:none}#ulock .ulglow{opacity:.7}#ulock .ulsp{opacity:0}}
 /* TEST ONLY (Luke t331u/t355u): scoreboard style toggle + timing log, outside the end panel; strip before Wix */
 
 /* Points pop-ups (Luke t355u): Flip-style lettering, much smaller, shot from the card. Colour by type (Solomon r2). */
@@ -1288,8 +1289,9 @@ function miss(e){const old=e.el.getBoundingClientRect();
 function hideUnlock(){const s=$('#ulock');if(!s||s.hidden)return;s.hidden=true;s.classList.remove('pre','spin','shown');const fx=s.querySelector('.ulfx');if(fx)fx.remove();const hold=s.querySelector('.ulcard');if(hold)hold.innerHTML=''}
 function positionUnlock(){const s=$('#ulock');if(!s||s.hidden)return;
  const sr=s.getBoundingClientRect(),card=s.querySelector('.ulspot .card')||s.querySelector('.ulspot');if(!card)return;
- const c=card.getBoundingClientRect(),hole=s.querySelector('.ulhole');
- hole.style.cssText='left:'+(c.left-sr.left)+'px;top:'+(c.top-sr.top)+'px;width:'+c.width+'px;height:'+c.height+'px'}
+ const c=card.getBoundingClientRect(),hole=s.querySelector('.ulhole'),glow=s.querySelector('.ulglow');
+ const box='left:'+(c.left-sr.left)+'px;top:'+(c.top-sr.top)+'px;width:'+c.width+'px;height:'+c.height+'px';
+ hole.style.cssText=box;if(glow)glow.style.cssText=box}
 /* Luke t331u: the unlock now starts as a plain black card with a big question mark ('Tap to reveal'). One tap spins it round
    (a scaleX turn, so it is safe with the card's own 3D faces) into the existing glowing mystery-card reveal. Reduced motion: no spin. */
 const UL_PRE="You've unlocked a new card, tap to find out what it is!",UL_DONE="You've unlocked a new card!";
@@ -1306,13 +1308,17 @@ function showUnlock(){const c=window.__disc&&window.__disc.unlockCard;if(!c||pha
 function revealUnlock(){const s=$('#ulock'),c=window.__disc&&window.__disc.unlockCard;if(!s||!s.classList.contains('pre'))return;s.classList.remove('pre');ui('tap');
  const fin=()=>{if(s.hidden)return;s.classList.add('shown');const msg=s.querySelector('.ulbox p');if(msg)msg.textContent=UL_DONE;const tit=s.querySelector('.ultitle');if(tit)tit.textContent=(c&&c.title)||'';
   s.dataset.at=performance.now();positionUnlock();sfx('conquer');window.__ev.push('unlockReveal');const go=$('#ulgo');if(go)go.focus({preventScroll:true})};
- if(RM.matches){fin();return}
  const old=s.querySelector('.ulfx');if(old)old.remove();
  const fx=document.createElement('div');fx.className='ulfx';fx.setAttribute('aria-hidden','true');fx.innerHTML='<div class="ulglow"></div>';
  const spot=s.querySelector('.ulspot');s.insertBefore(fx,spot||null);
- const sr=s.getBoundingClientRect(),cr=(spot&&spot.getBoundingClientRect())||sr,cx=cr.left+cr.width/2-sr.left,cy=cr.top+cr.height/2-sr.top;
+ const sr=s.getBoundingClientRect(),cr=(spot&&spot.getBoundingClientRect())||sr,glow=fx.querySelector('.ulglow');
+ glow.style.cssText='left:'+(cr.left-sr.left)+'px;top:'+(cr.top-sr.top)+'px;width:'+cr.width+'px;height:'+cr.height+'px';
+ const face=spot&&(spot.querySelector('.ulreal img')||spot.querySelector('.front img')||spot.querySelector('img'));
+ if(face)glow.appendChild(face.cloneNode(true));
+ if(RM.matches){fin();return}
+ const cx=cr.left+cr.width/2-sr.left,cy=cr.top+cr.height/2-sr.top;
  for(let i=0;i<7;i++){const sp=document.createElement('i');sp.className='ulsp';const a=(i/7)*Math.PI*2,d=58+(i%3)*18;sp.style.cssText='left:'+cx+'px;top:'+cy+'px;--tx:'+Math.round(Math.cos(a)*d)+'px;--ty:'+Math.round(Math.sin(a)*d)+'px;--d:1.2s;--dl:'+(0.18+i*0.06).toFixed(2)+'s';fx.appendChild(sp)}
- endLater(()=>{if(fx.parentNode)fx.remove()},1800)   /* Luke t403u: hard-card glow, scaled up, plus a few sparkles; removed after the reveal; skipped for reduced-motion */
+ endLater(()=>{fx.querySelectorAll('.ulsp').forEach(n=>n.remove())},1800)   /* Luke t405u: 2eafa02 hard-card glow stays while the card is shown; sparkles go after the reveal; skipped for reduced-motion */
  s.classList.add('spin');endLater(fin,TEST?60:450)}
 function scheduleUnlock(){if(!(window.__disc&&window.__disc.unlockCard))return;
  const wait=window.__disc.newHS?(TEST?1200:2000):(TEST?250:700);endLater(showUnlock,wait)}
