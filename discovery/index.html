@@ -65,7 +65,7 @@ header{flex:none;display:flex;justify-content:space-between;align-items:center;g
 .panel:has(.ff){align-self:stretch;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0;flex:1 1 auto;min-height:0}
 /* timeline */
 #tlw{position:relative;flex:1 1 auto;min-height:0}
-#tl{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:66px 18px 4px;--band:20px;--g:4px;--rg:4px;--tw:26px;--th:20px;--tf:19px}   /* Luke t360u: 4px plus a fixed 62px so the start card stays below the step-0 bubble; this used to be a turn-1-only cue for the hint pill, which now sits under the timeline */
+#tl{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:4px 18px 4px;--band:20px;--g:4px;--rg:4px;--tw:26px;--th:20px;--tf:19px}   /* Luke t365u: no reserved cue space; the timeline sits as high as possible, whether or not the first-run coach or a hint is showing */
 .rw{margin:0 auto;position:relative}
 .rw+.rw{margin-top:var(--rg)}
 .cards{display:flex;gap:var(--g)}
@@ -144,7 +144,7 @@ header{flex:none;display:flex;justify-content:space-between;align-items:center;g
  #tlh{padding:5px 24px 0}.lab{font-size:17px}
  .crow{max-width:760px;margin:0 auto;width:100%}.chip .ct{font-size:20px}.chip{min-height:52px}.chip .mc{width:30px}#hint{font-size:21px}#stage.loud #hint{font-size:21px}
  .vb{font-size:21px;text-align:center}.vh{justify-content:center;gap:24px}.nbst .lg{display:inline}
- #tl{padding:52px 32px 6px;--band:24px;--g:6px;--rg:6px;--tw:32px;--th:24px;--tf:22px}   /* Luke t259u/t300u: side padding and tighter packing. t360u: 6px plus a fixed 46px so the start card stays below the step-0 bubble, same as the old desktop cue */
+ #tl{padding:6px 32px;--band:24px;--g:6px;--rg:6px;--tw:32px;--th:24px;--tf:22px}   /* Luke t259u/t300u: side padding and tighter packing. t365u: no reserved cue space, same as play */
  .cue span{font-size:18px}
  .panel{font-size:21px}.panel .big{font-size:30px}
 }
@@ -195,19 +195,14 @@ header{flex:none;display:flex;justify-content:space-between;align-items:center;g
 .gbtn{font-family:'EB Garamond',Georgia,serif;font-weight:700;color:#F4E8CB;background:#551309;border:2px solid #E9D29E;border-radius:999px;min-height:48px;padding:5px 14px 7px;line-height:1.12;box-shadow:0 3px 10px rgba(0,0,0,.45);display:inline-flex;align-items:center;justify-content:center;text-align:center;font-size:22px;animation:gpulse 1s ease-in-out 1;touch-action:manipulation}
 @keyframes gpulse{0%{transform:scale(1)}45%{transform:scale(1.07)}100%{transform:scale(1)}}
 .flipb span.gbtn{min-width:60%;max-width:96%;padding:4px 8px 6px;white-space:nowrap}
-/* step 0: dim the frame, light the start card, parchment box with the line, gold arrow */
+/* step 0: dim the frame, light the start card, parchment box with the line (no arrow, Luke t365u) */
 #s0{position:fixed;left:0;right:0;top:var(--vt,0px);height:var(--vh,100%);z-index:8;overflow:hidden;cursor:pointer}
 #s0[hidden]{display:none}
 .s0hole{position:absolute;border-radius:var(--card-rx)/var(--card-ry);pointer-events:none;box-shadow:0 0 0 3px #E9D29E,0 0 24px 9px rgba(233,210,158,.95),0 0 0 9999px rgba(35,17,9,.6)}
 .s0box{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:min(94%,640px);background:var(--parch);border:2px solid #E9D29E;outline:2px solid var(--burg);border-radius:14px;padding:10px 14px 12px;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.5);color:var(--burg);font-size:20px;font-weight:700;line-height:1.25}
 .s0box p{margin:0 0 10px}.s0box p b{color:#40110C}
 .s0box .gbtn{min-width:180px;cursor:pointer}
-.s0arrow{position:absolute;width:0;pointer-events:none;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
-.s0arrow:before{content:"";position:absolute;left:-4px;width:8px;top:0;bottom:var(--hh);background:#E9D29E}
-.s0arrow:after{content:"";position:absolute;left:calc(var(--hw) * -1);bottom:0;border-left:var(--hw) solid transparent;border-right:var(--hw) solid transparent;border-top:var(--hh) solid #E9D29E}
 @media (min-width:700px){.s0box{font-size:23px}}
-@keyframes arrbob{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
-.s0arrow.bob{animation:arrbob 1s ease-in-out 3}
 
 /* Unlock reveal (Luke t287u): tutorial-style spotlight, card bright, everything around faded. Hole radius matches the WebP corners (Luke t297u). */
 #ulock{position:fixed;left:0;right:0;top:var(--vt,0px);height:var(--vh,100%);z-index:42;overflow:hidden;cursor:pointer}
@@ -500,7 +495,7 @@ header{position:relative;z-index:7}
 <div id="rsq" hidden role="dialog" aria-label="Restart this run?"><p>Restart this run?</p><div class="rsq-acts"><button type="button" class="btn sec" id="rsq-no">Cancel</button><button type="button" class="btn" id="rsq-go">Restart</button></div></div>
 <div id="vol" hidden role="dialog" aria-label="Settings"><div class="vol-row"><span class="vol-lab" id="sfx-lab">Sounds</span><button type="button" class="vol-tog" id="sfx-tog" role="switch" aria-checked="true" aria-labelledby="sfx-lab"></button><input id="volr" type="range" min="0" max="100" step="1" value="100" aria-label="Sounds volume"></div><div class="vol-row"><span class="vol-lab" id="mus-lab">Music</span><button type="button" class="vol-tog" id="mus-tog" role="switch" aria-checked="true" aria-labelledby="mus-lab"></button><input id="musr" type="range" min="0" max="100" step="1" value="100" aria-label="Music volume"></div><div class="vol-row"><span class="vol-lab" id="pop-lab">Streak pop-ups</span><button type="button" class="vol-tog" id="pop-tog" role="switch" aria-checked="true" aria-labelledby="pop-lab"></button></div><div class="vol-row"><span class="vol-lab" id="flip-lab">Long flips</span><button type="button" class="vol-tog" id="flip-tog" role="switch" aria-checked="true" aria-labelledby="flip-lab"></button></div></div>
 <div id="zoom" role="dialog" aria-label="Your card, large"><div class="z"></div><div class="zs"><div class="zt"></div><button class="btn zb"></button></div><div id="fc" hidden role="dialog" aria-label="This is your first card"><p class="fcmsg">This is your first card. Read it, and then tap to place it on the timeline.</p><p class="fchint">Tap anywhere to read it</p></div></div>
-<div id="s0" hidden><div class="s0hole"></div><div class="s0arrow"></div><div class="s0box"><p></p><button class="gbtn" id="s0go">Got it</button></div></div>
+<div id="s0" hidden><div class="s0hole"></div><div class="s0box"><p></p><button class="gbtn" id="s0go">Got it</button></div></div>
 <div id="help"></div>
 <div id="end"></div>
 <button id="sbt" type="button" hidden>TEST</button>
@@ -950,12 +945,18 @@ function showS0(){const s=$('#s0'),start=tl[0]&&tl[0].c;if(!start){s0Active=fals
  s.hidden=false;s.dataset.at=performance.now();positionS0();updatePill();$('#s0go').focus({preventScroll:true})}
 function positionS0(){const s=$('#s0');if(s.hidden)return;
  const sr=s.getBoundingClientRect(),card=$('#tl .slot .card')||$('#tl .slot');if(!card)return;
- const c=card.getBoundingClientRect(),hole=s.querySelector('.s0hole'),box=s.querySelector('.s0box'),ar=s.querySelector('.s0arrow');
+ const c=card.getBoundingClientRect(),hole=s.querySelector('.s0hole'),box=s.querySelector('.s0box');
  hole.style.cssText='left:'+(c.left-sr.left)+'px;top:'+(c.top-sr.top)+'px;width:'+c.width+'px;height:'+c.height+'px';
- const b=box.getBoundingClientRect(),y0=b.bottom-sr.top+3,tip=c.top-sr.top-5,len=tip-y0,cx=c.left-sr.left+c.width/2;
- const hw=Math.max(11,Math.min(22,c.width*.22)),hh=Math.max(14,Math.min(26,len,c.width*.3));
- ar.style.cssText='left:'+cx+'px;top:'+y0+'px;height:'+Math.max(len,0)+'px;--hw:'+hw+'px;--hh:'+Math.min(hh,Math.max(len,0))+'px;'+(len<8?'display:none':'');
- ar.classList.toggle('bob',!RM.matches)}
+ if(!box)return;
+ const gap=8,boxH=box.getBoundingClientRect().height,topMin=8,floor=sr.height-8;
+ let top=topMin;
+ if(topMin+boxH+gap<=c.top-sr.top)top=topMin;
+ else if(c.bottom-sr.top+gap+boxH<=floor)top=c.bottom-sr.top+gap;
+ else{
+  const above=c.top-sr.top-gap,below=floor-(c.bottom-sr.top);
+  top=below>above?c.bottom-sr.top+gap:Math.max(topMin,c.top-sr.top-gap-boxH);
+ }
+ box.style.top=Math.round(top)+'px'}
 function dismissS0(){const s=$('#s0');if(s.hidden)return;s.hidden=true;s0Active=false;s0Mark();swallowUntil=performance.now()+(TEST?100:350);
  renderStage();$('#stage').classList.add('hbhide');zoomHand();applyHandBar()}
 $('#s0').onclick=ev=>{ev.stopPropagation();ev.preventDefault();if(performance.now()-(+$("#s0").dataset.at||0)<250)return;tapAt={x:ev.clientX,y:ev.clientY};if(!$('#s0').hidden)ui('tap');dismissS0()};
