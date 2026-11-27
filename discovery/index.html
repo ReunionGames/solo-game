@@ -970,7 +970,7 @@ function newBestBurst(){if(!streakPops)return;const fx=$('#fx'),hd=$('header').g
    'Streak / broken!' on a wrong card; 'Streak / N' on every right card. About 1.1s, then fade. Nothing waits for them (pointer-events none).
    Discovery (24 Nov, Luke t230u): after the hold, smash plays and the letters pop apart then fall, timed to the glass impact peak (4ms, measured). Reduced motion is a plain fade. */
 const SMASH_PEAK=.004;   /* seconds to the abs/energy peak of smash (impactGlass_medium_004); onset is immediate, no leading silence */
-function bigFlash(cls,html,evn){if(!streakPops)return;clearWordFlashes();const o=document.createElement('div');o.id='sbk';o.className=cls;o.setAttribute('aria-live','assertive');
+function bigFlash(cls,html,evn,force){if(!streakPops&&!force)return;clearWordFlashes();const o=document.createElement('div');o.id='sbk';o.className=cls;o.setAttribute('aria-live','assertive');
   o.innerHTML='<span class="ff st">'+html+'</span>';document.body.appendChild(o);fitBig(o);window.__ev.push(evn);
   clearTimeout(bigFlash.t);clearTimeout(bigFlash.u);clearTimeout(bigFlash.p);
   const hold=TEST?600:1100,fall=TEST?400:1200;
@@ -1004,7 +1004,7 @@ function fitBig(o){const f=o.querySelector('.ff'),w=$('#tlw').getBoundingClientR
 function placeYes(o){const el=o&&o._el;if(!o||!el||!el.isConnected)return;const r=el.getBoundingClientRect(),vw=innerWidth,vh=innerHeight;let x=r.left+r.width/2,y=r.top+r.height/2;const fw=o.offsetWidth||0,fh=o.offsetHeight||0;x=Math.max(fw/2+4,Math.min(vw-fw/2-4,x));y=Math.max(fh/2+4,Math.min(vh-fh/2-4,y));o.style.left=Math.round(x)+'px';o.style.top=Math.round(y)+'px'}
 function yesFlash(e){clearWordFlashes();const o=document.createElement('div');o.id='yesbk';o.setAttribute('aria-live','assertive');o.innerHTML='<span class="ff"><i>YES!</i></span>';o._el=e&&e.el;document.body.appendChild(o);const r=o._el&&o._el.getBoundingClientRect(),fs=r?Math.max(28,Math.min(72,r.width*.48)):48;o.querySelector('.ff').style.fontSize=Math.round(fs)+'px';placeYes(o);window.__ev&&window.__ev.push('yes:'+(e&&e.c&&e.c.id||''));clearTimeout(yesFlash.t);clearTimeout(yesFlash.u);const hold=TEST?600:1100,fall=TEST?400:400;yesFlash.t=setTimeout(()=>{if(o.isConnected)o.classList.add('out')},hold);yesFlash.u=setTimeout(()=>{o.remove()},hold+fall)}
 function hintRestart(on){const b=$('#rst');if(b)b.classList.remove('hint')}   /* Discovery (Luke t427u): Restart is never highlighted */   /* Emily 26 Nov, Luke t397u: glow only on the first wrong card of a run, then stop. Still clears when they restart, take the next card, or the run ends. */
-function streakBroken(){hintRestart(true);if(!streakPops)return;bigFlash('stf','<i>Not</i><i>quite</i>','notQuite')}   /* Luke t446u/t447u: a miss uses a gentle Not quite pop-up like a streak increase (same Flip lettering and fade). No smash, no shatter, no flying red zero. The existing thud in wrong() stays. The counter still resets to 0. */
+function streakBroken(){hintRestart(true);bigFlash('stf','<i>Not</i><i>quite</i>','notQuite',true)}   /* Luke t446u/t447u/t448u: gentle Not quite pop-up, same Flip lettering as a streak increase. Shown on every miss, including when the streak is already 0, and even if Streak pop-ups are off (Luke t448u: every time). No smash, no shatter, no flying red zero. The thud in wrong() stays. */
 function zeroFly(){clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const old=document.querySelector('.zfly');if(old)old.remove();
  const k=$('#stats .stk');if(!k)return;window.__ev.push('zeroFly');
  if(RM.matches){stkRed=true;stats();return}   /* reduced motion: no fly, just the red 0 on the counter */
@@ -1090,7 +1090,7 @@ h.innerHTML='<span><b>'+n+'</b> · '+(sel==null?'Tap <b>+</b> where it goes, the
  const ct2=chip.querySelector('.ct');let fs=parseFloat(getComputedStyle(ct2).fontSize);while(fs>12&&ct2.scrollHeight>ct2.clientHeight+1){fs-=1;ct2.style.fontSize=fs+'px'}}
 function verdict(head,body,btn,nb){const s=$('#stage');clearNextClick(s);clearFlipWords();s.innerHTML='';s.className='pan v';sizeStage('verdict');
  const p=document.createElement('div');p.className='panel vp';const hr=document.createElement('div');hr.className='vh';
- hr.innerHTML='<span class="big">'+head+'</span>'+(nb||'');
+ hr.innerHTML=(head?'<span class="big">'+head+'</span>':'')+(nb||'');
  if(btn){const b=document.createElement('button');b.className='btn';b.textContent=btn[0];b.onclick=ev=>{ui('tap');btn[1](ev)};hr.appendChild(b)}
  p.appendChild(hr);if(body){const v=document.createElement('div');v.className='vb';v.innerHTML=body;p.appendChild(v)}
  s.appendChild(p);if(btn&&btn[0]==='Next card')armNextClick(s,btn[1]);const vb=p.querySelector('.vb');
@@ -1290,7 +1290,7 @@ function correct(e){clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const zf=doc
  }
 function when(e){const k=tl.indexOf(e),pv=tl[k-1]&&tl[k-1].c,nx=tl[k+1]&&tl[k+1].c,b=t=>'<b>'+t+'</b>';
  return b(e.c.title)+' happens '+(pv&&nx?'after '+b(pv.title)+' and before '+b(nx.title):pv?'after '+b(pv.title):'before '+b(nx.title))+'.'}
-function wrong(e){e.el.classList.add('bad');noteCard(e.c,false);markSeen(e.c.id);cardOk=false;placeLog.push({id:e.c.id,dealtMs:e.dealtMs||0,ok:false,longFlips:!!longFlips,speed:0,first:false});sfx('thud');nWrong++;const lost=streak;streak=0;nbShown=false;stkCold=true;stats();hintRestart(true);if(lost>0)streakBroken();   /* Luke t433u/t446u: any miss still resets the streak to 0; the pop-up is now Not quite, not Streak broken */verdict('Not quite…');ycCheck(e);later(()=>miss(e),1300*TS);
+function wrong(e){e.el.classList.add('bad');noteCard(e.c,false);markSeen(e.c.id);cardOk=false;placeLog.push({id:e.c.id,dealtMs:e.dealtMs||0,ok:false,longFlips:!!longFlips,speed:0,first:false});sfx('thud');nWrong++;streak=0;nbShown=false;stkCold=true;stats();hintRestart(true);streakBroken();   /* Luke t448u: Not quite pop-up on every miss, including a streak already at 0 */verdict('');ycCheck(e);later(()=>miss(e),1300*TS);
  setTimeout(()=>{if(phase==='judging'&&cur===e&&!e.moved){window.__ev.push('failsafe:miss');miss(e)}},1000*TS+1200)}   /* v5.9.1 failsafe: never stuck on 'Not quite…' */
 function miss(e){const old=e.el.getBoundingClientRect();
  tl.splice(tl.indexOf(e),1);const k=tl.filter(x=>key(x.c)<key(e.c)).length;
@@ -1298,7 +1298,7 @@ function miss(e){const old=e.el.getBoundingClientRect();
  e.fixd=true;phase='result';timeline();showEl(e.el,false);
  const last=!deck.length;
  /* Discovery v2 (Luke 24 Nov, t202u): no timer. The player reads why and taps Next card (or See your score after the last card) */
- verdict('Not quite',when(e),last?['See your score',()=>over()]:['Next card',()=>draw()]);ycCheck(e);   /* v5.9.1 failsafe: the score always pops up */   /* the score pops up by itself after the card has slid to its true place */
+ verdict('',when(e),last?['See your score',()=>over()]:['Next card',()=>draw()]);   /* Luke t448u: Not quite lives on the pop-up only; this line keeps the why-text and the Next card / See your score button */ycCheck(e);   /* v5.9.1 failsafe: the score always pops up */   /* the score pops up by itself after the card has slid to its true place */
  if(!RM.matches){const sl=e.el.parentElement,nw=e.el.getBoundingClientRect(),dx=old.left-nw.left,dy=old.top-nw.top;
   if(dx||dy){sl.style.transition='none';sl.style.transform='translate('+dx+'px,'+dy+'px)';sl.style.zIndex=4;sl.getBoundingClientRect();
    sl.style.transition='transform .6s ease-in-out';sl.style.transform='';later(()=>{sl.style.transition='';sl.style.zIndex=''},700)}}}
