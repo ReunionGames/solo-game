@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en-GB"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="robots" content="noindex">
 <title>Chronicles of the Kingdom: Game Mode: Discovery</title>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Fredoka:wght@700&display=swap" rel="stylesheet">
@@ -15,7 +15,7 @@
 /* v5.7 (21 Nov 2026): step 0 (This is your timeline pointer) now shows at the start of every playthrough, not only the first game. v5.6 (21 Nov 2026): workshop (g) stage one. Header streak number restyled (gold ring, pop on each correct card, colour steps at 3/5/10, data-driven milestones), new-best burst + 'New best!' tag from the header (best kept per deck for the session only, no storage), Kenney CC0 sounds (clack, flip, tick, thud, jingle) with a remembered mute toggle, a + marker at the left end of every timeline row (paired with the end of the row above: one insertion index, lit together), desktop zoomed card centred with the button and line below it. End of a run: no See your score step; the score pops up by itself after the verdict, with a View the timeline button that shows the final timeline and a Restart game button. Place it, Flip! and step 0 unchanged. v5.5 (17 Nov 2026): step 1 (Tap to read your first card) removed. Card 1 opens zoomed exactly like cards 2+ (after step 0, or straight away when step 0 is skipped), then the chip, then the Tap a gold marker prompt and marker pulse until the first marker tap. One stage layout for every turn, so the timeline top never moves. The Timeline: earliest to latest label is gone (the marker prompt says earliest on the left). v5.4 (17 Nov 2026): step 0 (the start card on the timeline, first game only), shared burgundy pill button for Tap to read your first card / Flip! / Got it, buttons centred on the card. v5.3 (17 Nov 2026): three-step start on card 1 (tap card to read, enlarged card says Got it place it, then a gold-marker prompt stays over the timeline until the first tap). v5.2 (17 Nov 2026): lays itself out in the part of the frame the visitor can actually see (IntersectionObserver), compact two-column end screen on desktop, quick Flip! text white again. v5.1 (17 Nov 2026): card 1 back to the side-by-side start; cards 2+ zoom (smaller on desktop, near the top); 2-line chip; fixed-height top zone. v5 (17 Nov 2026): every new card opens zoomed (read it, tap off to place); slim chip + one instruction line; timeline gets the frame */
 :root{--parch:#F4E8CB;--burg:#551309;--gold:#E9D29E;--red:#9c1c14;--ink:#2b1a10;--lab:#40110C;--soft:#7F5C4F;--card-rx:4.7619047619%;--card-ry:3.4090909091%} /* O's web cards: 3mm circular corner on a 63mm card (72px on 1512×2112 masters, 28.571px on the 600×838 WebPs). Two-value % keeps it circular as the card scales (a single % would be elliptical). */
 *{box-sizing:border-box}
-html,body{height:100%;margin:0;overflow:hidden;background:var(--parch);color:var(--ink);font-family:'EB Garamond',Georgia,serif;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--parch);color:var(--ink);font-family:'EB Garamond',Georgia,serif;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 #app{position:absolute;left:0;right:0;top:var(--vt,0px);height:var(--vh,100%);width:min(100%,1400px);margin:0 auto;display:flex;flex-direction:column}
 #vs{position:absolute;left:0;top:0;width:1px;height:100%;visibility:hidden;pointer-events:none}
 header{flex:none;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 12px;min-height:52px;border-bottom:1px solid #d8c79c;background:var(--parch)}
@@ -65,7 +65,7 @@ header{flex:none;display:flex;justify-content:space-between;align-items:center;g
 .panel:has(.ff){align-self:stretch;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0;flex:1 1 auto;min-height:0}
 /* timeline */
 #tlw{position:relative;flex:1 1 auto;min-height:0}
-#tl{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:4px 18px 4px;--band:20px;--g:4px;--rg:4px;--tw:26px;--th:20px;--tf:19px}   /* Luke t365u: no reserved cue space; the timeline sits as high as possible, whether or not the first-run coach or a hint is showing */
+#tl{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:4px 18px 4px;--band:20px;--g:4px;--rg:4px;--tw:26px;--th:20px;--tf:19px;touch-action:pan-y}   /* Luke t365u: no reserved cue space; the timeline sits as high as possible, whether or not the first-run coach or a hint is showing */
 .rw{margin:0 auto;position:relative}
 .rw+.rw{margin-top:var(--rg)}
 .cards{display:flex;gap:var(--g)}
@@ -259,11 +259,12 @@ header{position:relative;z-index:7}
 @media (prefers-reduced-motion:reduce){#rst.hint:after{animation:none;opacity:1;transform:none}}
 @media (max-width:420px){#rst{min-height:40px;padding:0 8px 0 6px;font-size:13px;margin:0 1px 0 4px}}
 /* Luke t261u: Restart confirm, a small popover under the header button */
-#rsq{position:fixed;z-index:45;right:auto;top:auto;background:var(--parch);border:2px solid var(--gold);border-radius:12px;padding:10px 12px;box-shadow:0 4px 16px rgba(0,0,0,.4);min-width:180px;max-width:min(240px,calc(100vw - 16px))}
-#rsq[hidden]{display:none!important}
-#rsq p{margin:0 0 8px;font-weight:700;color:var(--burg);font-size:16px;line-height:1.2}
-#rsq .rsq-acts{display:flex;gap:8px;justify-content:flex-end}
-#rsq .btn{min-height:36px;font-size:15px;padding:0 12px}
+#rsq,#dsq{position:fixed;z-index:45;right:auto;top:auto;background:var(--parch);border:2px solid var(--gold);border-radius:12px;padding:10px 12px;box-shadow:0 4px 16px rgba(0,0,0,.4);min-width:180px;max-width:min(300px,calc(100vw - 16px));box-sizing:border-box}
+#rsq[hidden],#dsq[hidden]{display:none!important}
+#rsq p,#dsq p{margin:0 0 8px;font-weight:700;color:var(--burg);font-size:16px;line-height:1.25}
+#dsq p{font-weight:600}
+#rsq .rsq-acts,#dsq .rsq-acts{display:flex;gap:8px;justify-content:flex-end}
+#rsq .btn,#dsq .btn{min-height:36px;font-size:15px;padding:0 12px}
 #mute .x{display:none}#mute .w{display:inline}#mute[data-level="0"] .x,#mute[aria-pressed="true"] .x{display:inline}#mute[data-level="0"] .w,#mute[aria-pressed="true"] .w{display:none}#mute[data-level="1"] .w2{display:none}
 /* Luke t245u/t275u/t327u: the gear opens a Settings panel (sounds, music, streak pop-ups) on desktop and mobile */
 #vol{position:fixed;z-index:45;right:auto;top:auto;background:var(--parch);border:2px solid var(--gold);border-radius:12px;padding:10px 12px;box-shadow:0 4px 16px rgba(0,0,0,.4);display:flex;flex-direction:column;gap:8px;min-width:222px;max-width:min(340px,calc(100vw - 16px));box-sizing:border-box}
@@ -280,7 +281,8 @@ header{position:relative;z-index:7}
 #vol .diff-btn{margin:0;border:0;background:#efe3c4;color:var(--burg);font:inherit;font-weight:700;font-size:13px;padding:6px 12px;min-height:28px;cursor:pointer;touch-action:manipulation}
 #vol .diff-btn[aria-checked="true"]{background:#551309;color:#F4E8CB}
 #vol input[type=range]{grid-column:2;grid-row:1;width:100%;min-width:0;height:44px;margin:0;accent-color:#551309;cursor:pointer}
-@media (max-width:420px){.brand b{white-space:normal;font-size:16px;line-height:1.15}#stats{gap:10px}header{gap:6px;padding:5px 8px}#stats .scw,#stats .hs{min-width:4em}}
+@media (max-width:520px){header{flex-wrap:wrap;align-items:center;gap:2px 8px;padding:4px 8px;min-height:0}.brand{flex:1 1 100%;min-width:0}.brand b{font-size:16px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#hr{flex:1 1 100%;justify-content:flex-end;min-width:0}#stats{gap:8px;min-width:0}#stats .scw,#stats .hs{min-width:0}}
+@media (max-width:360px){#rst .rsl{display:none}#rst{min-width:40px;padding:0;margin:0 1px 0 2px}}
 /* new best: gold sparkle out of the streak area + a tag; never blocks a tap */
 #fx{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:8}
 #fx .sp,#nhs .sp,#cfx .csp,.slot .csp,#end .csp{position:absolute;width:13px;height:13px;margin:-6.5px 0 0 -6.5px;background:#F2B81C;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);filter:drop-shadow(0 0 1px #7a4a00) drop-shadow(0 0 4px rgba(255,200,60,.9));opacity:0;animation:spk var(--d,1.2s) ease-out var(--dl,0s) forwards;pointer-events:none}
@@ -549,7 +551,8 @@ header{position:relative;z-index:7}
 <div id="pill" class="pill" hidden></div>
 </div>
 <div id="rsq" hidden role="dialog" aria-label="Restart this run?"><p>Restart this run?</p><div class="rsq-acts"><button type="button" class="btn sec" id="rsq-no">Cancel</button><button type="button" class="btn" id="rsq-go">Restart</button></div></div>
-<div id="vol" hidden role="dialog" aria-label="Settings"><div class="vol-row"><span class="vol-lab" id="sfx-lab">Sounds</span><button type="button" class="vol-tog" id="sfx-tog" role="switch" aria-checked="true" aria-labelledby="sfx-lab"></button><input id="volr" type="range" min="0" max="100" step="1" value="100" aria-label="Sounds volume"></div><div class="vol-row"><span class="vol-lab" id="mus-lab">Music</span><button type="button" class="vol-tog" id="mus-tog" role="switch" aria-checked="true" aria-labelledby="mus-lab"></button><input id="musr" type="range" min="0" max="100" step="1" value="100" aria-label="Music volume"></div><div class="vol-row"><span class="vol-lab" id="pop-lab">Streak pop-ups</span><button type="button" class="vol-tog" id="pop-tog" role="switch" aria-checked="true" aria-labelledby="pop-lab"></button></div><div class="vol-row"><span class="vol-lab" id="flip-lab">Long flips</span><button type="button" class="vol-tog" id="flip-tog" role="switch" aria-checked="true" aria-labelledby="flip-lab"></button></div><div class="vol-row vol-diff"><span class="vol-lab" id="diff-lab">Difficulty</span><div class="diff-seg" role="radiogroup" aria-labelledby="diff-lab"><button type="button" class="diff-btn" id="diff-normal" role="radio" aria-checked="true">Normal</button><button type="button" class="diff-btn" id="diff-easy" role="radio" aria-checked="false">Easy</button></div></div></div>
+<div id="dsq" hidden role="dialog" aria-label="Switch difficulty?"><p id="dsq-msg"></p><div class="rsq-acts"><button type="button" class="btn sec" id="dsq-no">Cancel</button><button type="button" class="btn" id="dsq-go">Switch</button></div></div>
+<div id="vol" hidden role="dialog" aria-label="Settings"><div class="vol-row"><span class="vol-lab" id="sfx-lab">Sounds</span><button type="button" class="vol-tog" id="sfx-tog" role="switch" aria-checked="true" aria-labelledby="sfx-lab"></button><input id="volr" type="range" min="0" max="100" step="1" value="100" aria-label="Sounds volume"></div><div class="vol-row"><span class="vol-lab" id="mus-lab">Music</span><button type="button" class="vol-tog" id="mus-tog" role="switch" aria-checked="true" aria-labelledby="mus-lab"></button><input id="musr" type="range" min="0" max="100" step="1" value="100" aria-label="Music volume"></div><div class="vol-row"><span class="vol-lab" id="pop-lab">Streak pop-ups</span><button type="button" class="vol-tog" id="pop-tog" role="switch" aria-checked="true" aria-labelledby="pop-lab"></button></div><div class="vol-row"><span class="vol-lab" id="flip-lab">Long flips</span><button type="button" class="vol-tog" id="flip-tog" role="switch" aria-checked="true" aria-labelledby="flip-lab"></button></div><div class="vol-row vol-diff"><span class="vol-lab" id="diff-lab">Difficulty</span><div class="diff-seg" role="radiogroup" aria-labelledby="diff-lab"><button type="button" class="diff-btn" id="diff-normal" role="radio" aria-checked="false">Normal</button><button type="button" class="diff-btn" id="diff-easy" role="radio" aria-checked="true">Easy</button></div></div></div>
 <div id="zoom" role="dialog" aria-label="Your card, large"><div class="z"></div><div class="zs"><div class="zt"></div><button class="btn zb"></button></div><div id="fc" hidden role="dialog" aria-label="This is your first card"><p class="fcmsg">This is your first card. Read it, and then tap to place it on the timeline.</p><p class="fchint">Tap anywhere to read it</p></div></div>
 <div id="s0" hidden><div class="s0hole"></div><div class="s0box"><p></p><button class="gbtn" id="s0go">Got it</button></div></div>
 <div id="help"></div>
@@ -643,11 +646,15 @@ const STRUGKEY='ckDiscoveryStruggle';                                           
 const STARTER_ALL=['1-2','1-7','2-2','2-5','3-2','3-5','4-6','5-3','5-7','6-3','6-7','7-3','7-6'];
 const EASY_STARTER_COUNT=2;
 const DIFFKEY='ckDiscoveryDifficulty';
-let diffMode=(()=>{try{return localStorage.getItem(DIFFKEY)==='easy'?'easy':'normal'}catch(e){return 'normal'}})();
+let diffMode=(()=>{try{const v=localStorage.getItem(DIFFKEY);if(v==='normal'||v==='easy')return v;return hasPlayedBefore()?'normal':'easy'}catch(e){return 'easy'}})();
 function isEasy(){return diffMode==='easy'}
 function starterIds(){return isEasy()?STARTER_ALL.slice(0,EASY_STARTER_COUNT):STARTER_ALL.slice()}
-function setDifficulty(mode){const next=mode==='easy'?'easy':'normal';if(next===diffMode)return;if(diffMode==='normal'&&next==='easy'&&hasPlayedBefore())keepPromoCardsOnEasy();diffMode=next;try{localStorage.setItem(DIFFKEY,diffMode)}catch(e){}volUI()}
-function keepPromoCardsOnEasy(){const easy=STARTER_ALL.slice(0,EASY_STARTER_COUNT);const st=loadUnlockState();let changed=false;STARTER_ALL.forEach(id=>{if(easy.indexOf(id)<0&&st.ids.indexOf(id)<0){st.ids.push(id);changed=true}});if(changed)saveUnlockState(st)}
+let pendingDiff=null;
+function placeDsq(){placePanel($('#dsq'),$('#set'))}
+function closeDsq(){const q=$('#dsq');if(q)q.hidden=true;pendingDiff=null}
+function openDsq(mode){closeRsq();closeVol();pendingDiff=mode==='easy'?'easy':'normal';const q=$('#dsq'),msg=$('#dsq-msg');if(!q||!msg)return;msg.textContent=pendingDiff==='easy'?'Switch to Easy? This starts a new run with 2 cards. Cards you have unlocked will be reset. Your high score is kept.':'Switch to Normal? This starts a new run with 13 cards. Cards you have unlocked will be reset. Your high score is kept.';q.hidden=false;placeDsq();const no=$('#dsq-no');if(no)no.focus({preventScroll:true})}
+function applyDifficulty(mode){const next=mode==='easy'?'easy':'normal';closeDsq();closeVol();if(next!==diffMode){diffMode=next;try{localStorage.setItem(DIFFKEY,diffMode)}catch(e){}saveUnlockState({v:1,ids:[]})}volUI();newRun();window.__ev&&window.__ev.push(next==='easy'?'diffEasyApplied':'diffNormalApplied')}
+function requestDifficulty(mode){const next=mode==='easy'?'easy':'normal';if(next===diffMode)return;if(!quiet()){unlockAudio();ui('tap')}openDsq(next);window.__ev&&window.__ev.push(next==='easy'?'diffEasyAsk':'diffNormalAsk')}
 function playableDeck(){return DECK_ALL.filter(c=>c&&c.id&&c.playable&&c.front&&c.back)}
 const PLACED=(()=>{const m=location.search.match(/[?&]placed=(\d+)/);return m?+m[1]:0})();
 let placedSession=false,placedPending=!!PLACED;
@@ -898,8 +905,8 @@ function setStreakPops(on){streakPops=!!on;if(streakPops&&pointPops){pointPops=f
 function setPointPops(on){pointPops=!!on;if(pointPops&&streakPops){streakPops=false;clearWordFlashes()}if(!pointPops)clearPointPops();persistPops();volUI()}
 const popTog=$('#pop-tog');if(popTog)popTog.addEventListener('click',ev=>{ev.stopPropagation();setStreakPops(!streakPops);if(!quiet()){unlockAudio();ui('tap')}window.__ev.push(streakPops?'popsOn':'popsOff')});
 const flipTog=$('#flip-tog');if(flipTog)flipTog.addEventListener('click',ev=>{ev.stopPropagation();longFlips=!longFlips;try{localStorage.setItem(FLIPKEY,longFlips?'1':'0')}catch(e){}volUI();if(!quiet()){unlockAudio();ui('tap')}window.__ev.push(longFlips?'longFlipsOn':'longFlipsOff')});
-const diffN=$('#diff-normal');if(diffN)diffN.addEventListener('click',ev=>{ev.stopPropagation();setDifficulty('normal');if(!quiet()){unlockAudio();ui('tap')}window.__ev.push('diffNormal')});
-const diffE=$('#diff-easy');if(diffE)diffE.addEventListener('click',ev=>{ev.stopPropagation();setDifficulty('easy');if(!quiet()){unlockAudio();ui('tap')}window.__ev.push('diffEasy')});
+const diffN=$('#diff-normal');if(diffN)diffN.addEventListener('click',ev=>{ev.stopPropagation();requestDifficulty('normal')});
+const diffE=$('#diff-easy');if(diffE)diffE.addEventListener('click',ev=>{ev.stopPropagation();requestDifficulty('easy')});
 const ptsTog=$('#pts-tog');if(ptsTog)ptsTog.addEventListener('click',ev=>{ev.stopPropagation();setPointPops(!pointPops);if(!quiet()){unlockAudio();ui('tap')}window.__ev.push(pointPops?'pointPopsOn':'pointPopsOff')});
 document.addEventListener('click',ev=>{const p=$('#vol');if(!p||p.hidden)return;if(ev.target.closest&&(ev.target.closest('#vol')||ev.target.closest('#set')))return;closeVol()});
 $('#rst').onclick=ev=>{ev.stopPropagation();ev.preventDefault();closeVol();requestRestart()};
@@ -907,16 +914,22 @@ $('#rsq-go').onclick=ev=>{ev.stopPropagation();ev.preventDefault();doRestart()};
 $('#rsq-no').onclick=ev=>{ev.stopPropagation();ev.preventDefault();ui('tap');closeRsq()};
 document.addEventListener('click',ev=>{const q=$('#rsq');if(!q||q.hidden)return;if(ev.target.closest&&(ev.target.closest('#rsq')||ev.target.closest('#rst')))return;closeRsq()});
 addEventListener('keydown',ev=>{if(ev.key==='Escape'&&$('#rsq')&&!$('#rsq').hidden){ev.preventDefault();closeRsq()}});
+const dsqGo=$('#dsq-go');if(dsqGo)dsqGo.onclick=ev=>{ev.stopPropagation();ev.preventDefault();ui('tap');if(pendingDiff)applyDifficulty(pendingDiff)};
+const dsqNo=$('#dsq-no');if(dsqNo)dsqNo.onclick=ev=>{ev.stopPropagation();ev.preventDefault();ui('tap');closeDsq()};
+document.addEventListener('click',ev=>{const q=$('#dsq');if(!q||q.hidden)return;if(ev.target.closest&&(ev.target.closest('#dsq')||ev.target.closest('#diff-normal')||ev.target.closest('#diff-easy')||ev.target.closest('#set')||ev.target.closest('#vol')))return;closeDsq()});
+addEventListener('keydown',ev=>{if(ev.key==='Escape'&&$('#dsq')&&!$('#dsq').hidden){ev.preventDefault();closeDsq()}});
 addEventListener('keydown',ev=>{if(ev.key==='Escape'&&$('#vol')&&!$('#vol').hidden){ev.preventDefault();ev.stopPropagation();closeVol()}},true);
 volUI();
-addEventListener('resize',()=>{placeVol();placeRsq()});
+addEventListener('resize',()=>{placeVol();placeRsq();placeDsq()});
 
 /* ---- fit to the part of the frame the visitor can see ----
    The game sits in a Wix iframe that can be taller than the browser window. An IntersectionObserver (its root is the
    top-level viewport, even cross-origin) reports which slice of this frame is on screen. We read the latest slice when a
    turn starts (and on resize / end screen), never while scrolling, and lay everything out inside it. */
-function applyFrame(){const full=innerHeight;let t=0,h=full;
- if(vis&&vis.h>0){t=Math.max(0,Math.min(vis.top,full));h=Math.min(full-t,vis.h)}
+function layoutH(){return document.documentElement.clientHeight||innerHeight}   /* layout viewport, not the visual viewport: iOS pinch-zoom can shrink innerHeight and collapse the timeline (Luke t454u) */
+function applyFrame(){const full=layoutH();let t=0,h=full;
+ const zoomed=(()=>{try{const s=visualViewport&&visualViewport.scale;return !!s&&Math.abs(s-1)>0.02}catch(e){return false}})();
+ if(!zoomed&&vis&&vis.h>0){t=Math.max(0,Math.min(vis.top,full));h=Math.min(full-t,vis.h)}
  const MIN=Math.min(full,desk()?380:360);if(h<MIN){h=MIN;t=Math.min(t,full-h)}
  FT=Math.round(t);FH=Math.round(h);const r=document.documentElement;
  r.style.setProperty('--vt',FT+'px');r.style.setProperty('--vh',FH+'px');r.classList.toggle('short',FH<=600)}
@@ -1515,6 +1528,10 @@ function viewTimeline(){$('#end').style.display='none';clearEnd();hideSbt();phas
  timeline();$('#tl').scrollTop=0;b.focus({preventScroll:true})}
 function relayout(){applyFrame();if(!phase||!hand&&phase==='choose')return;if(phase==='review'){sizeStage('verdict');timeline();syncConquerFx();return}if(phase==='choose')renderStage();else sizeStage('verdict');if(phase==='choose')applyHandBar();if(phase==='flipping')fitFF();timeline();positionS0();positionUnlock();fitZoom();if(ycFor)ycCheck(ycFor);syncConquerFx()}
 let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(relayout,120)});
+if(window.visualViewport){const vv=()=>{clearTimeout(rt);rt=setTimeout(relayout,120)};visualViewport.addEventListener('resize',vv);visualViewport.addEventListener('scroll',vv)}
+function ignoreNativeZoom(ev){ev.preventDefault()}
+['gesturestart','gesturechange','gestureend'].forEach(t=>document.addEventListener(t,ignoreNativeZoom,{passive:false,capture:true}));
+document.addEventListener('touchmove',ev=>{if(ev.touches&&ev.touches.length>1)ev.preventDefault()},{passive:false,capture:true});
 let cfxSync=0;$('#tl').addEventListener('scroll',()=>{if(!cfxSync)cfxSync=requestAnimationFrame(()=>{cfxSync=0;syncConquerFx();placeYes($('#yesbk'))})},{passive:true});addEventListener('resize',()=>placeYes($('#yesbk')));
 document.addEventListener('click',ev=>{if(!(ev.target.closest&&ev.target.closest('#mute, #vol, #rst, #rsq, #set')))skipFlip()},true);
 function showPlacedBoard(){const pool=playableDeck().slice();if(!pool.length)return;
