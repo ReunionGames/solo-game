@@ -441,6 +441,18 @@ header{position:relative;z-index:7}
 #end .sc>div,#end .tot,#end .rows>div{position:relative;overflow:visible}
 .sb .pts .bigw{opacity:.45;transition:opacity .2s}.sb .pts.on .bigw,.sb .pts.rm .bigw{opacity:1}
 .sb .rows small{font-size:14px;color:var(--soft);font-weight:600;text-align:left}.sb .rows b{font-size:17px;color:var(--burg);font-variant-numeric:tabular-nums}
+.sb .rows>div.has-sub{border-bottom:none}
+.sb .rows>div.sub{padding:1px 8px 1px 22px;border-bottom:none;background:transparent}
+.sb .rows>div.sub.on,.sb .rows>div.sub.sum{background:transparent}
+.sb .rows>div.sub.sublast{border-bottom:1px solid #e4d4a8;padding-bottom:3px}
+.sb .rows>div.sub small{font-size:12px;font-weight:600;color:var(--soft)}
+.sb .rows>div.sub b{font-size:14px}
+.short .sb .rows{margin:3px 0 0}
+.short .sb .rows>div{padding:3px 8px}
+.short .sb .rows>div.sub{padding:0 8px 0 18px}
+.short .sb .rows>div.sub.sublast{padding-bottom:2px}
+.short .sb .rows>div.sub small{font-size:11px}
+.short .sb .rows>div.sub b{font-size:13px}
 .sb .pers,.dsc .pers{margin:8px 8px 2px;font-size:13px;line-height:1.3;color:var(--soft);text-align:left;opacity:0;transition:opacity .25s}
 .sb .pers.on,.dsc .pers.on{opacity:1}
 .sb .pers b,.dsc .pers b{color:var(--burg);font-variant-numeric:tabular-nums}
@@ -702,6 +714,7 @@ function runTimeBonus(ms,right,tot){const r=TIME_SCORE.run;if(!r.enabled||!(tot>
 function streakLevel(n){const lv=TIME_SCORE.streak.levels;let i=0;for(let k=0;k<lv.length;k++)if((+n||0)>=lv[k].min)i=k;return i}
 function rollPts(n){return TIME_SCORE.streak.levels[streakLevel(n)].pts}
 function rollTotal(n){let t=0;for(let i=1;i<=n;i++)t+=rollPts(i);return t}
+function bonusBits(log,key,order,names){const counts={};(log||[]).forEach(c=>{if(!c.ok)return;const p=+c[key]||0;if(p>0)counts[p]=(counts[p]||0)+1});return order.filter(p=>counts[p]).map(p=>({lab:counts[p]+' \u00d7 '+(names&&names[p]?names[p]:'+'+p),v:counts[p]*p}))}   /* Luke t450u: scoreboard breakdowns for streak and speed bonuses; tiers with 0 cards are omitted */
 function dropStreak(n){const i=streakLevel(n);return i<=0?0:TIME_SCORE.streak.levels[i-1].min}
 const GAMESKEY='ckConquestGames';
 function gamesPlayed(){try{return Math.max(0,+localStorage.getItem(GAMESKEY)||0)}catch(e){return 0}}
@@ -1403,6 +1416,9 @@ function endNew(r){window.__disc=Object.assign({},r,{style:'new'});
  else if(unlockCard)line='New card unlocked.';
  else line='Get all '+r.total+' right in one go to unlock a new card.';
  const row=(cls,lab,v,k)=>'<div class="'+cls+'" data-v="'+v+'"'+(k?' data-k="'+k+'"':'')+'><small>'+lab+'</small><span class="rval"><b>0</b>'+(k?'<span class="nbadge" hidden>New best</span>':'')+'</span></div>';
+ const rollBits=bonusBits(r.placeLog,'roll',[2,4,6,8,10]),speedBits=bonusBits(r.placeLog,'speed',[3,2,1],{3:'Lightning +3',2:'Quick +2',1:'Steady +1'});
+ const sub=(x,last)=>'<div class="sub'+(last?' sublast':'')+'" data-v="'+x.v+'"><small>'+x.lab+'</small><span class="rval"><b>0</b></span></div>';
+ const subs=bits=>bits.map((x,i)=>sub(x,i===bits.length-1)).join('');
  const end=$('#end');
  end.innerHTML='<div class="ep dsc sb" role="dialog" aria-label="Your result">'+
   '<div class="e1"><div class="pts" id="pts" title="Tap to skip">'+
@@ -1411,7 +1427,7 @@ function endNew(r){window.__disc=Object.assign({},r,{style:'new'});
    '<div class="ptmeta"><small class="ptl">points</small>'+(r.runMs?'<span class="elapsed">'+fmtTime(r.runMs)+'</span>':'')+'</div>'+
    '<div class="nbt" aria-live="polite"></div>'+
    '<div class="yb">Your best: <span>'+fmtScoreTime(r.prevHS,r.prevHSTime)+'</span></div></div>'+
-   '<div class="rows">'+row('r1','Correct ('+r.nRight+' &times; 10)',r.ptsC,'correct')+row('r2','On a roll',r.ptsRoll,'roll')+row('r3','Speed',r.ptsSpeed,'speed')+(r.finish?row('r4','Perfect +50',r.finish,'perfect'):'')+'</div></div>'+
+   '<div class="rows">'+row('r1','Correct ('+r.nRight+' &times; 10)',r.ptsC,'correct')+row('r2'+(rollBits.length?' has-sub':''),'On a roll',r.ptsRoll,'roll')+subs(rollBits)+row('r3'+(speedBits.length?' has-sub':''),'Speed',r.ptsSpeed,'speed')+subs(speedBits)+(r.finish?row('r4','Perfect +50',r.finish,'perfect'):'')+'</div></div>'+
   '<div class="acts"><div class="a2"><button class="btn" id="again">Play again</button><button class="btn gold" id="viewtl">View the timeline</button></div></div>'+
   '<div class="e2">'+
    '<a class="cta boxb" id="buy" href="'+BUY_D+'" target="_blank" rel="noopener"><img src="'+BOX+'" alt="The Chronicles of the Kingdom game box"><span class="ct">Get the box for game night with family and friends</span></a>'+
@@ -1432,11 +1448,11 @@ function countUp(){const tok=endTok,d=window.__disc||{},big=$('#end .big'),pts=$
   d.counted=true;window.__ev.push('counted');scheduleUnlock()};
  if(RM.matches){pts.classList.add('rm');endLater(land,TEST?0:CU_DELAY);return}
  const e1=$('#end .e1');if(e1)e1.onclick=()=>{if(ok()){window.__ev.push('skip');land()}};
- let t=TEST?0:CU_DELAY;const RD=TEST?10:380,RG=TEST?5:170;
- rows.forEach((r,i)=>{const rv=+r.dataset.v||0,b=r.querySelector('b');
+ let t=TEST?0:CU_DELAY;const RD=TEST?10:380,RG=TEST?5:170,RDS=TEST?8:220,RGS=TEST?4:80;
+ rows.forEach((r,i)=>{const rv=+r.dataset.v||0,b=r.querySelector('b'),sub=r.classList.contains('sub'),dur=sub?RDS:RD,gap=sub?RGS:RG;
   endLater(()=>{if(!ok())return;r.classList.add('on');playScore('cutick',Math.pow(CU_RATE,i*2));const t0=performance.now();
-   const step=()=>{if(!ok())return;const k=Math.min(1,(performance.now()-t0)/RD);b.textContent=Math.round(rv*k);if(k<1)requestAnimationFrame(step);else rowBestFx(r)};step()},t);
-  t+=RD+RG});
+   const step=()=>{if(!ok())return;const k=Math.min(1,(performance.now()-t0)/dur);b.textContent=Math.round(rv*k);if(k<1)requestAnimationFrame(step);else rowBestFx(r)};step()},t);
+  t+=dur+gap});
  const n=v>0?Math.max(3,Math.min(16,Math.round(v/50))):0,stp=TEST?10:CU_STEP;
  endLater(()=>{if(ok()){pts.classList.add('on');rows.forEach(r=>r.classList.add('sum'))}},t);
  for(let i=0;i<n;i++)endLater(()=>{if(!ok())return;big.textContent=Math.round(v*(i+1)/n);playScore('cutick',Math.pow(CU_RATE,i))},t+80+i*stp);
