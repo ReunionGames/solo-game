@@ -275,6 +275,10 @@ header{position:relative;z-index:7}
 #vol .vol-tog:after{content:"";position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:#551309;transition:left .15s ease}
 #vol .vol-tog[aria-checked="true"]{background:#551309;border-color:#551309}
 #vol .vol-tog[aria-checked="true"]:after{left:22px;background:#F4E8CB}
+#vol .vol-diff{grid-template-columns:auto 1fr}
+#vol .diff-seg{grid-column:2;justify-self:end;display:flex;border:1.5px solid #cdb98a;border-radius:999px;overflow:hidden}
+#vol .diff-btn{margin:0;border:0;background:#efe3c4;color:var(--burg);font:inherit;font-weight:700;font-size:13px;padding:6px 12px;min-height:28px;cursor:pointer;touch-action:manipulation}
+#vol .diff-btn[aria-checked="true"]{background:#551309;color:#F4E8CB}
 #vol input[type=range]{grid-column:2;grid-row:1;width:100%;min-width:0;height:44px;margin:0;accent-color:#551309;cursor:pointer}
 @media (max-width:420px){.brand b{white-space:normal;font-size:16px;line-height:1.15}#stats{gap:10px}header{gap:6px;padding:5px 8px}#stats .scw,#stats .hs{min-width:4em}}
 /* new best: gold sparkle out of the streak area + a tag; never blocks a tap */
@@ -545,7 +549,7 @@ header{position:relative;z-index:7}
 <div id="pill" class="pill" hidden></div>
 </div>
 <div id="rsq" hidden role="dialog" aria-label="Restart this run?"><p>Restart this run?</p><div class="rsq-acts"><button type="button" class="btn sec" id="rsq-no">Cancel</button><button type="button" class="btn" id="rsq-go">Restart</button></div></div>
-<div id="vol" hidden role="dialog" aria-label="Settings"><div class="vol-row"><span class="vol-lab" id="sfx-lab">Sounds</span><button type="button" class="vol-tog" id="sfx-tog" role="switch" aria-checked="true" aria-labelledby="sfx-lab"></button><input id="volr" type="range" min="0" max="100" step="1" value="100" aria-label="Sounds volume"></div><div class="vol-row"><span class="vol-lab" id="mus-lab">Music</span><button type="button" class="vol-tog" id="mus-tog" role="switch" aria-checked="true" aria-labelledby="mus-lab"></button><input id="musr" type="range" min="0" max="100" step="1" value="100" aria-label="Music volume"></div><div class="vol-row"><span class="vol-lab" id="pop-lab">Streak pop-ups</span><button type="button" class="vol-tog" id="pop-tog" role="switch" aria-checked="true" aria-labelledby="pop-lab"></button></div><div class="vol-row"><span class="vol-lab" id="flip-lab">Long flips</span><button type="button" class="vol-tog" id="flip-tog" role="switch" aria-checked="true" aria-labelledby="flip-lab"></button></div></div>
+<div id="vol" hidden role="dialog" aria-label="Settings"><div class="vol-row"><span class="vol-lab" id="sfx-lab">Sounds</span><button type="button" class="vol-tog" id="sfx-tog" role="switch" aria-checked="true" aria-labelledby="sfx-lab"></button><input id="volr" type="range" min="0" max="100" step="1" value="100" aria-label="Sounds volume"></div><div class="vol-row"><span class="vol-lab" id="mus-lab">Music</span><button type="button" class="vol-tog" id="mus-tog" role="switch" aria-checked="true" aria-labelledby="mus-lab"></button><input id="musr" type="range" min="0" max="100" step="1" value="100" aria-label="Music volume"></div><div class="vol-row"><span class="vol-lab" id="pop-lab">Streak pop-ups</span><button type="button" class="vol-tog" id="pop-tog" role="switch" aria-checked="true" aria-labelledby="pop-lab"></button></div><div class="vol-row"><span class="vol-lab" id="flip-lab">Long flips</span><button type="button" class="vol-tog" id="flip-tog" role="switch" aria-checked="true" aria-labelledby="flip-lab"></button></div><div class="vol-row vol-diff"><span class="vol-lab" id="diff-lab">Difficulty</span><div class="diff-seg" role="radiogroup" aria-labelledby="diff-lab"><button type="button" class="diff-btn" id="diff-normal" role="radio" aria-checked="true">Normal</button><button type="button" class="diff-btn" id="diff-easy" role="radio" aria-checked="false">Easy</button></div></div></div>
 <div id="zoom" role="dialog" aria-label="Your card, large"><div class="z"></div><div class="zs"><div class="zt"></div><button class="btn zb"></button></div><div id="fc" hidden role="dialog" aria-label="This is your first card"><p class="fcmsg">This is your first card. Read it, and then tap to place it on the timeline.</p><p class="fchint">Tap anywhere to read it</p></div></div>
 <div id="s0" hidden><div class="s0hole"></div><div class="s0box"><p></p><button class="gbtn" id="s0go">Got it</button></div></div>
 <div id="help"></div>
@@ -557,7 +561,7 @@ header{position:relative;z-index:7}
  id = period-event, n = 1..52 set order. title/verse from the card-index. slug matches Oholiab's web-card filenames.
  front/back = in-game art at cards/front/{id}-{slug}.webp and cards/back/{id}-{slug}.webp (O's 600x838 RGBA WebP).
  reveal = spoiler-free mystery front for the unlock screen only (cards/mystery/{id}-{slug}.webp). In-game placement always uses front.
- playable = true for all 52 Bible Event cards (Luke t295u). New players start with the original 13 promo cards (STARTER_IDS). The other 39 are the unlock pool.
+ playable = true for all 52 Bible Event cards (Luke t295u). New players start with the 13 promo cards on Normal, or the first two of that list on Easy (Luke t451u/t452u). On Easy, the next 11 unlocks are the rest of those same 13, then the remaining pool.
  Art lives at discovery/cards/{front,back,mystery}/{period}-{event}-{slug}.webp. Rules cards are in discovery/cards/rules/ (not in this deck).
  Other playable cards join the deck once unlocked.
  Front images are only requested when the player taps Flip!. */
@@ -635,20 +639,33 @@ function getBestSkillTime(){try{return Math.max(0,+localStorage.getItem(BESTSKIL
 const HSKEY='ckDiscoveryHighScore';                                                          /* best total (correct + best streak) per device (Luke t212u) */
 const ROWBESTKEY='ckDiscoveryRowBests';                                              /* per-row personal bests on the old-school board (Luke t438u) */
 const STRUGKEY='ckDiscoveryStruggle';                                                        /* per-card miss streak + flag, this browser only (Luke t252u). A test BUILD reset now clears this too, so a previous auto-marked hard card does not linger (Luke t296u); ?hard=N can still add flags after that. Newly unlocked cards are flagged here so the first correct placement gets the hard-card treatment (Luke t288u/t289u). */
-/* The original 13 promo cards (Luke t295u). The other 39 playable Bible Event cards are the unlock pool. */
-const STARTER_IDS=['1-2','1-7','2-2','2-5','3-2','3-5','4-6','5-3','5-7','6-3','6-7','7-3','7-6'];
+/* The original 13 promo cards (Luke t295u). Normal starts with all 13. Easy starts with the first EASY_STARTER_COUNT of this list; the remaining 11 of these 13 are unlocked first, so Easy's first 13 owned cards are always this same set. After that, Easy draws from the rest of the pool (Luke t451u/t452u). */
+const STARTER_ALL=['1-2','1-7','2-2','2-5','3-2','3-5','4-6','5-3','5-7','6-3','6-7','7-3','7-6'];
+const EASY_STARTER_COUNT=2;
+const DIFFKEY='ckDiscoveryDifficulty';
+let diffMode=(()=>{try{return localStorage.getItem(DIFFKEY)==='easy'?'easy':'normal'}catch(e){return 'normal'}})();
+function isEasy(){return diffMode==='easy'}
+function starterIds(){return isEasy()?STARTER_ALL.slice(0,EASY_STARTER_COUNT):STARTER_ALL.slice()}
+function setDifficulty(mode){const next=mode==='easy'?'easy':'normal';if(next===diffMode)return;if(diffMode==='normal'&&next==='easy'&&hasPlayedBefore())keepPromoCardsOnEasy();diffMode=next;try{localStorage.setItem(DIFFKEY,diffMode)}catch(e){}volUI()}
+function keepPromoCardsOnEasy(){const easy=STARTER_ALL.slice(0,EASY_STARTER_COUNT);const st=loadUnlockState();let changed=false;STARTER_ALL.forEach(id=>{if(easy.indexOf(id)<0&&st.ids.indexOf(id)<0){st.ids.push(id);changed=true}});if(changed)saveUnlockState(st)}
 function playableDeck(){return DECK_ALL.filter(c=>c&&c.id&&c.playable&&c.front&&c.back)}
 const PLACED=(()=>{const m=location.search.match(/[?&]placed=(\d+)/);return m?+m[1]:0})();
 let placedSession=false,placedPending=!!PLACED;
 function loadUnlockState(){try{const raw=JSON.parse(localStorage.getItem(UNLOCKCARDSKEY)||'null');if(raw&&raw.v===1&&Array.isArray(raw.ids))return{v:1,ids:raw.ids.filter(id=>typeof id==='string')}}catch(e){}return{v:1,ids:[]}}
 function saveUnlockState(st){if(placedSession)return;try{localStorage.setItem(UNLOCKCARDSKEY,JSON.stringify({v:1,ids:(st&&st.ids)||[]}))}catch(e){}}
-function ownedIds(){return new Set(STARTER_IDS.concat(loadUnlockState().ids))}
+function ownedIds(){return new Set(starterIds().concat(loadUnlockState().ids))}
 function ownedDeck(){if(placedSession)return playableDeck();const have=ownedIds();return playableDeck().filter(c=>have.has(c.id))}
 function lockedPlayable(){const have=ownedIds();return playableDeck().filter(c=>!have.has(c.id))}
 function revealArt(c){return (c&&c.reveal)||(c&&c.front)}
 function markHard(id){if(!id||placedSession)return;try{const raw=JSON.parse(localStorage.getItem(STRUGKEY)||'{}'),m=(raw&&typeof raw==='object'&&!Array.isArray(raw))?raw:{},prev=m[id]||{};m[id]={miss:Math.max(prev.miss||0,3),flagged:true,viaUnlock:true,viaMiss:!!prev.viaMiss};localStorage.setItem(STRUGKEY,JSON.stringify(m))}catch(e){}}
-function grantUnlock(c){if(!c||!c.id||STARTER_IDS.indexOf(c.id)>=0)return false;const st=loadUnlockState();if(st.ids.indexOf(c.id)>=0)return false;st.ids.push(c.id);saveUnlockState(st);markHard(c.id);return true}
-function pickUnlock(){const left=lockedPlayable();if(!left.length)return null;const have=ownedIds(),tot={},own={};playableDeck().forEach(c=>{const p=c.period;tot[p]=(tot[p]||0)+1;if(have.has(c.id))own[p]=(own[p]||0)+1});const open={};left.forEach(c=>open[c.period]=1);let bestO=0,bestT=1,cands=[];Object.keys(open).forEach(k=>{const p=+k,o=own[p]||0,n=tot[p]||0;if(!n)return;if(!cands.length||o*bestT<bestO*n){bestO=o;bestT=n;cands=[p]}else if(o*bestT===bestO*n)cands.push(p)});const period=cands[Math.floor(Math.random()*cands.length)],pool=left.filter(c=>c.period===period);return pool[Math.floor(Math.random()*pool.length)]||null} /* unlock the period with the lowest owned/total ratio among those still incomplete; ties at random, then a random locked card in that period (Luke t298u/t299u) */
+/* Future sign-in hook (Luke t452u). Always allows for now — do not add a sign-in prompt here yet.
+   Easy: this is the gate after the 13th owned card (the next unlock once all 13 promo cards are owned).
+   Normal: this is the gate on the first unlock (the first card beyond the starting 13).
+   Both moments are the same: unlocking a card that is not in STARTER_ALL. */
+function allowUnlockNow(card){const pastPromo=!!(card&&STARTER_ALL.indexOf(card.id)<0);const hook=isEasy()?'easy-beyond-13':'normal-first-unlock';/* future: if(pastPromo && !signedIn()) return false; */return true}
+function grantUnlock(c){if(!c||!c.id||starterIds().indexOf(c.id)>=0)return false;if(!allowUnlockNow(c))return false;const st=loadUnlockState();if(st.ids.indexOf(c.id)>=0)return false;st.ids.push(c.id);saveUnlockState(st);markHard(c.id);return true}
+function pickUnlockFrom(left){if(!left||!left.length)return null;const have=ownedIds(),tot={},own={};playableDeck().forEach(c=>{const p=c.period;tot[p]=(tot[p]||0)+1;if(have.has(c.id))own[p]=(own[p]||0)+1});const open={};left.forEach(c=>open[c.period]=1);let bestO=0,bestT=1,cands=[];Object.keys(open).forEach(k=>{const p=+k,o=own[p]||0,n=tot[p]||0;if(!n)return;if(!cands.length||o*bestT<bestO*n){bestO=o;bestT=n;cands=[p]}else if(o*bestT===bestO*n)cands.push(p)});const period=cands[Math.floor(Math.random()*cands.length)],pool=left.filter(c=>c.period===period);return pool[Math.floor(Math.random()*pool.length)]||null} /* unlock the period with the lowest owned/total ratio among those still incomplete; ties at random, then a random locked card in that period (Luke t298u/t299u) */
+function pickUnlock(){const left=lockedPlayable();if(!left.length)return null;if(isEasy()){const promoLeft=left.filter(c=>STARTER_ALL.indexOf(c.id)>=0);if(promoLeft.length)return pickUnlockFrom(promoLeft)}return pickUnlockFrom(left)}
 /* TEST ONLY (Luke t247u/t263u/t264u/t287u/t296u/t301u/t304u/t306u/t307u): bump BUILD on every Discovery commit so testers get a fresh high score (and a fresh best streak on reload; best streak is session-only, no storage key) and cleared card unlocks. Struggle flags are also cleared so a previous build's auto-marked hard card does not linger; new builds no longer mark a random hard card (Luke t296u). ?hard=N still marks N owned cards, then strips the flag and plays a normal game. ?test=1&unlock=1 jumps a run to a perfect end so the unlock reveal can be checked quickly. ?placed=N is a session-only mid-game test: it plays the full 52-card set in memory with N cards already placed correctly, then deals the rest as a live game, and writes nothing to localStorage (no unlocks, high score or struggle flags). Try again returns to the saved pool. The flag is then stripped. Leave BUILD unchanged when shipping only this test-state so testers' saved data is not reset. Remove this auto-reset, the unlock clear, ?hard=, ?placed= and ?test=1&unlock=1 before Discovery goes on the Wix site. */
 const BUILD='2026-11-25-1445',BUILDKEY='ckDiscoveryBuild';
 function seedHardCards(n){n=+n;if(!(n>0)||!DECK_ALL||!DECK_ALL.length)return;try{const raw=JSON.parse(localStorage.getItem(STRUGKEY)||'{}'),m=(raw&&typeof raw==='object'&&!Array.isArray(raw))?raw:{};const pool=ownedDeck(),ids=(pool.length?pool:DECK_ALL).map(c=>c.id);const sh=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)),x=a[i];a[i]=a[j];a[j]=x}return a};const pick=sh(ids.filter(id=>!m[id])).concat(sh(ids.filter(id=>m[id]&&!m[id].flagged)));pick.slice(0,Math.min(n,pick.length)).forEach(id=>{m[id]={miss:3,flagged:true,viaMiss:true}});localStorage.setItem(STRUGKEY,JSON.stringify(m))}catch(e){}}
@@ -710,7 +727,7 @@ function hasPlayedBefore(){if(gamesPlayed()>0)return true;try{if(+localStorage.g
 function bumpGames(){if(placedSession)return;try{localStorage.setItem(GAMESKEY,String(gamesPlayed()+1))}catch(e){}}
 function lockedBase(){return lockedPlayable().length}   /* locked among the 52 base playable cards (Luke t375u) */
 function neuAmount(kind){const n=TIME_SCORE.neu||{};let amt=0;if(n.mode==='flat')amt=Math.max(0,+n.flat||0);else if(n.mode==='perUnlocked')amt=Math.max(0,(+n.per||0)*ownedDeck().length);else amt=Math.max(0,(+n.per||0)*lockedBase());if(kind==='miss')amt=Math.max(amt,+n.floor||0);return amt}
-function struggleKind(c){if(!isStruggling(c))return null;const s=struggleMap()[c.id]||{};if(s.viaMiss)return 'miss';if(s.viaUnlock)return 'unlock';if(STARTER_IDS.indexOf(c.id)>=0)return 'miss';return 'unlock'}   /* both kinds of hard card (Luke t383u): markHard on unlock, and noteCard after 3 misses. If both apply, 'miss' wins so we do not double-count. */
+function struggleKind(c){if(!isStruggling(c))return null;const s=struggleMap()[c.id]||{};if(s.viaMiss)return 'miss';if(s.viaUnlock)return 'unlock';if(starterIds().indexOf(c.id)>=0)return 'miss';return 'unlock'}   /* both kinds of hard card (Luke t383u): markHard on unlock, and noteCard after 3 misses. If both apply, 'miss' wins so we do not double-count. */
 function resetDecide(){decideStart=0;decideHold=0;decideOn=false;dealStart=0}
 function decideBlocked(){if(phase==='over'||phase==='review')return true;const v=$('#vol');if(v&&!v.hidden)return true;const h=$('#help');if(h&&h.style.display==='flex')return true;return false}   /* Luke t355u: pause only for rules/help and settings. Clock starts in newRun before phase is 'choose', so first-card reading counts. */
 function pauseDecide(){if(!decideOn||!decideStart){decideOn=false;return}decideHold+=Math.max(0,performance.now()-decideStart);decideStart=0;decideOn=false}
@@ -864,7 +881,10 @@ function volUI(){const m=$('#mute'),r=$('#volr'),mr=$('#musr'),p=$('#vol'),st=$(
   if(mt){mt.setAttribute('aria-checked',mOn?'true':'false');mt.setAttribute('aria-label',mOn?'Music on':'Music off')}
   if(pt){pt.setAttribute('aria-checked',streakPops?'true':'false');pt.setAttribute('aria-label',streakPops?'Streak pop-ups on':'Streak pop-ups off')}
   if(ft){ft.setAttribute('aria-checked',longFlips?'true':'false');ft.setAttribute('aria-label',longFlips?'Long flips on':'Long flips off')}
-  if(ppt){ppt.setAttribute('aria-checked',pointPops?'true':'false');ppt.setAttribute('aria-label',pointPops?'Points pop-ups on':'Points pop-ups off')}}
+  if(ppt){ppt.setAttribute('aria-checked',pointPops?'true':'false');ppt.setAttribute('aria-label',pointPops?'Points pop-ups on':'Points pop-ups off')}
+  const dn=$('#diff-normal'),de=$('#diff-easy');
+  if(dn){dn.setAttribute('aria-checked',isEasy()?'false':'true')}
+  if(de){de.setAttribute('aria-checked',isEasy()?'true':'false')}}
 function applyVol(){try{localStorage.setItem(VOLKEY,String(masterVol));localStorage.setItem(MUTEKEY,muted?'1':'0');localStorage.setItem(ALLMUTEKEY,allMuted?'1':'0')}catch(e){}volUI();if(bothSilent()&&silentEl)silentEl.pause();else if(audioWanted())iosPlayback()}
 function applyAllMute(){if(allMuted)stopSfx();applyVol();applyMusic();window.__ev&&window.__ev.push(allMuted?'muteAll':'unmuteAll')}
 $('#mute').onclick=ev=>{ev.stopPropagation();ev.preventDefault();closeRsq();closeVol();allMuted=!allMuted;applyAllMute();if(!allMuted&&audioWanted()){unlockAudio();if(!quiet())ui('tap')}};
@@ -878,6 +898,8 @@ function setStreakPops(on){streakPops=!!on;if(streakPops&&pointPops){pointPops=f
 function setPointPops(on){pointPops=!!on;if(pointPops&&streakPops){streakPops=false;clearWordFlashes()}if(!pointPops)clearPointPops();persistPops();volUI()}
 const popTog=$('#pop-tog');if(popTog)popTog.addEventListener('click',ev=>{ev.stopPropagation();setStreakPops(!streakPops);if(!quiet()){unlockAudio();ui('tap')}window.__ev.push(streakPops?'popsOn':'popsOff')});
 const flipTog=$('#flip-tog');if(flipTog)flipTog.addEventListener('click',ev=>{ev.stopPropagation();longFlips=!longFlips;try{localStorage.setItem(FLIPKEY,longFlips?'1':'0')}catch(e){}volUI();if(!quiet()){unlockAudio();ui('tap')}window.__ev.push(longFlips?'longFlipsOn':'longFlipsOff')});
+const diffN=$('#diff-normal');if(diffN)diffN.addEventListener('click',ev=>{ev.stopPropagation();setDifficulty('normal');if(!quiet()){unlockAudio();ui('tap')}window.__ev.push('diffNormal')});
+const diffE=$('#diff-easy');if(diffE)diffE.addEventListener('click',ev=>{ev.stopPropagation();setDifficulty('easy');if(!quiet()){unlockAudio();ui('tap')}window.__ev.push('diffEasy')});
 const ptsTog=$('#pts-tog');if(ptsTog)ptsTog.addEventListener('click',ev=>{ev.stopPropagation();setPointPops(!pointPops);if(!quiet()){unlockAudio();ui('tap')}window.__ev.push(pointPops?'pointPopsOn':'pointPopsOff')});
 document.addEventListener('click',ev=>{const p=$('#vol');if(!p||p.hidden)return;if(ev.target.closest&&(ev.target.closest('#vol')||ev.target.closest('#set')))return;closeVol()});
 $('#rst').onclick=ev=>{ev.stopPropagation();ev.preventDefault();closeVol();requestRestart()};
