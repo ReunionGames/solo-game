@@ -977,7 +977,11 @@ function watchImg(img,face,src,pri){let n=0;face.classList.remove('fail');
 /* Luke t472u: the timeline's starting card is never the player's newly won card (flagged viaUnlock until first correct placement), so the new card must be placed and can earn its hard-card points. Prefer a middle-period card from the rest. */
 function isFreshUnlock(c){if(!c||!c.id)return false;const s=struggleMap()[c.id]||{};return !!(s.flagged&&s.viaUnlock)}
 function pickStartCard(pool){const rest=pool.filter(c=>!isFreshUnlock(c)),mid=rest.filter(c=>MID.includes(c.period)),from=mid.length?mid:(rest.length?rest:pool);return shuffle(from.slice())[0]}
-function newRun(){ptsHard=0;hintRestart(false);stopSfx();pend=[];musicBegin();clearT();cutChimes();clearEnd();hideSbt();lastRun=null;$('#end').style.display='none';hideUnlock();const nh=$('#nhs');if(nh)nh.remove();hideYc();closeRsq();clearConquerFx();conquerTestArmed=CONQUERTEST;
+/* Luke t488u: when a game starts (Play again / Restart / mode change, or the first tap of the first game, never on page load) scroll the game to the top of the visible screen. From inside the Wix iframe, scrollIntoView on the game root is passed up to the parent page, so the game fills the screen and the Wix header is a scroll-up away. Relayout once the smooth scroll has settled so the game uses the newly visible slice. */
+let bootDone=false;
+function scrollGameIntoView(){try{const a=document.getElementById('app')||document.body;a.scrollIntoView({block:'start',inline:'nearest',behavior:RM.matches?'auto':'smooth'});window.__ev&&window.__ev.push('scrollIntoView');setTimeout(()=>{try{if(phase)relayout()}catch(e){}},RM.matches?60:900)}catch(e){}}
+addEventListener('click',()=>{if(bootDone)scrollGameIntoView()},{capture:true,once:true});
+function newRun(){ptsHard=0;hintRestart(false);stopSfx();pend=[];if(bootDone)scrollGameIntoView();musicBegin();clearT();cutChimes();clearEnd();hideSbt();lastRun=null;$('#end').style.display='none';hideUnlock();const nh=$('#nhs');if(nh)nh.remove();hideYc();closeRsq();clearConquerFx();conquerTestArmed=CONQUERTEST;
  if(placedPending){placedPending=false;placedSession=true;preloadOwned();showPlacedBoard();return}
  placedSession=false;preloadOwned();
  const pool=ownedDeck(),start=pickStartCard(pool);
@@ -1566,7 +1570,7 @@ function showPlacedBoard(){const pool=playableDeck().slice();if(!pool.length)ret
  if(!deck.length){hand=null;phase='review';applyFrame();stats();viewTimeline();return}
  draw()}
 const UNLOCKTEST=TEST&&/[?&]unlock=1\b/.test(location.search);
-newRun();
+newRun();bootDone=true;
 if(UNLOCKTEST){nRight=total;nWrong=0;ptsC=total*10;ptsRoll=rollTotal(total);ptsSpeed=0;runMs=0;later(over,40)}
 if(PLACED){try{const u=new URL(location.href);u.searchParams.delete('placed');history.replaceState(null,'',u.pathname+u.search+u.hash)}catch(e){}}
 if(TEST)window.__ckScore={fmt:fmtTime,speedPts,rollPts,rollTotal,dropStreak,streakLevel,neuAmount,lockedBase,gamesPlayed,hasPlayedBefore,struggleKind,pointsPop,setPointPops,setStreakPops,cardTiers,detectPlayInput,get playInput(){return playInput},set playInput(v){playInput=(v==='touch'?'touch':'mouse')},preview(extra){lastRun=Object.assign({nRight:40,nWrong:11,runBest:12,total:51,ptsC:400,ptsRoll:40,ptsSpeed:40,ptsRun:2,ptsNew:0,ptsConq:0,finish:50,runMs:17*60*1000,score:492,maxRun:false,perfect:false,newHS:false,prevHS:480,unlockCard:null,stillLocked:0,owned:52,cardMs:[]},extra||{});phase='over';const s0=$('#s0');if(s0)s0.hidden=true;s0Active=false;const fc=$('#fc');if(fc)fc.hidden=true;const z=$('#zoom');if(z)z.style.display='none';applyFrame&&applyFrame();renderEnd()}};
