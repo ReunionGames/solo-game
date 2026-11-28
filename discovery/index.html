@@ -16,9 +16,6 @@
 :root{--parch:#F4E8CB;--burg:#551309;--gold:#E9D29E;--red:#9c1c14;--ink:#2b1a10;--lab:#40110C;--soft:#7F5C4F;--card-rx:4.7619047619%;--card-ry:3.4090909091%} /* O's web cards: 3mm circular corner on a 63mm card (72px on 1512×2112 masters, 28.571px on the 600×838 WebPs). Two-value % keeps it circular as the card scales (a single % would be elliptical). */
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;overflow:hidden;background:var(--parch);color:var(--ink);font-family:'EB Garamond',Georgia,serif;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
-/* Luke t495u (desktop): the Wix embed is taller than the part the game lays out in, so cream showed below it. On desktop frames the whole frame is footer-dark and the cream game page sits only in the laid-out slice, so there is no cream band before the footer. Mobile is unchanged. */
-html.deskfill{background:#40110C}html.deskfill body{background:transparent}
-html.deskfill::before{content:"";position:fixed;left:0;right:0;top:var(--vt,0px);height:var(--vh,100%);background:var(--parch);z-index:-1}
 #app{position:absolute;left:0;right:0;top:var(--vt,0px);height:var(--vh,100%);width:min(100%,1400px);margin:0 auto;display:flex;flex-direction:column}
 #vs{position:absolute;left:0;top:0;width:1px;height:100%;visibility:hidden;pointer-events:none}
 header{flex:none;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 12px;min-height:52px;border-bottom:1px solid #d8c79c;background:var(--parch)}
@@ -961,11 +958,10 @@ function applyFrame(){const full=layoutH();let t=0,h=full;
  if(!zoomed&&vis&&vis.h>0){t=Math.max(0,Math.min(vis.top,full));h=Math.min(full-t,vis.h)}
  const MIN=Math.min(full,desk()?380:360);if(h<MIN){h=MIN;t=Math.min(t,full-h)}
  FT=Math.round(t);FH=Math.round(h);const r=document.documentElement;
- r.style.setProperty('--vt',FT+'px');r.style.setProperty('--vh',FH+'px');r.classList.toggle('short',FH<=600);r.classList.toggle('deskfill',desk())}
-let io=null,relayoutOnVis=false;function refreshVis(){try{const v=document.getElementById('vs');if(io&&v){io.unobserve(v);io.observe(v)}}catch(e){}}
-try{io=new IntersectionObserver(es=>{const e=es[es.length-1],ir=e.intersectionRect;
+ r.style.setProperty('--vt',FT+'px');r.style.setProperty('--vh',FH+'px');r.classList.toggle('short',FH<=600)}
+try{const io=new IntersectionObserver(es=>{const e=es[es.length-1],ir=e.intersectionRect;
   vis=e.isIntersecting&&ir.height>0?{top:ir.top,h:ir.height}:null;window.__vis=vis;
-  if(!visSeen){visSeen=true;relayout()}else if(relayoutOnVis){relayoutOnVis=false;try{if(phase)relayout()}catch(e){}}},{threshold:Array.from({length:101},(_,i)=>i/100)});io.observe(document.getElementById('vs'))}catch(e){}
+  if(!visSeen){visSeen=true;relayout()}},{threshold:Array.from({length:101},(_,i)=>i/100)});io.observe(document.getElementById('vs'))}catch(e){}
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function build(c,o){const el=document.createElement('div');el.className='card'+(o.up?' up':'');
   const inner=document.createElement('div');inner.className='inner';
@@ -1004,8 +1000,7 @@ function isFreshUnlock(c){if(!c||!c.id)return false;const s=struggleMap()[c.id]|
 function pickStartCard(pool){const rest=pool.filter(c=>!isFreshUnlock(c)),mid=rest.filter(c=>MID.includes(c.period)),from=mid.length?mid:(rest.length?rest:pool);return shuffle(from.slice())[0]}
 /* Luke t488u: when a game starts (Play again / Restart / mode change, or the first tap of the first game, never on page load) scroll the game to the top of the visible screen. From inside the Wix iframe, scrollIntoView on the game root is passed up to the parent page, so the game fills the screen and the Wix header is a scroll-up away. Relayout once the smooth scroll has settled so the game uses the newly visible slice. */
 let bootDone=false;
-function scrollGameIntoView(){try{const a=document.getElementById('app')||document.body;a.scrollIntoView({block:'start',inline:'nearest',behavior:RM.matches?'auto':'smooth'});window.__ev&&window.__ev.push('scrollIntoView');setTimeout(()=>{relayoutOnVis=true;refreshVis()},RM.matches?60:900)}catch(e){}}
-addEventListener('pointerdown',()=>{refreshVis()},true);
+function scrollGameIntoView(){try{const a=document.getElementById('app')||document.body;a.scrollIntoView({block:'start',inline:'nearest',behavior:RM.matches?'auto':'smooth'});window.__ev&&window.__ev.push('scrollIntoView');setTimeout(()=>{try{if(phase)relayout()}catch(e){}},RM.matches?60:900)}catch(e){}}
 addEventListener('click',()=>{if(bootDone)scrollGameIntoView()},{capture:true,once:true});
 function newRun(){ptsHard=0;hintRestart(false);stopSfx();pend=[];if(bootDone)scrollGameIntoView();musicBegin();clearT();cutChimes();clearEnd();hideSbt();lastRun=null;$('#end').style.display='none';hideUnlock();const nh=$('#nhs');if(nh)nh.remove();hideYc();closeRsq();clearConquerFx();conquerTestArmed=CONQUERTEST;
  if(placedPending){placedPending=false;placedSession=true;preloadOwned();showPlacedBoard();return}
