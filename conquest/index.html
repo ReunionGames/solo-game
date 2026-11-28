@@ -548,6 +548,17 @@ header{position:relative;z-index:7}
 #tpanel .tacts{display:flex;gap:8px}
 #tpanel .tacts button{font:inherit;font-size:13px;background:#F4E8CB;color:#551309;border:0;border-radius:6px;padding:6px 10px;cursor:pointer}
 
+
+/* Luke t496u: Conquest is locked until all 52 Discovery cards are owned */
+#cgate{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;padding:18px;background:var(--parch);color:var(--ink);text-align:center}
+#cgate[hidden]{display:none}
+#cgate .box{width:min(94%,420px);background:#fbf3de;border:2px solid var(--burg);border-radius:14px;box-shadow:0 0 0 2px var(--gold);padding:22px 18px 20px}
+#cgate .lock{width:36px;height:36px;margin:0 auto 8px;color:var(--burg)}
+#cgate .lock svg{width:36px;height:36px;display:block}
+#cgate h1{margin:0 0 8px;font-size:24px;font-variant:small-caps;color:var(--burg);line-height:1.15}
+#cgate p{margin:0 0 16px;font-size:18px;line-height:1.35;color:var(--ink)}
+#cgate .btn{min-height:48px;padding:5px 22px 7px;border:2px solid var(--gold);border-radius:999px;box-shadow:0 3px 10px rgba(0,0,0,.35);font-size:20px}
+#cgate .sec{display:inline-block;margin-top:10px;background:none;color:var(--burg);border:1.5px solid #cdb98a;box-shadow:none;font-size:17px;min-height:44px}
 </style></head><body>
 <div id="vs"></div>
 <div id="app">
@@ -565,6 +576,15 @@ header{position:relative;z-index:7}
 <div id="end"></div>
 <div id="ulock" tabindex="-1" hidden role="dialog" aria-label="You've unlocked a new card!"><div class="ulhole"></div><div class="ulspot"><div class="ulcard"></div></div><div class="ulbox"><p>You've unlocked a new card!</p><p class="ultitle"></p><button class="gbtn" id="ulgo">Continue</button></div></div>
 <div id="cfx" aria-hidden="true"></div>
+<div id="cgate" hidden role="dialog" aria-modal="true" aria-labelledby="cgateTitle" aria-describedby="cgateMsg">
+<div class="box">
+<div class="lock" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M17 8h-1V6a4 4 0 1 0-8 0v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zM9 6a3 3 0 1 1 6 0v2H9V6zm8 14H7V10h10v10z"/></svg></div>
+<h1 id="cgateTitle">Conquest is locked</h1>
+<p id="cgateMsg">Unlock all 52 cards in Discovery to open Conquest</p>
+<a class="btn" href="../portal/">Back to the dashboard</a>
+<a class="btn sec" href="../discovery-demo/">Play Discovery</a>
+</div>
+</div>
 <script>
 /* ===== CARD DATA: all 52 Bible Event cards (Solomon card-index + Oholiab web art, 25 Nov 2026).
  id = period-event, n = 1..52 set order. title/verse from the card-index. slug matches Oholiab's web-card filenames.
@@ -1528,6 +1548,27 @@ function showPlacedBoard(){const pool=playableDeck().slice();if(!pool.length)ret
  if(!deck.length){hand=null;phase='review';applyFrame();stats();viewTimeline();return}
  draw()}
 const UNLOCKTEST=TEST&&/[?&]unlock=1\b/.test(location.search);
+/* Luke t496u: same 52-card rule as the dashboard and the Discovery 'Unlock Conquest mode' button. Unsaved difficulty must not credit Normal's 13 starters. */
+function discoveryAllOwned(){
+ const STARTER_ALL=['1-2','1-7','2-2','2-5','3-2','3-5','4-6','5-3','5-7','6-3','6-7','7-3','7-6'];
+ const EASY_STARTERS=['1-2','4-6'];
+ const PERIODS=[10,6,5,7,8,8,8];
+ let diff=null,list=[];
+ try{diff=localStorage.getItem('ckDiscoveryDifficulty')}catch(e){}
+ try{const r=JSON.parse(localStorage.getItem('ckDiscoveryUnlocked')||'null');if(r&&r.v===1&&Array.isArray(r.ids))list=r.ids.filter(x=>typeof x==='string')}catch(e){}
+ const starters=diff==='normal'?STARTER_ALL:EASY_STARTERS,set={};
+ starters.concat(list).forEach(id=>{if(typeof id==='string'&&/^[1-7]-\d+$/.test(id)){const p=+id.split('-')[0],e=+id.split('-')[1];if(p>=1&&p<=7&&e>=1&&e<=PERIODS[p-1])set[id]=1}});
+ return Object.keys(set).length>=52;
+}
+function showConquestGate(){
+ const g=$('#cgate'),app=$('#app');
+ if(g)g.hidden=false;
+ if(app){app.setAttribute('inert','');app.style.visibility='hidden'}
+ try{document.title='Chronicles of the Kingdom: Conquest locked'}catch(e){}
+ window.__ev&&window.__ev.push('conquestLocked');
+}
+if(!discoveryAllOwned()){showConquestGate()}
+else{
 newRun();
 if(UNLOCKTEST){nRight=total;nWrong=0;ptsC=total*10;ptsRoll=rollTotal(total);ptsSpeed=0;runMs=0;later(over,40)}
 if(PLACED){try{const u=new URL(location.href);u.searchParams.delete('placed');history.replaceState(null,'',u.pathname+u.search+u.hash)}catch(e){}}
@@ -1542,5 +1583,6 @@ if(TEST)window.__ckUnlock={show:showUnlock,hide:hideUnlock,pick:pickUnlock,owned
  conquerScroll(){if(!tl.length)return null;const e=tl[0];e.conquered=true;if(!e.el){const card=$('#tl .slot .card');if(card)e.el=card}ensureConquerOverlay(e,false);
   const sc=$('#tl'),host=$('#tlw').getBoundingClientRect(),cr=e.el.getBoundingClientRect();sc.scrollTop=sc.scrollTop+(cr.bottom-host.top)+16;return true},
  endAll(){nRight=total;nWrong=0;over()}};
+}
 })();
 </script></body></html>
