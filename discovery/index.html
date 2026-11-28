@@ -565,7 +565,7 @@ header{position:relative;z-index:7}
  id = period-event, n = 1..52 set order. title/verse from the card-index. slug matches Oholiab's web-card filenames.
  front/back = in-game art at cards/front/{id}-{slug}.webp and cards/back/{id}-{slug}.webp (O's 600x838 RGBA WebP).
  reveal = spoiler-free mystery front for the unlock screen only (cards/mystery/{id}-{slug}.webp). In-game placement always uses front.
- playable = true for all 52 Bible Event cards (Luke t295u). New players start with the 13 promo cards on Normal, or the first two of that list on Easy (Luke t451u/t452u). On Easy, the next 11 unlocks are the rest of those same 13, then the remaining pool.
+ playable = true for all 52 Bible Event cards (Luke t295u). New players start with the 13 promo cards on Normal, or Creation of Heavens and Earth plus Jonah Sent to Nineveh on Easy (Luke t451u/t452u/t472u). On Easy, Jonah starts on the board and Creation is the first card to place; the next 11 unlocks are the rest of those same 13, then the remaining pool.
  Art lives at discovery/cards/{front,back,mystery}/{period}-{event}-{slug}.webp. Rules cards are in discovery/cards/rules/ (not in this deck).
  Other playable cards join the deck once unlocked.
  Front images are only requested when the player taps Flip!. */
@@ -643,13 +643,13 @@ function getBestSkillTime(){try{return Math.max(0,+localStorage.getItem(BESTSKIL
 const HSKEY='ckDiscoveryHighScore';                                                          /* best total (correct + best streak) per device (Luke t212u) */
 const ROWBESTKEY='ckDiscoveryRowBests';                                              /* per-row personal bests on the old-school board (Luke t438u) */
 const STRUGKEY='ckDiscoveryStruggle';                                                        /* per-card miss streak + flag, this browser only (Luke t252u). A test BUILD reset now clears this too, so a previous auto-marked hard card does not linger (Luke t296u); ?hard=N can still add flags after that. Newly unlocked cards are flagged here so the first correct placement gets the hard-card treatment (Luke t288u/t289u). */
-/* The original 13 promo cards (Luke t295u). Normal starts with all 13. Easy starts with the first EASY_STARTER_COUNT of this list; the remaining 11 of these 13 are unlocked first, so Easy's first 13 owned cards are always this same set. After that, Easy draws from the rest of the pool (Luke t451u/t452u). */
+/* The original 13 promo cards (Luke t295u). Normal starts with all 13. Easy starts with Creation of Heavens and Earth (1-2) and Jonah Sent to Nineveh (4-6), a well-known middle-period card; the remaining 11 of these 13 are unlocked first, so Easy's first 13 owned cards are always this same set. After that, Easy draws from the rest of the pool (Luke t451u/t452u/t472u). */
 const STARTER_ALL=['1-2','1-7','2-2','2-5','3-2','3-5','4-6','5-3','5-7','6-3','6-7','7-3','7-6'];
-const EASY_STARTER_COUNT=2;
+const EASY_STARTERS=['1-2','4-6'];
 const DIFFKEY='ckDiscoveryDifficulty';
 let diffMode=(()=>{try{const v=localStorage.getItem(DIFFKEY);if(v==='normal'||v==='easy')return v;return hasPlayedBefore()?'normal':'easy'}catch(e){return 'easy'}})();
 function isEasy(){return diffMode==='easy'}
-function starterIds(){return isEasy()?STARTER_ALL.slice(0,EASY_STARTER_COUNT):STARTER_ALL.slice()}
+function starterIds(){return isEasy()?EASY_STARTERS.slice():STARTER_ALL.slice()}
 let pendingDiff=null;
 function placeDsq(){placePanel($('#dsq'),$('#set'))}
 function closeDsq(){const q=$('#dsq');if(q)q.hidden=true;pendingDiff=null}
@@ -686,7 +686,7 @@ const THEME_LINE='From Creation to Jesus\u2019 return: one story.',THEME_FINAL=f
 const STREAK_STEPS=[{at:0,fg:'#F4E8CB',ring:'#cdb98a',glow:'none'},{at:3,fg:'#E9D29E',ring:'#E9D29E',glow:'none'},{at:5,fg:'#F3AE45',ring:'#F3AE45',glow:'none'},
  {at:10,fg:'#F2B81C',ring:'#F2B81C',glow:'0 0 10px 3px rgba(242,184,28,.75)'},{at:20,fg:'#F2B81C',ring:'#F2B81C',glow:'0 0 12px 4px rgba(242,184,28,.8)'},
  {at:30,fg:'#F2B81C',ring:'#F2B81C',glow:'0 0 13px 5px rgba(242,184,28,.85)'},{at:40,fg:'#F2B81C',ring:'#F2B81C',glow:'0 0 14px 5px rgba(242,184,28,.9)'},{at:50,fg:'#F2B81C',ring:'#F2B81C',glow:'0 0 15px 6px rgba(242,184,28,.95)'}];
-const MID=[3,4,5];                              /* start card comes from the middle three periods: Judges, Kings, Exile */
+const MID=[3,4,5];                              /* start card comes from the middle three periods: Judges, Kings, Exile. Never a newly unlocked card (Luke t472u). */
 const HARD=new Set(['4-6','3-5','5-7','2-5','7-6']); /* Jonah, Samuel, Esther, 12 Spies, Patmos: full flip */
 const FAN=['1-7','2-2','6-7'];
 const RELEASE='5.9';                            /* bump on every release: the first-time tutorial (step 0 flag + first-card overlay) shows again after each update (Luke, 21 Nov) */
@@ -970,10 +970,13 @@ function watchImg(img,face,src,pri){let n=0;face.classList.remove('fail');
  img.onerror=()=>{if(n>=3){IMGBAD.add(src);face.classList.add('ld','fail');return}n++;window.__imgTries++;const u=n<3?src+(src.includes('?')?'&':'?')+'r='+n:src+'/v1/fit/w_760,h_1062,q_85/card.webp';
   setTimeout(()=>{img.src=u},TEST?20:400*n)};
  img.src=src;if(img.complete&&img.naturalWidth>0){ready();return}face.classList.add('ld');warmImg(src,pri||'high')}
+/* Luke t472u: the timeline's starting card is never the player's newly won card (flagged viaUnlock until first correct placement), so the new card must be placed and can earn its hard-card points. Prefer a middle-period card from the rest. */
+function isFreshUnlock(c){if(!c||!c.id)return false;const s=struggleMap()[c.id]||{};return !!(s.flagged&&s.viaUnlock)}
+function pickStartCard(pool){const rest=pool.filter(c=>!isFreshUnlock(c)),mid=rest.filter(c=>MID.includes(c.period)),from=mid.length?mid:(rest.length?rest:pool);return shuffle(from.slice())[0]}
 function newRun(){ptsHard=0;hintRestart(false);musicBegin();clearT();cutChimes();clearEnd();hideSbt();lastRun=null;$('#end').style.display='none';hideUnlock();const nh=$('#nhs');if(nh)nh.remove();hideYc();closeRsq();clearConquerFx();conquerTestArmed=CONQUERTEST;
  if(placedPending){placedPending=false;placedSession=true;preloadOwned();showPlacedBoard();return}
  placedSession=false;preloadOwned();
- const pool=ownedDeck(),mid=pool.filter(c=>MID.includes(c.period)),start=shuffle((mid.length?mid:pool).slice())[0];
+ const pool=ownedDeck(),start=pickStartCard(pool);
  deck=shuffle(pool.filter(c=>c!==start));if(TEST&&TK)deck=deck.slice(0,TK);total=deck.length;
  tl=[{c:start,up:true}];streak=0;turn=0;nRight=0;nWrong=0;runBest=0;ptsC=0;ptsRoll=0;ptsNew=0;ptsConq=0;ptsSpeed=0;ptsRun=0;runMs=0;cardMs=[];placeLog=[];resetDecide();startRunClock();nbShown=false;best=getBest();bestStart=best;stkLevel=-1;stkCold=false;stkRed=false;clearTimeout(zeroFly.t);clearTimeout(zeroFly.u);const zf=document.querySelector('.zfly');if(zf)zf.remove();preloadAhead();draw()}
 function draw(){hintRestart(false);clearPointPops();clearWordFlashes();bankCard();if(!deck.length)return over();applyFrame();
