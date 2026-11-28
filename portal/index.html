@@ -40,7 +40,12 @@ button.name-tap:focus-visible,button.edit-link:focus-visible,#nameCancel:focus-v
 #nameCancel[hidden]{display:none}
 .note{margin:0 0 10px;font-size:15px;color:var(--soft);line-height:1.3}
 .grid{display:grid;grid-template-columns:1fr;gap:12px}
-@media (min-width:700px){.grid.two{grid-template-columns:1fr 1fr}.grid.three{grid-template-columns:1fr 1fr}}
+@media (min-width:700px){
+ .grid.two{grid-template-columns:1fr 1fr}
+ .grid.three{grid-template-columns:1fr 1fr}
+ /* Luke t506u: Discovery and Conquest share row heights so the stats and Play buttons line up */
+ .grid.two.modes > .panel{display:grid;grid-template-rows:subgrid;grid-row:span 5;align-items:start}
+}
 .panel{background:var(--panel);border:2px solid var(--burg);border-radius:14px;box-shadow:0 0 0 2px var(--gold);padding:12px 14px 14px;min-width:0}
 .panel h2{margin:0 0 6px;font-size:21px;font-variant:small-caps;letter-spacing:.03em;color:var(--lab);line-height:1.15}
 .rule{height:2px;background:var(--gold);margin:0 0 10px;position:relative}
@@ -50,7 +55,7 @@ button.name-tap:focus-visible,button.edit-link:focus-visible,#nameCancel:focus-v
 .game .art img{display:block;width:100%;height:100%;object-fit:cover}
 .game .body{flex:1;min-width:0}
 .tag{display:inline-block;margin:0 0 6px;padding:1px 9px 2px;border-radius:999px;background:var(--burg);color:var(--parch);font-size:14px;font-weight:700;line-height:1.3}
-.desc{margin:0 0 8px;font-size:17px;line-height:1.28}
+.desc{margin:0;font-size:16px;line-height:1.35;overflow-wrap:break-word}
 .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0 0 10px}
 .st{background:rgba(233,210,158,.35);border-radius:10px;padding:5px 4px 6px;text-align:center;min-width:0}
 .st b{display:block;font-size:24px;line-height:1;color:var(--burg);font-variant-numeric:tabular-nums}
@@ -68,8 +73,6 @@ button.name-tap:focus-visible,button.edit-link:focus-visible,#nameCancel:focus-v
 .btn.locked:active{transform:none}
 .coll.locked .bar i{width:0 !important;background:#cfc0a0}
 .coll.locked .per{display:none}
-/* Luke t504u: longer locked description sits under the card so it stays readable */
-.panel.locked #cDesc,.panel #cDesc{margin:8px 0 0;font-size:16px;line-height:1.4}
 .coll{margin:0 0 12px}
 .coll:last-child{margin-bottom:0}
 .coll .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:18px;color:var(--lab)}
@@ -115,7 +118,7 @@ button.name-tap:focus-visible,button.edit-link:focus-visible,#nameCancel:focus-v
  <p class="note">Pick up where you left off, or start a new run.</p>
  <div id="nostore" role="alert">Your browser is not sharing saved game progress with this page, so the numbers below show as zero. Your progress is still safe in the games themselves.</div>
 
- <div class="grid two">
+ <div class="grid two modes">
   <section class="panel" aria-labelledby="hD">
    <h2 id="hD">Discovery</h2><div class="rule"></div>
    <div class="game">
@@ -139,9 +142,9 @@ button.name-tap:focus-visible,button.edit-link:focus-visible,#nameCancel:focus-v
     <div class="art"><img src="../discovery/cards/front/7-8-the-new-jerusalem.webp" width="600" height="838" loading="lazy" alt="Bible Event Card: The New Jerusalem"></div>
     <div class="body">
      <span class="tag" id="cTag"><svg class="lock-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17 8h-1V6a4 4 0 1 0-8 0v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zM9 6a3 3 0 1 1 6 0v2H9V6zm8 14H7V10h10v10z"/></svg> Locked</span>
+     <p class="desc" id="cDesc">The full timeline, against the clock. All 52 cards, streak and speed bonuses, and +50 for a perfect run. Climb the leaderboard and see if you can finish on top. Unlock all 52 cards in Discovery to take it on.</p>
     </div>
    </div>
-   <p class="desc" id="cDesc">The full timeline, against the clock. All 52 cards, streak and speed bonuses, and +50 for a perfect run. Climb the leaderboard and see if you can finish on top. Unlock all 52 cards in Discovery to take it on.</p>
    <div class="stats" style="margin-top:10px">
     <div class="st"><b id="cBest">0</b><span>Best run score</span></div>
     <div class="st"><b id="cPts">0</b><span>Best points total</span></div>
