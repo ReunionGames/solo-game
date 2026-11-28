@@ -52,6 +52,9 @@ header{flex:none;display:flex;justify-content:space-between;align-items:center;g
 .vh{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .vh .big{white-space:nowrap}.vh .nbst{margin:0;font-size:16px;padding:0 10px;box-shadow:0 0 8px 1px var(--gold)}
 .vh .btn{min-height:44px;font-size:18px;padding:0 18px}
+.vh .vacts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.vh .vacts .btn{font-size:16px;padding:0 12px}
+@media (max-width:520px){.vh{flex-wrap:wrap}.vh .vacts{width:100%;justify-content:stretch}.vh .vacts .btn{flex:1}}
 .vb{font-size:16px;line-height:1.25;margin-top:1px}.vb b{color:var(--burg)}
 .nbst .lg{display:none}
 /* the flip words */
@@ -210,10 +213,9 @@ header{flex:none;display:flex;justify-content:space-between;align-items:center;g
 .ulhole{position:absolute;border-radius:var(--card-rx)/var(--card-ry);pointer-events:none;box-shadow:0 0 0 3px #E9D29E,0 0 24px 9px rgba(233,210,158,.95),0 0 0 9999px rgba(35,17,9,.6)}
 .ulspot{position:absolute;left:50%;top:54%;transform:translate(-50%,-50%);width:min(58vw,260px);filter:drop-shadow(0 8px 22px rgba(0,0,0,.45));pointer-events:none}
 .ulcard{width:100%}
-.ulbox{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:min(94%,640px);background:var(--parch);border:2px solid #E9D29E;outline:2px solid var(--burg);border-radius:14px;padding:10px 14px 12px;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.5);color:var(--burg);font-size:20px;font-weight:700;line-height:1.25;z-index:1}
-.ulbox p{margin:0 0 10px}.ulbox p b{color:#40110C}
-.ulbox .ultitle{margin:-4px 0 10px;font-size:18px;font-weight:700;color:#40110C}
-.ulbox .gbtn{min-width:180px;cursor:pointer;pointer-events:auto}
+.ulbox{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:max-content;max-width:min(94%,640px);background:var(--parch);border:2px solid #E9D29E;outline:2px solid var(--burg);border-radius:14px;padding:10px 16px;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.5);color:var(--burg);font-size:20px;font-weight:700;line-height:1.25;z-index:1;box-sizing:border-box}
+.ulbox p{margin:0}.ulbox p b{color:#40110C}
+.ulbox .ultitle{margin:4px 0 0;font-size:18px;font-weight:700;color:#40110C}
 @media (min-width:700px){.ulbox{font-size:23px}.ulbox .ultitle{font-size:20px}.ulspot{width:min(42vw,300px)}}
 .dsc .unl.newcard{border:2px solid var(--burg);background:var(--gold);color:var(--burg);font-weight:700;font-size:17px}
 
@@ -415,8 +417,8 @@ header{position:relative;z-index:7}
 @media (min-width:700px){
  #end .ep.dsc{max-width:860px;grid-template-columns:1.1fr 1fr}
  #end .ep.dsc .e1{grid-row:1/3}
- #end .ep.dsc .e2{grid-row:1/2}
- #end .ep.dsc .acts{grid-column:2;grid-row:2}
+ #end .ep.dsc .acts{grid-column:2;grid-row:1;margin-top:0;margin-bottom:10px}
+ #end .ep.dsc .e2{grid-row:2}
 }
 
 /* Scoreboard v1 (Luke t329u; Oholiab layout): one big burgundy total, Your best, 3 small rows, Play again, two distinct calls to action, one italic line */
@@ -482,9 +484,8 @@ header{position:relative;z-index:7}
 .ulq .qm{font-family:'EB Garamond',Georgia,serif;font-weight:700;font-size:min(34vw,170px);line-height:1}
 .ulq .qt{font-size:17px;font-weight:700;letter-spacing:.02em;color:var(--gold)}
 #ulock.pre .ulreal{opacity:0}
-/* Luke t336u: before the tap-to-reveal, hide Continue and the empty title with display:none so they don't leave a blank block under the message. The step-0 'Got it' bubble is unchanged. */
-#ulock.pre #ulgo,#ulock.spin:not(.shown) #ulgo,#ulock.pre .ultitle,#ulock.spin:not(.shown) .ultitle{display:none}
-#ulock.pre .ulbox>p:first-child,#ulock.spin:not(.shown) .ulbox>p:first-child{margin:0}
+/* Emma / Luke t470u: Continue removed; hide the empty title before the reveal so the box shrinks to the message. The step-0 'Got it' bubble is unchanged. */
+#ulock.pre .ultitle,#ulock.spin:not(.shown) .ultitle{display:none}
 #ulock.spin .ulcard{animation:ulspin .45s ease-in-out}   /* Luke t396u: about 35% quicker than the old .7s flip */
 #ulock.spin .ulq{animation:ulqout .45s linear forwards}
 #ulock.spin .ulreal{animation:ulrin .45s linear forwards}
@@ -557,7 +558,7 @@ header{position:relative;z-index:7}
 <div id="s0" hidden><div class="s0hole"></div><div class="s0box"><p></p><button class="gbtn" id="s0go">Got it</button></div></div>
 <div id="help"></div>
 <div id="end"></div>
-<div id="ulock" tabindex="-1" hidden role="dialog" aria-label="You've unlocked a new card!"><div class="ulhole"></div><div class="ulspot"><div class="ulcard"></div></div><div class="ulbox"><p>You've unlocked a new card!</p><p class="ultitle"></p><button class="gbtn" id="ulgo">Continue</button></div></div>
+<div id="ulock" tabindex="-1" hidden role="dialog" aria-label="You've unlocked a new card!"><div class="ulhole"></div><div class="ulspot"><div class="ulcard"></div></div><div class="ulbox"><p>You've unlocked a new card!</p><p class="ultitle"></p></div></div>
 <div id="cfx" aria-hidden="true"></div>
 <script>
 /* ===== CARD DATA: all 52 Bible Event cards (Solomon card-index + Oholiab web art, 25 Nov 2026).
@@ -1359,7 +1360,7 @@ function showUnlock(){const c=window.__disc&&window.__disc.unlockCard;if(!c||pha
  s.hidden=false;s.dataset.at=performance.now();positionUnlock();requestAnimationFrame(positionUnlock);window.__ev.push('unlock:'+c.id);s.focus&&s.focus({preventScroll:true})}
 function revealUnlock(){const s=$('#ulock'),c=window.__disc&&window.__disc.unlockCard;if(!s||!s.classList.contains('pre'))return;s.classList.remove('pre');ui('tap');
  const fin=()=>{if(s.hidden)return;s.classList.add('shown');const msg=s.querySelector('.ulbox p');if(msg)msg.textContent=UL_DONE;const tit=s.querySelector('.ultitle');if(tit)tit.textContent=(c&&c.title)||'';
-  s.dataset.at=performance.now();positionUnlock();sfx('conquer');window.__ev.push('unlockReveal');const go=$('#ulgo');if(go)go.focus({preventScroll:true})};
+  s.dataset.at=performance.now();positionUnlock();sfx('conquer');window.__ev.push('unlockReveal');s.focus&&s.focus({preventScroll:true})};
  const old=s.querySelector('.ulfx');if(old)old.remove();
  const fx=document.createElement('div');fx.className='ulfx';fx.setAttribute('aria-hidden','true');fx.innerHTML='<div class="ulglow"></div>';
  const spot=s.querySelector('.ulspot');s.insertBefore(fx,spot||null);
@@ -1374,10 +1375,12 @@ function revealUnlock(){const s=$('#ulock'),c=window.__disc&&window.__disc.unloc
  s.classList.add('spin');endLater(fin,TEST?60:450)}
 function scheduleUnlock(){if(!(window.__disc&&window.__disc.unlockCard))return;
  const wait=window.__disc.newHS?(TEST?1200:2000):(TEST?250:700);endLater(showUnlock,wait)}
-$('#ulock').onclick=ev=>{ev.stopPropagation();ev.preventDefault();const s=$('#ulock');if(s.hidden||performance.now()-(+s.dataset.at||0)<250)return;
- if(s.classList.contains('pre')){revealUnlock();return}if(!s.classList.contains('shown'))return;ui('tap');hideUnlock()};
-$('#ulock').onkeydown=ev=>{if((ev.key==='Enter'||ev.key===' ')&&$('#ulock').classList.contains('pre')){ev.preventDefault();revealUnlock()}};
-$('#ulgo').onclick=ev=>{ev.stopPropagation();ev.preventDefault();const s=$('#ulock');if(s.classList.contains('pre')){revealUnlock();return}ui('tap');hideUnlock()};
+function unlockReady(){const s=$('#ulock');return s&&!s.hidden&&performance.now()-(+s.dataset.at||0)>=400}
+function dismissUnlock(){const s=$('#ulock');if(!s||!s.classList.contains('shown'))return;ui('tap');hideUnlock()}
+$('#ulock').onclick=ev=>{ev.stopPropagation();ev.preventDefault();if(!unlockReady())return;const s=$('#ulock');
+ if(s.classList.contains('pre')){revealUnlock();return}if(!s.classList.contains('shown'))return;dismissUnlock()};
+$('#ulock').onkeydown=ev=>{if(!(ev.key==='Enter'||ev.key===' '||ev.key==='Escape'))return;ev.preventDefault();if(!unlockReady())return;const s=$('#ulock');
+ if(s.classList.contains('pre')){if(ev.key!=='Escape')revealUnlock();return}if(s.classList.contains('shown'))dismissUnlock()};
 /* ---- Scoreboard v1 (Luke t329u, workshop 25 Nov) ----
    Sounds by Spielberg (harp, B major): one countup-tick per count-up step, each step x1.06 playbackRate, so a bigger score climbs
    higher; end-note when the total lands. New best plays NEWBEST_SND (Spielberg's new-best-ding, draft until Luke has heard it) instead of end-note (never both).
@@ -1496,11 +1499,12 @@ function endOld(r){const {nRight,nWrong,runBest,perfect,unlockCard,stillLocked}=
   (perfect?'<div class="perf">Perfect!</div>':'')+
   unlLine+
   (!stillLocked?'<a class="btn gold" id="conq" href="'+CONQUEST_URL+'">Unlock Conquest mode</a>':'')+
-  '</div><hr><div class="e2">'+
+  '</div><hr><div class="acts"><div class="a2"><button class="btn" id="again">Play again</button><button class="btn gold" id="viewtl">View the timeline</button></div></div>'+
+  '<div class="e2">'+
   '<a class="btn green" id="buy" href="'+BUY_D+'" target="_blank" rel="noopener">Get the full game</a>'+
   '<div class="sell"><img class="box" src="'+BOX+'" alt="The Chronicles of the Kingdom game box"><p>This web game uses '+r.owned+' of the 52 cards.<br><b>52</b> Bible Event Cards &middot; <b>1+</b> players &middot; <b>Age 9+</b></p></div>'+
   '<p class="lead">Leading a group? Try the <a href="'+LEADER_URL+'" target="_blank" rel="noopener">free Leader\'s Guide preview</a>.</p>'+
-  '</div><div class="acts"><div class="a2"><button class="btn" id="again">Play again</button><button class="btn gold" id="viewtl">View the timeline</button></div></div></div>';
+  '</div></div>';
  end.style.display='flex';$('#again').onclick=()=>{ui('tap');newRun()};$('#viewtl').onclick=()=>{ui('tap');viewTimeline()};$('#buy').addEventListener('click',()=>ui('tap'));const cq=$('#conq');if(cq)cq.addEventListener('click',()=>ui('tap'));
  $('#again').focus({preventScroll:true});countUpOld()}
 function countUpOld(){const tok=endTok,els=[...document.querySelectorAll('#end .sc>div'),$('#end .tot')],D=TEST?20:420,GAP=TEST?10:200;let t=TEST?0:350;
@@ -1523,9 +1527,13 @@ function fitNHS(o){const f=o.querySelector('.ff'),W=o.clientWidth-24,H=o.clientH
 function viewTimeline(){$('#end').style.display='none';clearEnd();hideSbt();phase='review';hideYc();applyFrame();
  const s=$('#stage');clearNextClick(s);s.innerHTML='';s.className='pan v';sizeStage('verdict');
  const p=document.createElement('div');p.className='panel vp';const hr=document.createElement('div');hr.className='vh';
- hr.innerHTML='<span class="big">Your timeline</span>';const b=document.createElement('button');b.className='btn';b.id='restart';b.textContent='Play again';b.onclick=()=>{ui('tap');newRun()};hr.appendChild(b);p.appendChild(hr);
+ hr.innerHTML='<span class="big">Your timeline</span>';const acts=document.createElement('div');acts.className='vacts';
+ const sb=document.createElement('button');sb.className='btn gold';sb.id='viewsb';sb.textContent='View scoreboard';sb.onclick=()=>viewScoreboard();
+ const b=document.createElement('button');b.className='btn';b.id='restart';b.textContent='Play again';b.onclick=()=>{ui('tap');newRun()};
+ acts.appendChild(sb);acts.appendChild(b);hr.appendChild(acts);p.appendChild(hr);
  const v=document.createElement('div');v.className='vb';v.innerHTML='<b>'+nRight+' of '+total+'</b> correct · Best streak <b>'+runBest+'</b>';p.appendChild(v);s.appendChild(p);
  timeline();$('#tl').scrollTop=0;b.focus({preventScroll:true})}
+function viewScoreboard(){ui('tap');phase='over';const end=$('#end');if(end&&end.innerHTML){end.style.display='flex';const ag=$('#again');if(ag)ag.focus({preventScroll:true});return}if(lastRun)renderEnd()}
 function relayout(){applyFrame();if(!phase||!hand&&phase==='choose')return;if(phase==='review'){sizeStage('verdict');timeline();syncConquerFx();return}if(phase==='choose')renderStage();else sizeStage('verdict');if(phase==='choose')applyHandBar();if(phase==='flipping')fitFF();timeline();positionS0();positionUnlock();fitZoom();if(ycFor)ycCheck(ycFor);syncConquerFx()}
 let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(relayout,120)});
 if(window.visualViewport){const vv=()=>{clearTimeout(rt);rt=setTimeout(relayout,120)};visualViewport.addEventListener('resize',vv);visualViewport.addEventListener('scroll',vv)}
