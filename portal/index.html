@@ -124,7 +124,7 @@ button.name-tap:focus-visible,button.edit-link:focus-visible,#nameCancel:focus-v
    <div class="game">
     <div class="art"><img src="../discovery/cards/front/1-2-creation-of-heavens-and-earth.webp" width="600" height="838" loading="lazy" alt="Bible Event Card: Creation of Heavens and Earth"></div>
     <div class="body">
-     <span class="tag" id="dDiff">Easy</span>
+     <span class="tag" id="dDiff">Start Discovery</span>
      <p class="desc">Place every card where you think it belongs. Each correct card helps you unlock more.</p>
     </div>
    </div>
@@ -201,11 +201,20 @@ function seenCount(k){return ids(k).length}
 function $(id){return document.getElementById(id)}
 function fmt(n){return n.toLocaleString('en-GB')}
 
-function discoveryDifficulty(){
- var v=rd(K.D.diff);if(v==='normal'||v==='easy')return v;
- /* games: no saved choice -> Normal for anyone who has played before, Easy for new players */
- var played=num(K.D.games)>0||num(K.D.best)>0||ids(K.D.unl).length>0||seenCount(K.D.seen)>0;
- return played?'normal':'easy';
+function discoveryPlayed(){
+ return num(K.D.games)>0||num(K.D.best)>0||ids(K.D.unl).length>0||seenCount(K.D.seen)>0;
+}
+function paintDiscoveryTag(){
+ var tag=$('dDiff');if(!tag)return;
+ if(!discoveryPlayed()){
+  var v=rd(K.D.diff);
+  if(v==='easy')tag.textContent='Start with 2 cards';
+  else if(v==='normal')tag.textContent='Start with 13 cards';
+  else tag.textContent='Start Discovery';
+  return;
+ }
+ var n=Object.keys(owned('D')).length;
+ tag.textContent='Continue with '+n+' card'+(n===1?'':'s');
 }
 function validId(id){
  if(typeof id!=='string'||!/^[1-7]-\d+$/.test(id))return false;
@@ -275,7 +284,7 @@ function draw(mode,pre){
 }
 function render(){
  draw('D','d');draw('C','c');
- $('dDiff').textContent=discoveryDifficulty()==='easy'?'Easy: starts with 2 cards':'Normal: starts with 13 cards';
+ paintDiscoveryTag();
  $('nostore').style.display=storeOK?'none':'block';
 }
 
