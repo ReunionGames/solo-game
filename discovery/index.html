@@ -867,7 +867,9 @@ function wantSfx(k,rate){const p=sfxPri(k),cur=Math.max(curSfx?sfxPri(curSfx.k):
 function flushPend(k){const now=performance.now();pend=pend.filter(p=>{if(p[0]!==k)return true;if(now-p[2]<600&&!quiet())wantSfx(k,p[1]);return false})}
 function sfx(k,rate){window.__ev.push((quiet()?'muted:':'snd:')+k);if(quiet()||!actx)return;wantSfx(k,rate)}
 function play(k,rate){
-  try{if(actx.state!=='running')actx.resume().catch(()=>{});const s=actx.createBufferSource(),g=actx.createGain();s.buffer=bufs[k];if(rate)s.playbackRate.value=rate;g.gain.value=(VOL[k]||.7)*(masterVol/100);s.connect(g);g.connect(actx.destination);s.onended=()=>{if(curSfx&&curSfx.src===s)curSfx=null};s.start(0);curSfx={k,src:s,g}}catch(e){}}
+  try{if(actx.state!=='running')actx.resume().catch(()=>{});const s=actx.createBufferSource(),g=actx.createGain();s.buffer=bufs[k];if(rate)s.playbackRate.value=rate;g.gain.value=(VOL[k]||.7)*(masterVol/100);s.connect(g);g.connect(actx.destination);
+   const clear=()=>{if(curSfx&&curSfx.src===s)curSfx=null};s.onended=clear;s.start(0);curSfx={k,src:s,g};
+   const dur=Math.max(0.08,((bufs[k]&&bufs[k].duration)||0)/(rate||1)+0.08);setTimeout(clear,dur*1000)}catch(e){}}   /* Luke t477u: if onended never fires (seen in the Wix iframe), curSfx would sit forever and drop later sounds */
 function ui(k){setTimeout(()=>sfx('tick'),0)}   /* Discovery (Luke 24 Nov 21:08): every button plays the tick */   /* v5.9.4: quiet acknowledgement, deferred so it always runs after this tap's unlockAudio/audioSession path */
 function cardSnd(){setTimeout(()=>sfx('clack'),0)}   /* v5.9.5 (Luke 23 Nov): every card action that had no sound uses the existing clack; every such button uses uitap */
 function placePanel(el,anchor){if(!el||el.hidden||!anchor)return;const r=anchor.getBoundingClientRect(),w=el.offsetWidth,h=el.offsetHeight;let left=Math.round(r.right-w);left=Math.max(8,Math.min(left,innerWidth-w-8));let top=Math.round(r.bottom-2);if(top+h>innerHeight-8)top=Math.max(8,Math.round(r.top-h+2));el.style.left=left+'px';el.style.top=top+'px'}
@@ -973,7 +975,7 @@ function watchImg(img,face,src,pri){let n=0;face.classList.remove('fail');
 /* Luke t472u: the timeline's starting card is never the player's newly won card (flagged viaUnlock until first correct placement), so the new card must be placed and can earn its hard-card points. Prefer a middle-period card from the rest. */
 function isFreshUnlock(c){if(!c||!c.id)return false;const s=struggleMap()[c.id]||{};return !!(s.flagged&&s.viaUnlock)}
 function pickStartCard(pool){const rest=pool.filter(c=>!isFreshUnlock(c)),mid=rest.filter(c=>MID.includes(c.period)),from=mid.length?mid:(rest.length?rest:pool);return shuffle(from.slice())[0]}
-function newRun(){ptsHard=0;hintRestart(false);musicBegin();clearT();cutChimes();clearEnd();hideSbt();lastRun=null;$('#end').style.display='none';hideUnlock();const nh=$('#nhs');if(nh)nh.remove();hideYc();closeRsq();clearConquerFx();conquerTestArmed=CONQUERTEST;
+function newRun(){ptsHard=0;hintRestart(false);stopSfx();pend=[];musicBegin();clearT();cutChimes();clearEnd();hideSbt();lastRun=null;$('#end').style.display='none';hideUnlock();const nh=$('#nhs');if(nh)nh.remove();hideYc();closeRsq();clearConquerFx();conquerTestArmed=CONQUERTEST;
  if(placedPending){placedPending=false;placedSession=true;preloadOwned();showPlacedBoard();return}
  placedSession=false;preloadOwned();
  const pool=ownedDeck(),start=pickStartCard(pool);
