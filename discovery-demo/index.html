@@ -215,6 +215,8 @@ header{flex:none;display:flex;justify-content:space-between;align-items:center;g
 .ulcard{width:100%}
 .ulbox{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:max-content;max-width:min(94%,640px);background:var(--parch);border:2px solid #E9D29E;outline:2px solid var(--burg);border-radius:14px;padding:10px 16px;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.5);color:var(--burg);font-size:20px;font-weight:700;line-height:1.25;z-index:1;box-sizing:border-box}
 .ulbox p{margin:0}.ulbox p b{color:#40110C}
+/* Luke t494u: nothing but the unlock reveal can be clicked until it has finished (the game also sets inert on #app and #end) */
+html.ullock #app,html.ullock #end{pointer-events:none}
 .ulbox .ultitle{margin:4px 0 0;font-size:18px;font-weight:700;color:#40110C}
 @media (min-width:700px){.ulbox{font-size:23px}.ulbox .ultitle{font-size:20px}.ulspot{width:min(42vw,300px)}}
 .dsc .unl.newcard{border:2px solid var(--burg);background:var(--gold);color:var(--burg);font-weight:700;font-size:17px}
@@ -1355,7 +1357,13 @@ function miss(e){const old=e.el.getBoundingClientRect();
   if(dx||dy){sl.style.transition='none';sl.style.transform='translate('+dx+'px,'+dy+'px)';sl.style.zIndex=4;sl.getBoundingClientRect();
    sl.style.transition='transform .6s ease-in-out';sl.style.transform='';later(()=>{sl.style.transition='';sl.style.zIndex=''},700)}}}
 /* ---- end screen ---- */
-function hideUnlock(){const s=$('#ulock');if(!s||s.hidden)return;s.hidden=true;s.classList.remove('pre','spin','shown');const fx=s.querySelector('.ulfx');if(fx)fx.remove();const hold=s.querySelector('.ulcard');if(hold)hold.innerHTML=''}
+/* Luke t494u: while a new card is waiting to be revealed (from the end of the run until the reveal is closed) the game behind it is inert: no scoreboard, header or settings button can be clicked or tabbed to. Released by hideUnlock(), or by a 20s failsafe if the reveal never opens. */
+var ulLockT=0,ulWant=false;
+function setUlLock(on){ulWant=!!on;clearTimeout(ulLockT);const r=document.documentElement;
+ ['#app','#end'].forEach(sel=>{const el=document.querySelector(sel);if(!el)return;if(on)el.setAttribute('inert','');else el.removeAttribute('inert')});
+ r.classList.toggle('ullock',!!on);
+ if(on){try{closeRsq();closeVol();closeDsq()}catch(e){}ulLockT=setTimeout(()=>{const s=document.getElementById('ulock');if(!s||s.hidden)setUlLock(false)},20000);window.__ev&&window.__ev.push('ulLock')}}
+function hideUnlock(){setUlLock(false);const s=$('#ulock');if(!s||s.hidden)return;s.hidden=true;s.classList.remove('pre','spin','shown');const fx=s.querySelector('.ulfx');if(fx)fx.remove();const hold=s.querySelector('.ulcard');if(hold)hold.innerHTML=''}
 function positionUnlock(){const s=$('#ulock');if(!s||s.hidden)return;
  const sr=s.getBoundingClientRect(),card=s.querySelector('.ulspot .card')||s.querySelector('.ulspot');if(!card)return;
  const c=card.getBoundingClientRect(),hole=s.querySelector('.ulhole'),glow=s.querySelector('.ulglow');
@@ -1375,7 +1383,7 @@ function showUnlock(){const c=window.__disc&&window.__disc.unlockCard;if(!c||pha
  const tit=s.querySelector('.ultitle');if(tit)tit.textContent='';
  s.hidden=false;s.dataset.at=performance.now();positionUnlock();requestAnimationFrame(positionUnlock);window.__ev.push('unlock:'+c.id);s.focus&&s.focus({preventScroll:true})}
 function revealUnlock(){const s=$('#ulock'),c=window.__disc&&window.__disc.unlockCard;if(!s||!s.classList.contains('pre'))return;s.classList.remove('pre');ui('tap');
- const fin=()=>{if(s.hidden)return;s.classList.add('shown');const msg=s.querySelector('.ulbox p');if(msg)msg.textContent=UL_DONE;const tit=s.querySelector('.ultitle');if(tit)tit.textContent=(c&&c.title)||'';
+ const fin=()=>{if(s.hidden||s.classList.contains('shown'))return;s.classList.add('shown');const msg=s.querySelector('.ulbox p');if(msg)msg.textContent=UL_DONE;const tit=s.querySelector('.ultitle');if(tit)tit.textContent=(c&&c.title)||'';
   s.dataset.at=performance.now();positionUnlock();sfx('conquer');window.__ev.push('unlockReveal');s.focus&&s.focus({preventScroll:true})};
  const old=s.querySelector('.ulfx');if(old)old.remove();
  const fx=document.createElement('div');fx.className='ulfx';fx.setAttribute('aria-hidden','true');fx.innerHTML='<div class="ulglow"></div>';
@@ -1388,7 +1396,7 @@ function revealUnlock(){const s=$('#ulock'),c=window.__disc&&window.__disc.unloc
  const cx=cr.left+cr.width/2-sr.left,cy=cr.top+cr.height/2-sr.top;
  for(let i=0;i<7;i++){const sp=document.createElement('i');sp.className='ulsp';const a=(i/7)*Math.PI*2,d=58+(i%3)*18;sp.style.cssText='left:'+cx+'px;top:'+cy+'px;--tx:'+Math.round(Math.cos(a)*d)+'px;--ty:'+Math.round(Math.sin(a)*d)+'px;--d:1.2s;--dl:'+(0.18+i*0.06).toFixed(2)+'s';fx.appendChild(sp)}
  endLater(()=>{fx.querySelectorAll('.ulsp').forEach(n=>n.remove())},1800)   /* Luke t405u: 2eafa02 hard-card glow stays while the card is shown; sparkles go after the reveal; skipped for reduced-motion */
- s.classList.add('spin');endLater(fin,TEST?60:450)}
+ s.classList.add('spin');endLater(fin,TEST?60:450);endLater(fin,2500)}   /* Luke t494u: failsafe, the reveal always finishes even if a timer or animation is skipped */
 function scheduleUnlock(){if(!(window.__disc&&window.__disc.unlockCard))return;
  const wait=window.__disc.newHS?(TEST?1200:2000):(TEST?250:700);endLater(showUnlock,wait)}
 function unlockReady(){const s=$('#ulock');return s&&!s.hidden&&performance.now()-(+s.dataset.at||0)>=400}
@@ -1433,7 +1441,7 @@ function over(){bankCard();flushPlay();clearPointPops();hintRestart(false);music
  const perfect=nWrong===0&&nRight===total&&total>0,full=total>=51,finish=(full&&perfect)?50:0,ptsRun=0,score=nRight+runBest+ptsHard;
  if(!placedSession)bumpGames();
  const maxBase=51*10+rollTotal(51)+50,maxRun=full&&perfect&&ptsC+ptsRoll+finish===maxBase;   /* prize later: 870 without speed, New or Conquered. A fully unlocked perfect all-Lightning run scores 1023 (510 + 310 streak + 153 speed + 50 Perfect). Elapsed time ranks ties, it is not points (Luke t424u). New and Conquered are in the run score (Luke t377u). */
- const unlockCard=perfect?pickUnlock():null;const demoGate=!!unlockCard&&demoIsGate();if(unlockCard&&!demoGate)grantUnlock(unlockCard);   /* demo: the 14th card is shown, not given */
+ const unlockCard=perfect?pickUnlock():null;if(unlockCard)setUlLock(true);const demoGate=!!unlockCard&&demoIsGate();if(unlockCard&&!demoGate)grantUnlock(unlockCard);   /* demo: the 14th card is shown, not given */
  let prevHS=0;try{prevHS=Math.max(0,+localStorage.getItem(HSKEY)||0)}catch(e){}const prevHSTime=0,newHS=score>prevHS&&score>0;if(newHS&&!placedSession){try{localStorage.setItem(HSKEY,String(score))}catch(e){}}   /* Discovery: the pre-79924a3 high score key, higher score only */
  /* old-style score (correct + best streak) and its old high-score key, kept only for the test toggle */
  const oldScore=score,oldPrevHS=prevHS,oldNewHS=newHS;
@@ -1446,7 +1454,7 @@ function over(){bankCard();flushPlay();clearPointPops();hintRestart(false);music
    style switch, endOld, countUpOld, #sbt and its CSS before Discovery goes on Wix. */
 const SBKEY='ckDiscSbStyle';
 function sbStyle(){try{return sessionStorage.getItem(SBKEY)==='old'?'old':'new'}catch(e){return 'new'}}
-function renderEnd(){if(!lastRun)return;clearEnd();endOld(lastRun);window.__ev.push('end:old')}   /* Luke t430u: one scoreboard per mode, test toggles removed */
+function renderEnd(){if(!lastRun)return;const keepLock=ulWant;clearEnd();if(keepLock)setUlLock(true);endOld(lastRun);window.__ev.push('end:old')}   /* Luke t430u: one scoreboard per mode, test toggles removed */
 function hideSbt(){const t=$('#sbt');if(t)t.hidden=true;const tb=$('#tbt');if(tb)tb.hidden=true;const p=$('#tpanel');if(p)p.hidden=true}
 function endNew(r){window.__disc=Object.assign({},r,{style:'new'});
  const allOpen=!r.stillLocked,unlockCard=r.unlockCard;
