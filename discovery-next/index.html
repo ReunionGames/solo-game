@@ -582,8 +582,7 @@ header{position:relative;z-index:7}
 <div id="pill" class="pill" hidden></div>
 </div>
 <div id="rsq" hidden role="dialog" aria-label="Restart this run?"><p>Restart this run?</p><div class="rsq-acts"><button type="button" class="btn sec" id="rsq-no">Cancel</button><button type="button" class="btn" id="rsq-go">Restart</button></div></div>
-<div id="dsq" hidden role="dialog" aria-label="Switch difficulty?"><p id="dsq-msg"></p><div class="rsq-acts"><button type="button" class="btn sec" id="dsq-no">Cancel</button><button type="button" class="btn" id="dsq-go">Switch</button></div></div>
-<div id="vol" hidden role="dialog" aria-label="Settings"><div class="vol-row"><span class="vol-lab" id="sfx-lab">Sounds</span><button type="button" class="vol-tog" id="sfx-tog" role="switch" aria-checked="true" aria-labelledby="sfx-lab"></button><input id="volr" type="range" min="0" max="100" step="1" value="100" aria-label="Sounds volume"></div><div class="vol-row"><span class="vol-lab" id="mus-lab">Music</span><button type="button" class="vol-tog" id="mus-tog" role="switch" aria-checked="true" aria-labelledby="mus-lab"></button><input id="musr" type="range" min="0" max="100" step="1" value="100" aria-label="Music volume"></div><div class="vol-row"><span class="vol-lab" id="pop-lab">Streak pop-ups</span><button type="button" class="vol-tog" id="pop-tog" role="switch" aria-checked="true" aria-labelledby="pop-lab"></button></div><div class="vol-row"><span class="vol-lab" id="flip-lab">Long flips</span><button type="button" class="vol-tog" id="flip-tog" role="switch" aria-checked="true" aria-labelledby="flip-lab"></button></div><div class="vol-row vol-diff"><span class="vol-lab" id="diff-lab">Difficulty</span><div class="diff-seg" role="radiogroup" aria-labelledby="diff-lab"><button type="button" class="diff-btn" id="diff-normal" role="radio" aria-checked="false">Normal</button><button type="button" class="diff-btn" id="diff-easy" role="radio" aria-checked="true">Easy</button></div></div></div>
+<div id="vol" hidden role="dialog" aria-label="Settings"><div class="vol-row"><span class="vol-lab" id="sfx-lab">Sounds</span><button type="button" class="vol-tog" id="sfx-tog" role="switch" aria-checked="true" aria-labelledby="sfx-lab"></button><input id="volr" type="range" min="0" max="100" step="1" value="100" aria-label="Sounds volume"></div><div class="vol-row"><span class="vol-lab" id="mus-lab">Music</span><button type="button" class="vol-tog" id="mus-tog" role="switch" aria-checked="true" aria-labelledby="mus-lab"></button><input id="musr" type="range" min="0" max="100" step="1" value="100" aria-label="Music volume"></div><div class="vol-row"><span class="vol-lab" id="pop-lab">Streak pop-ups</span><button type="button" class="vol-tog" id="pop-tog" role="switch" aria-checked="true" aria-labelledby="pop-lab"></button></div><div class="vol-row"><span class="vol-lab" id="flip-lab">Long flips</span><button type="button" class="vol-tog" id="flip-tog" role="switch" aria-checked="true" aria-labelledby="flip-lab"></button></div></div>
 <div id="zoom" role="dialog" aria-label="Your card, large"><div class="z"></div><div class="zs"><div class="zt"></div><button class="btn zb"></button></div><div id="fc" hidden role="dialog" aria-label="This is your first card"><p class="fcmsg">This is your first card. Read it, and then tap to place it on the timeline.</p><p class="fchint">Tap anywhere to read it</p></div></div>
 <div id="s0" hidden><div class="s0hole"></div><div class="s0box"><p></p><button class="gbtn" id="s0go">Got it</button></div></div>
 <div id="help"></div>
@@ -723,9 +722,7 @@ const $=s=>document.querySelector(s), key=c=>c.period*1000+c.number, byId=id=>DE
 let pendingDiff=null;
 function placeDsq(){placePanel($('#dsq'),$('#set'))}
 function closeDsq(){const q=$('#dsq');if(q)q.hidden=true;pendingDiff=null}
-function openDsq(mode){closeRsq();closeVol();pendingDiff=mode==='easy'?'easy':'normal';const q=$('#dsq'),msg=$('#dsq-msg');if(!q||!msg)return;msg.textContent=pendingDiff==='easy'?'Switch to Easy? This starts a new run with 2 cards. Cards you have unlocked will be reset. Your high score is kept.':'Switch to Normal? This starts a new run with 13 cards. Cards you have unlocked will be reset. Your high score is kept.';q.hidden=false;placeDsq();const no=$('#dsq-no');if(no)no.focus({preventScroll:true})}
 function applyDifficulty(mode){const next=mode==='easy'?'easy':'normal';closeDsq();closeVol();if(next!==diffMode){diffMode=next;try{localStorage.setItem(DIFFKEY,diffMode)}catch(e){}saveUnlockState({v:1,ids:[]})}volUI();newRun();window.__ev&&window.__ev.push(next==='easy'?'diffEasyApplied':'diffNormalApplied')}
-function requestDifficulty(mode){const next=mode==='easy'?'easy':'normal';if(next===diffMode)return;if(!quiet()){unlockAudio();ui('tap')}openDsq(next);window.__ev&&window.__ev.push(next==='easy'?'diffEasyAsk':'diffNormalAsk')}
 const RM=matchMedia('(prefers-reduced-motion: reduce)');
 const R=1512/2112;                              /* card width / height */
 /* best streak per deck, for this page session only (Luke, 16 Nov: no storage for the best streak) */
@@ -940,8 +937,6 @@ function setStreakPops(on){streakPops=!!on;if(streakPops&&pointPops){pointPops=f
 function setPointPops(on){pointPops=!!on;if(pointPops&&streakPops){streakPops=false;clearWordFlashes()}if(!pointPops)clearPointPops();persistPops();volUI()}
 const popTog=$('#pop-tog');if(popTog)popTog.addEventListener('click',ev=>{ev.stopPropagation();setStreakPops(!streakPops);if(!quiet()){unlockAudio();ui('tap')}window.__ev.push(streakPops?'popsOn':'popsOff')});
 const flipTog=$('#flip-tog');if(flipTog)flipTog.addEventListener('click',ev=>{ev.stopPropagation();longFlips=!longFlips;try{localStorage.setItem(FLIPKEY,longFlips?'1':'0')}catch(e){}volUI();if(!quiet()){unlockAudio();ui('tap')}window.__ev.push(longFlips?'longFlipsOn':'longFlipsOff')});
-const diffN=$('#diff-normal');if(diffN)diffN.addEventListener('click',ev=>{ev.stopPropagation();requestDifficulty('normal')});
-const diffE=$('#diff-easy');if(diffE)diffE.addEventListener('click',ev=>{ev.stopPropagation();requestDifficulty('easy')});
 const ptsTog=$('#pts-tog');if(ptsTog)ptsTog.addEventListener('click',ev=>{ev.stopPropagation();setPointPops(!pointPops);if(!quiet()){unlockAudio();ui('tap')}window.__ev.push(pointPops?'pointPopsOn':'pointPopsOff')});
 document.addEventListener('click',ev=>{const p=$('#vol');if(!p||p.hidden)return;if(ev.target.closest&&(ev.target.closest('#vol')||ev.target.closest('#set')))return;closeVol()});
 $('#rst').onclick=ev=>{ev.stopPropagation();ev.preventDefault();closeVol();requestRestart()};
@@ -949,10 +944,6 @@ $('#rsq-go').onclick=ev=>{ev.stopPropagation();ev.preventDefault();doRestart()};
 $('#rsq-no').onclick=ev=>{ev.stopPropagation();ev.preventDefault();ui('tap');closeRsq()};
 document.addEventListener('click',ev=>{const q=$('#rsq');if(!q||q.hidden)return;if(ev.target.closest&&(ev.target.closest('#rsq')||ev.target.closest('#rst')))return;closeRsq()});
 addEventListener('keydown',ev=>{if(ev.key==='Escape'&&$('#rsq')&&!$('#rsq').hidden){ev.preventDefault();closeRsq()}});
-const dsqGo=$('#dsq-go');if(dsqGo)dsqGo.onclick=ev=>{ev.stopPropagation();ev.preventDefault();ui('tap');if(pendingDiff)applyDifficulty(pendingDiff)};
-const dsqNo=$('#dsq-no');if(dsqNo)dsqNo.onclick=ev=>{ev.stopPropagation();ev.preventDefault();ui('tap');closeDsq()};
-document.addEventListener('click',ev=>{const q=$('#dsq');if(!q||q.hidden)return;if(ev.target.closest&&(ev.target.closest('#dsq')||ev.target.closest('#diff-normal')||ev.target.closest('#diff-easy')||ev.target.closest('#set')||ev.target.closest('#vol')))return;closeDsq()});
-addEventListener('keydown',ev=>{if(ev.key==='Escape'&&$('#dsq')&&!$('#dsq').hidden){ev.preventDefault();closeDsq()}});
 addEventListener('keydown',ev=>{if(ev.key==='Escape'&&$('#vol')&&!$('#vol').hidden){ev.preventDefault();ev.stopPropagation();closeVol()}},true);
 volUI();
 addEventListener('resize',()=>{placeVol();placeRsq();placeDsq()});
@@ -1611,7 +1602,7 @@ function showPlacedBoard(){const pool=playableDeck().slice();if(!pool.length)ret
 const DEMO_GATE_AT=14,SIGNUP_URL='https://www.chroniclesofthekingdom.co.uk/game-portal';
 let demoCard=null,demoLeaving=false;addEventListener('pagehide',()=>{demoLeaving=true});
 function demoIsGate(){return ownedIds().size+1>=DEMO_GATE_AT}
-function demoShowGate(){const g=$('#dgate');if(!g)return;const d=window.__disc;if(d&&d.unlockCard)demoCard=d.unlockCard;const fb=$('#dgfb');if(fb)fb.hidden=true;const gi=$('#dgcard');if(gi&&demoCard){gi.alt=demoCard.title||'';gi.src=demoCard.front||revealArt(demoCard);gi.hidden=false}g.classList.add('on');window.__ev&&window.__ev.push('demoGate');const b=$('#dgo');if(b)b.focus({preventScroll:true})}
+function demoShowGate(){const g=$('#dgate');if(!g)return;const d=window.__disc;if(d&&d.unlockCard)demoCard=d.unlockCard;const fb=$('#dgfb');if(fb)fb.hidden=true;const gi=$('#dgcard');if(gi&&demoCard){gi.alt=demoCard.title||'';gi.src=revealArt(demoCard);gi.hidden=false}g.classList.add('on');window.__ev&&window.__ev.push('demoGate');const b=$('#dgo');if(b)b.focus({preventScroll:true})}
 function demoHideGate(){const g=$('#dgate');if(g)g.classList.remove('on')}
 function demoAfterUnlock(){const d=window.__disc;if(d&&d.demoGate&&d.unlockCard)demoShowGate()}
 function demoSignup(){
