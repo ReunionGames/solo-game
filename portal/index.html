@@ -68,6 +68,8 @@ button.name-tap:focus-visible,button.edit-link:focus-visible,#nameCancel:focus-v
 .btn.locked:active{transform:none}
 .coll.locked .bar i{width:0 !important;background:#cfc0a0}
 .coll.locked .per{display:none}
+/* Luke t504u: longer locked description sits under the card so it stays readable */
+.panel.locked #cDesc,.panel #cDesc{margin:8px 0 0;font-size:16px;line-height:1.4}
 .coll{margin:0 0 12px}
 .coll:last-child{margin-bottom:0}
 .coll .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:18px;color:var(--lab)}
@@ -137,9 +139,9 @@ button.name-tap:focus-visible,button.edit-link:focus-visible,#nameCancel:focus-v
     <div class="art"><img src="../discovery/cards/front/7-8-the-new-jerusalem.webp" width="600" height="838" loading="lazy" alt="Bible Event Card: The New Jerusalem"></div>
     <div class="body">
      <span class="tag" id="cTag"><svg class="lock-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17 8h-1V6a4 4 0 1 0-8 0v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zM9 6a3 3 0 1 1 6 0v2H9V6zm8 14H7V10h10v10z"/></svg> Locked</span>
-     <p class="desc" id="cDesc">Unlock all 52 cards in Discovery to open Conquest</p>
     </div>
    </div>
+   <p class="desc" id="cDesc">The full timeline, against the clock. All 52 cards, streak and speed bonuses, and +50 for a perfect run. Climb the leaderboard and see if you can finish on top. Unlock all 52 cards in Discovery to take it on.</p>
    <div class="stats" style="margin-top:10px">
     <div class="st"><b id="cBest">0</b><span>Best run score</span></div>
     <div class="st"><b id="cPts">0</b><span>Best points total</span></div>
@@ -220,7 +222,7 @@ function paintConquestLock(open){
  if(panel)panel.className='panel'+(open?'':' locked');
  if(coll)coll.className='coll'+(open?'':' locked');
  if(tag)tag.innerHTML=open?'All 52 cards playable':LOCK_SVG+'Locked';
- if(desc)desc.textContent=open?'The full timeline challenge.':'Unlock all 52 cards in Discovery to open Conquest';
+ if(desc)desc.textContent=open?'The full timeline challenge.':'The full timeline, against the clock. All 52 cards, streak and speed bonuses, and +50 for a perfect run. Climb the leaderboard and see if you can finish on top. Unlock all 52 cards in Discovery to take it on.';
  if(lab)lab.innerHTML=open?'<b id="colC">52</b> of 52 cards':'Locked';
  if(btn){
   if(open){
